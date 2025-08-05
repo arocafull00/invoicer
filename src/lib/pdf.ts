@@ -1,178 +1,305 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import { Invoice } from '../types';
-import { formatDate, formatCurrency } from './helpers';
+import type { Invoice } from '@/types';
+import { formatDate, formatCurrency } from '@/lib/helpers';
 
 /**
- * Genera un PDF de factura
+ * Genera un PDF de factura con el formato específico
  */
 export const createInvoicePDF = async (invoice: Invoice): Promise<Uint8Array> => {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595, 842]); // A4 size
   const { width, height } = page.getSize();
   
-  // Cargar fuente
+  // Cargar fuentes
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   
   // Colores
   const primaryColor = rgb(0.498, 0.353, 0.941); // #7F5AF0
-  const textColor = rgb(1, 1, 1); // White
-  const darkColor = rgb(0.05, 0.05, 0.05); // #0D0D0D
+  const textColor = rgb(0.05, 0.05, 0.05); // #0D0D0D
+  const lightGray = rgb(0.6, 0.6, 0.6);
   
-  // Fondo oscuro
-  page.drawRectangle({
-    x: 0,
-    y: 0,
-    width,
-    height,
-    color: darkColor,
-  });
+  let yPosition = height - 50;
   
-  // Título
-  page.drawText('FACTURA', {
+  // Título principal
+  page.drawText('INVOICE', {
     x: 50,
-    y: height - 80,
-    size: 32,
+    y: yPosition,
+    size: 24,
     font: boldFont,
     color: primaryColor,
   });
   
   // Número de factura
-  page.drawText(`Nº: ${invoice.number}`, {
-    x: 50,
-    y: height - 120,
+  page.drawText(invoice.number, {
+    x: width - 200,
+    y: yPosition,
     size: 16,
-    font: font,
+    font: boldFont,
     color: textColor,
   });
   
-  // Fecha
-  page.drawText(`Fecha: ${formatDate(invoice.created_date)}`, {
-    x: 50,
-    y: height - 140,
+  yPosition -= 40;
+  
+  // Fecha de la factura
+  page.drawText(formatDate(invoice.created_date), {
+    x: width - 200,
+    y: yPosition,
     size: 12,
     font: font,
     color: textColor,
   });
   
-  // Información del consultor
-  page.drawText('CONSULTOR:', {
+  yPosition -= 60;
+  
+  // Sección Consultant
+  page.drawText('Consultant', {
     x: 50,
-    y: height - 200,
+    y: yPosition,
     size: 14,
     font: boldFont,
     color: primaryColor,
   });
   
-  page.drawText(invoice.consultant?.name || '', {
+  yPosition -= 25;
+  
+  page.drawText(invoice.consultant.name, {
     x: 50,
-    y: height - 220,
+    y: yPosition,
     size: 12,
     font: font,
     color: textColor,
   });
   
-  page.drawText(invoice.consultant?.email || '', {
+  yPosition -= 20;
+  
+  page.drawText(invoice.consultant.address, {
     x: 50,
-    y: height - 235,
+    y: yPosition,
     size: 10,
     font: font,
     color: textColor,
   });
   
-  // Información del cliente
-  page.drawText('CLIENTE:', {
-    x: 300,
-    y: height - 200,
-    size: 14,
-    font: boldFont,
-    color: primaryColor,
-  });
+  yPosition -= 15;
   
-  page.drawText(invoice.client?.name || '', {
-    x: 300,
-    y: height - 220,
-    size: 12,
-    font: font,
-    color: textColor,
-  });
-  
-  page.drawText(invoice.client?.email || '', {
-    x: 300,
-    y: height - 235,
+  page.drawText(`${invoice.consultant.city}, ${invoice.consultant.country}`, {
+    x: 50,
+    y: yPosition,
     size: 10,
     font: font,
     color: textColor,
   });
   
-  // Período de trabajo
-  page.drawText('PERÍODO DE TRABAJO:', {
+  yPosition -= 15;
+  
+  page.drawText(`NIF: ${invoice.consultant.nif}`, {
     x: 50,
-    y: height - 280,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: textColor,
+  });
+  
+  yPosition -= 15;
+  
+  page.drawText(`Email: ${invoice.consultant.email}`, {
+    x: 50,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: textColor,
+  });
+  
+  yPosition -= 40;
+  
+  // Sección Client
+  page.drawText('Client', {
+    x: 50,
+    y: yPosition,
     size: 14,
     font: boldFont,
     color: primaryColor,
   });
   
-  page.drawText(`${formatDate(invoice.start_date)} - ${formatDate(invoice.end_date)}`, {
+  yPosition -= 25;
+  
+  page.drawText(invoice.client.name, {
     x: 50,
-    y: height - 300,
+    y: yPosition,
     size: 12,
     font: font,
     color: textColor,
   });
   
-  // Descripción
-  page.drawText('DESCRIPCIÓN:', {
+  yPosition -= 20;
+  
+  page.drawText(invoice.client.address, {
     x: 50,
-    y: height - 340,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: textColor,
+  });
+  
+  yPosition -= 15;
+  
+  page.drawText(`${invoice.client.city}, ${invoice.client.country}`, {
+    x: 50,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: textColor,
+  });
+  
+  if (invoice.client.company_number) {
+    yPosition -= 15;
+    page.drawText(`Company Number: ${invoice.client.company_number}`, {
+      x: 50,
+      y: yPosition,
+      size: 10,
+      font: font,
+      color: textColor,
+    });
+  }
+  
+  yPosition -= 40;
+  
+  // Sección Payment Instructions
+  page.drawText('Payment Instructions', {
+    x: 50,
+    y: yPosition,
     size: 14,
     font: boldFont,
     color: primaryColor,
   });
+  
+  yPosition -= 25;
+  
+  page.drawText(`Account Holder: ${invoice.payment_instructions.account_holder}`, {
+    x: 50,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: textColor,
+  });
+  
+  yPosition -= 15;
+  
+  page.drawText(`IBAN: ${invoice.payment_instructions.iban}`, {
+    x: 50,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: textColor,
+  });
+  
+  yPosition -= 15;
+  
+  page.drawText(`Payment Method: ${invoice.payment_instructions.payment_method}`, {
+    x: 50,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: textColor,
+  });
+  
+  yPosition -= 15;
+  
+  page.drawText(invoice.payment_instructions.payment_terms, {
+    x: 50,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: textColor,
+  });
+  
+  yPosition -= 20;
+  
+  page.drawText(invoice.payment_instructions.vat_exemption_text, {
+    x: 50,
+    y: yPosition,
+    size: 8,
+    font: font,
+    color: lightGray,
+    maxWidth: width - 100,
+  });
+  
+  yPosition -= 60;
+  
+  // Línea separadora
+  page.drawLine({
+    start: { x: 50, y: yPosition },
+    end: { x: width - 50, y: yPosition },
+    thickness: 1,
+    color: lightGray,
+  });
+  
+  yPosition -= 30;
+  
+  // Descripción y Total
+  page.drawText('DESCRIPTION', {
+    x: 50,
+    y: yPosition,
+    size: 14,
+    font: boldFont,
+    color: primaryColor,
+  });
+  
+  page.drawText('TOTAL', {
+    x: width - 150,
+    y: yPosition,
+    size: 14,
+    font: boldFont,
+    color: primaryColor,
+  });
+  
+  yPosition -= 25;
   
   page.drawText(invoice.description, {
     x: 50,
-    y: height - 360,
+    y: yPosition,
     size: 12,
     font: font,
     color: textColor,
-    maxWidth: width - 100,
-  });
-  
-  // Total
-  page.drawText('TOTAL:', {
-    x: 400,
-    y: height - 420,
-    size: 18,
-    font: boldFont,
-    color: primaryColor,
+    maxWidth: width - 200,
   });
   
   page.drawText(formatCurrency(invoice.total), {
-    x: 400,
-    y: height - 440,
-    size: 16,
+    x: width - 150,
+    y: yPosition,
+    size: 12,
     font: boldFont,
     color: textColor,
   });
   
-  // Instrucciones de pago
-  page.drawText('INSTRUCCIONES DE PAGO:', {
-    x: 50,
-    y: height - 500,
-    size: 14,
-    font: boldFont,
-    color: primaryColor,
+  yPosition -= 40;
+  
+  // Línea separadora final
+  page.drawLine({
+    start: { x: 50, y: yPosition },
+    end: { x: width - 50, y: yPosition },
+    thickness: 1,
+    color: lightGray,
   });
   
-  page.drawText(invoice.payment_instructions, {
-    x: 50,
-    y: height - 520,
-    size: 10,
-    font: font,
+  yPosition -= 30;
+  
+  // Subtotal
+  page.drawText('Subtotal', {
+    x: width - 200,
+    y: yPosition,
+    size: 12,
+    font: boldFont,
     color: textColor,
-    maxWidth: width - 100,
+  });
+  
+  page.drawText(formatCurrency(invoice.total), {
+    x: width - 150,
+    y: yPosition,
+    size: 12,
+    font: boldFont,
+    color: textColor,
   });
   
   return await pdfDoc.save();
@@ -188,7 +315,7 @@ export const downloadInvoicePDF = async (invoice: Invoice): Promise<void> => {
   
   const link = document.createElement('a');
   link.href = url;
-  link.download = `factura-${invoice.number}.pdf`;
+  link.download = `${invoice.number.replace(/\s+/g, '_')}.pdf`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

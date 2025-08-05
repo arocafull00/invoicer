@@ -1,14 +1,8 @@
-import React from 'react';
-import { AppProviders } from './app/providers';
-import { useAuth } from './hooks/useAuth';
+import { AppProviders } from '@/app/providers';
 import './index.css';
 
 function App() {
-  return (
-    <div className="App">
-      <AppProviders />
-    </div>
-  );
+  return <AppProviders />;
 }
 
 export default App;

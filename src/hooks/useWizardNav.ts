@@ -1,66 +1,39 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useInvoiceStore } from '../lib/stores';
+import { useState, useCallback } from 'react';
 
-export const useWizardNav = () => {
+/**
+ * Hook personalizado para manejar la navegación del wizard
+ */
+export const useWizardNav = (totalSteps: number) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const { wizardDraft, setWizardDraft } = useInvoiceStore();
-  const navigate = useNavigate();
 
-  const totalSteps = 5;
-
-  const nextStep = () => {
+  const goNext = useCallback(() => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     }
-  };
+  }, [currentStep, totalSteps]);
 
-  const prevStep = () => {
+  const goPrevious = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
-  };
+  }, [currentStep]);
 
-  const goToStep = (step: number) => {
+  const goToStep = useCallback((step: number) => {
     if (step >= 1 && step <= totalSteps) {
       setCurrentStep(step);
     }
-  };
+  }, [totalSteps]);
 
-  const canGoNext = (step: number) => {
-    switch (step) {
-      case 1:
-        return !!wizardDraft.consultant_id;
-      case 2:
-        return !!wizardDraft.client_id;
-      case 3:
-        return !!wizardDraft.start_date && !!wizardDraft.end_date;
-      case 4:
-        return !!wizardDraft.description && !!wizardDraft.total;
-      case 5:
-        return !!wizardDraft.payment_instructions;
-      default:
-        return false;
-    }
-  };
-
-  const canGoPrev = (step: number) => {
-    return step > 1;
-  };
-
-  const resetWizard = () => {
-    setCurrentStep(1);
-    navigate('/invoices');
-  };
+  const canGoNext = currentStep < totalSteps;
+  const canGoPrevious = currentStep > 1;
 
   return {
     currentStep,
     totalSteps,
-    nextStep,
-    prevStep,
+    goNext,
+    goPrevious,
     goToStep,
     canGoNext,
-    canGoPrev,
-    resetWizard,
+    canGoPrevious,
   };
 }; 

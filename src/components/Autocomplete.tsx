@@ -1,50 +1,34 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Search } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { ChevronDown, Search, Plus } from 'lucide-react';
 
-interface Option {
-  id: string;
-  name: string;
-  email?: string;
-}
-
-interface AutocompleteProps {
-  options: Option[];
-  value?: string;
-  onChange: (value: string) => void;
+interface AutocompleteProps<T> {
+  options: T[];
+  value: T | null;
+  onChange: (value: T) => void;
+  getOptionLabel: (option: T) => string;
   placeholder?: string;
-  label?: string;
-  error?: string;
-  onAddNew?: (name: string) => void;
+  onAddNew?: (label: string) => void;
 }
 
-export const Autocomplete: React.FC<AutocompleteProps> = ({
+export const Autocomplete = <T,>({
   options,
   value,
   onChange,
+  getOptionLabel,
   placeholder = 'Buscar...',
-  label,
-  error,
   onAddNew,
-}) => {
+}: AutocompleteProps<T>) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredOptions, setFilteredOptions] = useState<Option[]>([]);
+  const [showAddNew, setShowAddNew] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-
-  const selectedOption = options.find(option => option.id === value);
-
-  useEffect(() => {
-    const filtered = options.filter(option =>
-      option.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (option.email && option.email.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-    setFilteredOptions(filtered);
-  }, [options, searchTerm]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        setSearchTerm('');
+        setShowAddNew(false);
       }
     };
 
@@ -52,87 +36,87 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSelect = (option: Option) => {
-    onChange(option.id);
-    setSearchTerm(option.name);
+  const filteredOptions = options.filter(option =>
+    getOptionLabel(option).toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleSelect = (option: T) => {
+    onChange(option);
     setIsOpen(false);
+    setSearchTerm('');
+    setShowAddNew(false);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setSearchTerm(newValue);
-    setIsOpen(true);
-    
-    if (!newValue) {
-      onChange('');
-    }
-  };
-
-  const handleAddNew = () => {
+  const handleAddNewClick = () => {
     if (onAddNew && searchTerm.trim()) {
       onAddNew(searchTerm.trim());
       setSearchTerm('');
+      setShowAddNew(false);
       setIsOpen(false);
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setIsOpen(true);
+    setShowAddNew(value.trim() && !filteredOptions.some(option => 
+      getOptionLabel(option).toLowerCase() === value.toLowerCase()
+    ));
+  };
+
+  const handleInputClick = () => {
+    setIsOpen(true);
+    setShowAddNew(searchTerm.trim() && !filteredOptions.some(option => 
+      getOptionLabel(option).toLowerCase() === searchTerm.toLowerCase()
+    ));
+  };
+
   return (
-    <div className="relative" ref={wrapperRef}>
-      {label && (
-        <label className="block text-sm font-medium text-text mb-2">
-          {label}
-        </label>
-      )}
+    <div ref={wrapperRef} className="relative">
       <div className="relative">
         <input
           type="text"
-          value={searchTerm || selectedOption?.name || ''}
+          value={isOpen ? searchTerm : (value ? getOptionLabel(value) : '')}
           onChange={handleInputChange}
-          onFocus={() => setIsOpen(true)}
+          onClick={handleInputClick}
           placeholder={placeholder}
-          className={`input-field w-full pr-10 ${error ? 'border-red-500' : ''}`}
+          className="input-field w-full pr-10"
         />
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
-          <Search className="w-4 h-4 text-textMedium" />
+          {isOpen && <Search className="w-4 h-4 text-textMedium" />}
           <ChevronDown className={`w-4 h-4 text-textMedium transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </div>
       </div>
 
-      {error && (
-        <p className="text-red-500 text-sm mt-1">{error}</p>
-      )}
-
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-full bg-surface border border-surface rounded-lg shadow-lg max-h-60 overflow-y-auto">
-          {filteredOptions.length > 0 ? (
-            filteredOptions.map((option) => (
-              <button
-                key={option.id}
-                onClick={() => handleSelect(option)}
-                className="w-full px-4 py-2 text-left hover:bg-surface/50 transition-colors border-b border-surface/20 last:border-b-0"
-              >
-                <div className="font-medium text-text">{option.name}</div>
-                {option.email && (
-                  <div className="text-sm text-textMedium">{option.email}</div>
-                )}
-              </button>
-            ))
-          ) : searchTerm ? (
-            <div className="px-4 py-2 text-textMedium">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-surface rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+          {filteredOptions.length === 0 && !showAddNew ? (
+            <div className="px-3 py-2 text-textMedium text-sm">
               No se encontraron resultados
-              {onAddNew && (
-                <button
-                  onClick={handleAddNew}
-                  className="block w-full mt-2 text-primary hover:text-accent text-left"
-                >
-                  + Agregar "{searchTerm}"
-                </button>
-              )}
             </div>
           ) : (
-            <div className="px-4 py-2 text-textMedium">
-              No hay opciones disponibles
-            </div>
+            <>
+              {filteredOptions.map((option, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleSelect(option)}
+                  className="w-full px-3 py-2 text-left hover:bg-surface/50 transition-colors text-text"
+                >
+                  {getOptionLabel(option)}
+                </button>
+              ))}
+              
+              {showAddNew && onAddNew && (
+                <button
+                  onClick={handleAddNewClick}
+                  className="w-full px-3 py-2 text-left hover:bg-surface/50 transition-colors text-primary flex items-center space-x-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Añadir "{searchTerm}"</span>
+                </button>
+              )}
+            </>
           )}
         </div>
       )}

@@ -1,5 +1,5 @@
-import { Invoice } from '../types';
-import { formatDate, formatCurrency } from './helpers';
+import type { Invoice } from '@/types';
+import { formatDate, formatCurrency } from '@/lib/helpers';
 
 /**
  * Exporta las facturas a CSV con el formato específico

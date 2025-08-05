@@ -1,147 +1,106 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
-import { Stepper } from '../../../components/Stepper';
-import { useWizardNav } from '../../../hooks/useWizardNav';
-import { useInvoiceStore } from '../../../lib/stores';
+import { useWizardNav } from '@/hooks/useWizardNav';
+import { useInvoiceStore } from '@/lib/stores';
+import { Stepper } from '@/components/Stepper';
 import { StepConsultant } from './StepConsultant';
 import { StepClient } from './StepClient';
 import { StepDates } from './StepDates';
 import { StepDetails } from './StepDetails';
 import { StepPayment } from './StepPayment';
+import { generateInvoiceNumber } from '@/lib/helpers';
+import type { Invoice } from '@/types';
 
-const steps = ['Consultor', 'Cliente', 'Fechas', 'Detalles', 'Pago'];
+const steps = [
+  { id: 1, title: 'Consultor', component: StepConsultant },
+  { id: 2, title: 'Cliente', component: StepClient },
+  { id: 3, title: 'Fechas', component: StepDates },
+  { id: 4, title: 'Detalles', component: StepDetails },
+  { id: 5, title: 'Pago', component: StepPayment },
+];
 
 export const InvoiceWizard: React.FC = () => {
   const navigate = useNavigate();
-  const { wizardDraft, clearWizardDraft } = useInvoiceStore();
-  const {
-    currentStep,
-    totalSteps,
-    nextStep,
-    prevStep,
-    goToStep,
-    canGoNext,
-    canGoPrev,
-    resetWizard,
-  } = useWizardNav();
+  const { currentStep, canGoNext, canGoPrevious, goNext, goPrevious } = useWizardNav(steps.length);
+  const { wizardDraft, invoices } = useInvoiceStore();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const handleCreateInvoice = async () => {
+    if (!wizardDraft.consultant || !wizardDraft.client || !wizardDraft.start_date || 
+        !wizardDraft.end_date || !wizardDraft.description || !wizardDraft.total || 
+        !wizardDraft.payment_instructions) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
+    const newInvoice: Invoice = {
+      id: Date.now().toString(),
+      number: generateInvoiceNumber(),
+      created_date: new Date().toISOString().split('T')[0],
+      start_date: wizardDraft.start_date,
+      end_date: wizardDraft.end_date,
+      consultant: wizardDraft.consultant,
+      client: wizardDraft.client,
+      description: wizardDraft.description,
+      total: wizardDraft.total,
+      payment_instructions: wizardDraft.payment_instructions,
+      vat_exempt: true
+    };
+
+    // Añadir la nueva factura al store
+    useInvoiceStore.setState({
+      invoices: [...invoices, newInvoice],
+      wizardDraft: {}
+    });
+
+    // Simular guardado en Supabase
+    console.log('Guardando factura en Supabase:', newInvoice);
     
-    try {
-      // Simular guardado en Supabase
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // En producción, aquí se insertaría en Supabase
-      console.log('Factura creada:', wizardDraft);
-      
-      // Limpiar wizard y redirigir
-      clearWizardDraft();
-      navigate('/invoices');
-    } catch (error) {
-      console.error('Error al crear factura:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Redirigir a la lista de facturas
+    navigate('/invoices');
   };
 
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return <StepConsultant />;
-      case 2:
-        return <StepClient />;
-      case 3:
-        return <StepDates />;
-      case 4:
-        return <StepDetails />;
-      case 5:
-        return <StepPayment />;
-      default:
-        return <StepConsultant />;
-    }
-  };
+  const CurrentStepComponent = steps[currentStep - 1].component;
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header */}
+    <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
-        <button
-          onClick={() => navigate('/invoices')}
-          className="flex items-center space-x-2 text-textMedium hover:text-text transition-colors mb-4"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Volver a facturas</span>
-        </button>
-        
         <h1 className="text-3xl font-bold text-text mb-2">Crear Nueva Factura</h1>
-        <p className="text-textMedium">
-          Completa los pasos para generar tu factura
-        </p>
+        <p className="text-textMedium">Completa los pasos para generar tu factura</p>
       </div>
 
-      {/* Stepper */}
-      <Stepper
-        currentStep={currentStep}
-        totalSteps={totalSteps}
-        steps={steps}
-        onStepClick={goToStep}
-      />
+      <Stepper steps={steps} currentStep={currentStep} />
 
-      {/* Step Content */}
-      <div className="mb-8">
-        {renderStep()}
+      <div className="mt-8">
+        <CurrentStepComponent />
       </div>
 
-      {/* Navigation */}
-      <div className="flex items-center justify-between pt-6 border-t border-surface/20">
+      <div className="mt-8 flex justify-between">
         <button
-          onClick={prevStep}
-          disabled={!canGoPrev(currentStep)}
-          className="btn-secondary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={goPrevious}
+          disabled={!canGoPrevious}
+          className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Anterior</span>
+          Anterior
         </button>
 
-        <div className="flex items-center space-x-3">
-          {currentStep < totalSteps ? (
+        <div className="flex gap-3">
+          {currentStep < steps.length ? (
             <button
-              onClick={nextStep}
-              disabled={!canGoNext(currentStep)}
-              className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={goNext}
+              disabled={!canGoNext}
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>Siguiente</span>
-              <ArrowRight className="w-4 h-4" />
+              Siguiente
             </button>
           ) : (
             <button
-              onClick={handleSubmit}
-              disabled={isSubmitting || !canGoNext(currentStep)}
-              className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleCreateInvoice}
+              className="btn-primary"
             >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Creando...</span>
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4" />
-                  <span>Crear Factura</span>
-                </>
-              )}
+              Crear Factura
             </button>
           )}
         </div>
-      </div>
-
-      {/* Progress indicator */}
-      <div className="mt-6 text-center text-sm text-textMedium">
-        Paso {currentStep} de {totalSteps}
       </div>
     </div>
   );

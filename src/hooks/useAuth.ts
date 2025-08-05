@@ -1,43 +1,51 @@
 import { useEffect } from 'react';
-import { useAuthStore } from '../lib/stores';
-import { auth } from '../lib/supabase';
-import { User } from '@supabase/supabase-js';
+import { useAuthStore } from '@/lib/stores';
+import { supabase } from '@/lib/supabase';
 
+/**
+ * Hook personalizado para manejar la autenticación
+ */
 export const useAuth = () => {
-  const { user, session, loading, setUser, setSession, setLoading } = useAuthStore();
+  const { user, session, loading } = useAuthStore();
 
   useEffect(() => {
     // Obtener sesión inicial
-    auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      useAuthStore.setState({ session, user: session?.user ?? null, loading: false });
     });
 
     // Escuchar cambios de autenticación
     const {
       data: { subscription },
-    } = auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      useAuthStore.setState({ session, user: session?.user ?? null, loading: false });
     });
 
     return () => subscription.unsubscribe();
-  }, [setUser, setSession, setLoading]);
+  }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };
   };
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await auth.signUp({ email, password });
+    const { error } = await supabase.auth.signUp({ email, password });
+    return { error };
+  };
+
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/invoices`
+      }
+    });
     return { error };
   };
 
   const signOut = async () => {
-    const { error } = await auth.signOut();
+    const { error } = await supabase.auth.signOut();
     return { error };
   };
 
@@ -47,6 +55,7 @@ export const useAuth = () => {
     loading,
     signIn,
     signUp,
+    signInWithGoogle,
     signOut,
   };
 }; 
