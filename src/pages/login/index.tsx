@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Github } from 'lucide-react';
+import logoImage from '@/assets/logo.png';
 
 export const LoginPage: React.FC = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,7 +30,7 @@ export const LoginPage: React.FC = () => {
       if (error) {
         setError(error.message);
       } else {
-        navigate('/invoices');
+        navigate('/dashboard');
       }
     } catch (err) {
       setError('Ocurrió un error inesperado');
@@ -51,109 +56,86 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-[#0D0D0D] flex">
       {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-primary items-center justify-center">
-        <div className="text-center text-white">
-          <h1 className="text-4xl font-bold mb-4">Invoicer</h1>
-          <p className="text-xl opacity-90">
-            Gestiona tus facturas de manera profesional
-          </p>
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#7F5AF0] to-[#654DD4] items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative z-10 text-center text-white px-8">
+          <div className="mb-8">
+            <img 
+              src={logoImage} 
+              alt="Invoicer Logo" 
+              className="w-24 h-24 mx-auto mb-6 drop-shadow-2xl"
+            />
+            <h1 className="text-5xl font-bold mb-4 tracking-tight">Invoicer</h1>
+            <p className="text-xl opacity-90 max-w-md mx-auto leading-relaxed">
+              Gestiona tus facturas de manera profesional y eficiente
+            </p>
+          </div>
+          <div className="mt-12 p-6 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+            <p className="text-sm italic opacity-80">
+              "Esta herramienta ha revolucionado la forma en que gestiono mis facturas. 
+              Ahora todo es más rápido y profesional."
+            </p>
+            <p className="text-sm font-medium mt-2 opacity-90">- Usuario satisfecho</p>
+          </div>
         </div>
       </div>
 
       {/* Right side - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
+          {/* Header */}
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-text mb-2">
+            <div className="lg:hidden mb-6">
+              <img 
+                src={logoImage} 
+                alt="Invoicer Logo" 
+                className="w-16 h-16 mx-auto mb-4"
+              />
+            </div>
+            <h2 className="text-3xl font-bold text-white mb-2">
               {isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
             </h2>
-            <p className="text-textMedium">
+            <p className="text-[#A1A1AA]">
               {isSignUp 
-                ? 'Crea tu cuenta para comenzar a gestionar facturas'
-                : 'Accede a tu cuenta para continuar'
+                ? 'Ingresa tu email para crear tu cuenta'
+                : 'Ingresa tus credenciales para acceder'
               }
             </p>
           </div>
 
-          {/* Google Sign In Button */}
-          <button
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            className="w-full btn-secondary flex items-center justify-center gap-3 mb-6 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="currentColor"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="currentColor"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              />
-              <path
-                fill="currentColor"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              />
-            </svg>
-            {loading ? 'Conectando...' : 'Continuar con Google'}
-          </button>
-
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-surface/20"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-background text-textMedium">O continúa con email</span>
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-text mb-2">
-                Email
-              </label>
-              <input
-                id="email"
+          <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+            {/* Email Input */}
+            <div className="mb-4">
+              <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@example.com"
                 required
-                className="input-field w-full"
-                placeholder="tu@email.com"
+                className="bg-[#0D0D0D] border-[#FFFFFF14] text-white placeholder:text-[#A1A1AA]"
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-text mb-2">
-                Contraseña
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="input-field w-full"
-                placeholder="••••••••"
-              />
-            </div>
-
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                <p className="text-red-500 text-sm">{error}</p>
+            {!isSignUp && (
+              <div className="mb-6">
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="bg-[#0D0D0D] border-[#FFFFFF14] text-white placeholder:text-[#A1A1AA]"
+                />
               </div>
             )}
 
-            <button
-              type="submit"
+            {/* Submit Button */}
+            <Button 
+              onClick={isSignUp ? handleGoogleSignIn : handleSubmit}
               disabled={loading}
-              className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#7F5AF0] text-white hover:bg-[#654DD4] mb-4"
             >
               {loading ? (
                 <div className="flex items-center justify-center">
@@ -161,20 +143,49 @@ export const LoginPage: React.FC = () => {
                   {isSignUp ? 'Creando cuenta...' : 'Iniciando sesión...'}
                 </div>
               ) : (
-                isSignUp ? 'Crear cuenta' : 'Iniciar sesión'
+                isSignUp ? 'Registrarse con Email' : 'Iniciar sesión con Email'
               )}
-            </button>
-          </form>
+            </Button>
 
+            {/* Divider */}
+            <div className="relative mb-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[#FFFFFF14]"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-[#FFFFFF14] text-[#A1A1AA]">O CONTINÚA CON</span>
+              </div>
+            </div>
+
+            {/* GitHub Button */}
+            <Button 
+              onClick={handleGoogleSignIn}
+              variant="outline"
+              disabled={loading}
+              className="w-full bg-[#0D0D0D] border-[#FFFFFF14] text-white hover:bg-[#FFFFFF1A]"
+            >
+              <Github className="w-4 h-4 mr-2" />
+              GitHub
+            </Button>
+
+            {error && (
+              <div className="mt-4 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                <p className="text-red-500 text-sm">{error}</p>
+              </div>
+            )}
+          </Card>
+
+          {/* Footer */}
           <div className="mt-6 text-center">
-            <p className="text-textMedium">
-              {isSignUp ? '¿Ya tienes una cuenta?' : '¿No tienes una cuenta?'}
-              <button
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-primary hover:text-accent ml-1 font-medium"
-              >
-                {isSignUp ? 'Iniciar sesión' : 'Crear cuenta'}
-              </button>
+            <p className="text-sm text-[#A1A1AA]">
+              Al hacer clic en continuar, aceptas nuestros{' '}
+              <a href="#" className="text-[#7F5AF0] hover:underline">
+                Términos de Servicio
+              </a>{' '}
+              y{' '}
+              <a href="#" className="text-[#7F5AF0] hover:underline">
+                Política de Privacidad
+              </a>
             </p>
           </div>
         </div>

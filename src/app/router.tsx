@@ -2,14 +2,19 @@ import { createBrowserRouter } from 'react-router-dom';
 import { RequireAuth } from '@/components/RequireAuth';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { LoginPage } from '@/pages/login';
-import { InvoicesPage } from '@/pages/invoices';
+import { DashboardPage } from '@/pages/dashboard';
+import Invoices from '@/pages/invoices';
 import { InvoiceWizard } from '@/pages/invoices/Wizard';
 import { SettingsPage } from '@/pages/settings';
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <RequireAuth><DashboardLayout><InvoicesPage /></DashboardLayout></RequireAuth>,
+    element: <RequireAuth><DashboardLayout><DashboardPage /></DashboardLayout></RequireAuth>,
+  },
+  {
+    path: '/dashboard',
+    element: <RequireAuth><DashboardLayout><DashboardPage /></DashboardLayout></RequireAuth>,
   },
   {
     path: '/login',
@@ -17,7 +22,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/invoices',
-    element: <RequireAuth><DashboardLayout><InvoicesPage /></DashboardLayout></RequireAuth>,
+    element: <RequireAuth><DashboardLayout><Invoices /></DashboardLayout></RequireAuth>,
   },
   {
     path: '/invoices/new',

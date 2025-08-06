@@ -1,175 +1,173 @@
 import React from 'react';
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const SettingsPage: React.FC = () => {
   return (
-    <div className="p-6">
+    <div className="max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-text mb-2">Configuración</h1>
-        <p className="text-textMedium">
-          Gestiona la configuración de tu cuenta y aplicación
-        </p>
+        <h1 className="text-3xl font-bold text-white mb-2">Configuración</h1>
+        <p className="text-[#A1A1AA]">Gestiona la configuración de tu cuenta y preferencias</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Profile Section */}
-        <div className="bg-surface rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-text mb-4">Perfil</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Perfil */}
+        <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+          <h2 className="text-xl font-semibold text-white mb-4">Perfil</h2>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-text mb-2">
-                Nombre
-              </label>
-              <input
-                type="text"
-                className="input-field w-full"
-                placeholder="Tu nombre"
+            <div className="space-y-2">
+              <Label htmlFor="profile-name" className="text-white">Nombre</Label>
+              <Input
+                id="profile-name"
+                defaultValue="Adrián Rocafull"
+                className="bg-[#0D0D0D] border-[#FFFFFF14] text-white"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-text mb-2">
-                Email
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="profile-email" className="text-white">Email</Label>
+              <Input
+                id="profile-email"
                 type="email"
-                className="input-field w-full"
-                placeholder="tu@email.com"
+                defaultValue="adrianrocafull@gmail.com"
+                className="bg-[#0D0D0D] border-[#FFFFFF14] text-white"
               />
             </div>
-            <button className="btn-primary">
+            <Button className="w-full bg-[#7F5AF0] text-white hover:bg-[#654DD4]">
               Guardar cambios
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
 
-        {/* Security Section */}
-        <div className="bg-surface rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-text mb-4">Seguridad</h2>
+        {/* Seguridad */}
+        <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+          <h2 className="text-xl font-semibold text-white mb-4">Seguridad</h2>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-text mb-2">
-                Contraseña actual
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="current-password" className="text-white">Contraseña actual</Label>
+              <Input
+                id="current-password"
                 type="password"
-                className="input-field w-full"
                 placeholder="••••••••"
+                className="bg-[#0D0D0D] border-[#FFFFFF14] text-white"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-text mb-2">
-                Nueva contraseña
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="new-password" className="text-white">Nueva contraseña</Label>
+              <Input
+                id="new-password"
                 type="password"
-                className="input-field w-full"
                 placeholder="••••••••"
+                className="bg-[#0D0D0D] border-[#FFFFFF14] text-white"
               />
             </div>
-            <button className="btn-primary">
+            <Button className="w-full bg-[#7F5AF0] text-white hover:bg-[#654DD4]">
               Cambiar contraseña
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
 
-        {/* Notifications Section */}
-        <div className="bg-surface rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-text mb-4">Notificaciones</h2>
+        {/* Notificaciones */}
+        <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+          <h2 className="text-xl font-semibold text-white mb-4">Notificaciones</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-text">Notificaciones por email</span>
-              <input
-                type="checkbox"
-                className="w-4 h-4 text-primary bg-surface border-surface rounded focus:ring-primary"
-              />
+              <div className="space-y-1">
+                <Label className="text-white">Notificaciones por email</Label>
+                <p className="text-sm text-[#A1A1AA]">Recibe notificaciones sobre tus facturas</p>
+              </div>
+              <Switch defaultChecked />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-text">Recordatorios de pago</span>
-              <input
-                type="checkbox"
-                className="w-4 h-4 text-primary bg-surface border-surface rounded focus:ring-primary"
-              />
+              <div className="space-y-1">
+                <Label className="text-white">Recordatorios de pago</Label>
+                <p className="text-sm text-[#A1A1AA]">Notificaciones sobre facturas pendientes</p>
+              </div>
+              <Switch defaultChecked />
             </div>
-            <button className="btn-primary">
+            <Button className="w-full bg-[#7F5AF0] text-white hover:bg-[#654DD4]">
               Guardar preferencias
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
 
-        {/* Billing Section */}
-        <div className="bg-surface rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-text mb-4">Facturación</h2>
+        {/* Facturación */}
+        <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+          <h2 className="text-xl font-semibold text-white mb-4">Facturación</h2>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-text mb-2">
-                Moneda por defecto
-              </label>
-              <select className="input-field w-full">
-                <option value="EUR">EUR (€)</option>
-                <option value="USD">USD ($)</option>
-                <option value="GBP">GBP (£)</option>
-              </select>
+            <div className="space-y-2">
+              <Label htmlFor="default-currency" className="text-white">Moneda por defecto</Label>
+              <Select defaultValue="eur">
+                <SelectTrigger className="bg-[#0D0D0D] border-[#FFFFFF14] text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#0D0D0D] border-[#FFFFFF14]">
+                  <SelectItem value="eur" className="text-white hover:bg-[#FFFFFF14]">EUR (€)</SelectItem>
+                  <SelectItem value="usd" className="text-white hover:bg-[#FFFFFF14]">USD ($)</SelectItem>
+                  <SelectItem value="gbp" className="text-white hover:bg-[#FFFFFF14]">GBP (£)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-text mb-2">
-                Formato de fecha
-              </label>
-              <select className="input-field w-full">
-                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-              </select>
+            <div className="space-y-2">
+              <Label htmlFor="date-format" className="text-white">Formato de fecha</Label>
+              <Select defaultValue="dd/mm/yyyy">
+                <SelectTrigger className="bg-[#0D0D0D] border-[#FFFFFF14] text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#0D0D0D] border-[#FFFFFF14]">
+                  <SelectItem value="dd/mm/yyyy" className="text-white hover:bg-[#FFFFFF14]">DD/MM/YYYY</SelectItem>
+                  <SelectItem value="mm/dd/yyyy" className="text-white hover:bg-[#FFFFFF14]">MM/DD/YYYY</SelectItem>
+                  <SelectItem value="yyyy-mm-dd" className="text-white hover:bg-[#FFFFFF14]">YYYY-MM-DD</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <button className="btn-primary">
+            <Button className="w-full bg-[#7F5AF0] text-white hover:bg-[#654DD4]">
               Guardar configuración
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
 
-        {/* Export Section */}
-        <div className="bg-surface rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-text mb-4">Exportación</h2>
+        {/* Exportación */}
+        <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+          <h2 className="text-xl font-semibold text-white mb-4">Exportación</h2>
           <div className="space-y-4">
-            <button className="btn-secondary w-full">
+            <Button variant="outline" className="w-full bg-[#0D0D0D] border-[#FFFFFF14] text-white hover:bg-[#FFFFFF1A]">
               Exportar todos los datos
-            </button>
-            <button className="btn-secondary w-full">
+            </Button>
+            <Button variant="outline" className="w-full bg-[#0D0D0D] border-[#FFFFFF14] text-white hover:bg-[#FFFFFF1A]">
               Descargar plantillas
-            </button>
-            <button className="btn-secondary w-full">
+            </Button>
+            <Button variant="outline" className="w-full bg-[#0D0D0D] border-[#FFFFFF14] text-white hover:bg-[#FFFFFF1A]">
               Configurar backup automático
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
 
-        {/* API Section */}
-        <div className="bg-surface rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-text mb-4">API</h2>
+        {/* API */}
+        <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+          <h2 className="text-xl font-semibold text-white mb-4">API</h2>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-text mb-2">
-                API Key
-              </label>
-              <input
-                type="text"
-                className="input-field w-full"
-                placeholder="sk_..."
-                readOnly
-              />
+            <div className="space-y-2">
+              <Label className="text-white">API Key</Label>
+              <div className="flex gap-2">
+                <Input
+                  value="sk_live_••••••••••••••••"
+                  readOnly
+                  className="bg-[#0D0D0D] border-[#FFFFFF14] text-white"
+                />
+                <Button variant="outline" className="bg-[#0D0D0D] border-[#FFFFFF14] text-white hover:bg-[#FFFFFF1A]">
+                  Regenerar
+                </Button>
+              </div>
             </div>
-            <button className="btn-primary">
-              Regenerar API Key
-            </button>
-            <button className="btn-secondary w-full">
+            <Button variant="outline" className="w-full bg-[#0D0D0D] border-[#FFFFFF14] text-white hover:bg-[#FFFFFF1A]">
               Ver documentación
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
-
-      <div className="mt-8 text-center">
-        <p className="text-textMedium">
-          🚧 Esta sección está en desarrollo. Próximamente más opciones de configuración.
-        </p>
+        </Card>
       </div>
     </div>
   );
