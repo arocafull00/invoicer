@@ -1,0 +1,31 @@
+# Git Commit Guidelines
+
+
+## Commit Message Rules
+- All git commit messages MUST be written in English
+- Keep commit messages short and concise (50 characters or less for the subject line)
+- Use imperative mood (e.g., "Add feature" not "Added feature" or "Adding feature")
+- Be concrete and direct - describe what the commit does, not why
+- Start with a capital letter
+- Do not end with a period
+- Use present tense
+
+
+## Examples of Good Commits
+- "Add user authentication"
+- "Fix navigation bug"
+- "Update button styles"
+- "Remove unused imports"
+- "Refactor auth context"
+
+
+## Examples of Bad Commits
+- "Added some stuff" (not specific)
+- "Arreglar bug" (not in English)
+- "Fixed the bug that was causing issues with the login form when users tried to authenticate" (too long)
+- "fix bug" (not capitalized)
+- "Add feature." (ends with period)
+
+
+
+
