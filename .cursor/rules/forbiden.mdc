@@ -1,0 +1,10 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+Nunca crees tests
+Nunca crees documentación
+Nunca lances el proyecto
+Nunca crees componentes o funciones como ejemplos

@@ -1,0 +1,83 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+Genera una aplicación de facturación moderna usando:
+
+- shadcn/ui + TailwindCSS (paleta abajo)
+- Zustand para estado global
+- React Router Dom v6
+- Supabase (auth y base de datos)
+
+Paleta de colores (extensión Tailwind):
+
+export const colors = {
+  primary: "#7F5AF0",
+  background: "#0D0D0D",
+  accent: "#654DD4",
+  text: "#FFFFFF",
+  textMedium: "#A1A1AA",
+  surface: "#FFFFFF14",
+};
+
+Requisitos funcionales
+1. Auth:
+   • Ruta /login con email + password (Supabase Auth UI o custom)  
+   • Protege rutas internas con un wrapper RequireAuth  
+
+2. Rutas privadas con layout Dashboard y side nav:
+   • /invoices        → Mis Facturas  
+   • /invoices/new    → Wizard Crear Factura  
+   • /settings        → Placeholder futuro  
+
+3. Mis Facturas (/invoices):
+   • Tabla responsive con columnas: Nº, Fecha, Cliente, Total (react-hook-table + shadcn/ui Table)  
+   • Botones: Descargar CSV, Descargar PDF por fila y Crear nueva factura  
+
+4. Wizard Crear Factura (/invoices/new):
+   • Paso 1 Consultant  (Autocomplete con registros previos)  
+   • Paso 2 Cliente      (Autocomplete con registros previos)  
+   • Paso 3 Fechas       (DatePickers StartTime y EndTime; fecha creación = hoy)  
+   • Paso 4 Detalles     (Descripción del servicio, Total €)  
+   • Paso 5 Pago         (Instrucciones autocompletadas)  
+   • Número de factura autoincremental (SELECT max + 1)  
+   • Guardar y generar: inserta en Supabase y regresa a /invoices  
+
+5. Exportación:
+   • CSV con columnas {date, number, client, total}  
+   • PDF que replica el diseño del PDF adjunto usando pdf-lib y fuente Google Sans  
+   • Helper createInvoicePDF(invoice) en lib/pdf.ts  
+
+6. Estado global (Zustand):
+   • useAuthStore   → usuario y sesión  
+   • useInvoiceStore → wizardDraft y listas (consultants, clients, payments)  
+
+7. Estructura de carpetas:
+   src/
+     app/                (App.tsx, router, providers)
+     components/         (Inputs, DatePicker, Stepper, PDFButton y wrappers UI)
+     pages/
+       login/
+       invoices/
+         index.tsx
+         Wizard/
+           StepConsultant.tsx
+           StepClient.tsx
+           StepDates.tsx
+           StepDetails.tsx
+           StepPayment.tsx
+     hooks/              (useAuth, useWizardNav)
+     lib/                (supabase.ts, csv.ts, pdf.ts, helpers.ts)
+     types/              (Invoice, Consultant, Client, PaymentInstruction)
+     styles/             (tailwind config extend)
+
+Buenas prácticas
+- Componentes fully responsive
+- Tipado estricto con interfaces en /types
+- Separar lógica de UI (hooks vs components)
+- Dark theme por defecto con la paleta indicada
+- Comentarios JSDoc en las funciones utilitarias
+
+Crea todo el boilerplate necesario (layout, routers, stores), los componentes principales y las funciones utilitarias listas para editar.
+
