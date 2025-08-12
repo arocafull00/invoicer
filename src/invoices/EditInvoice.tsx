@@ -11,11 +11,11 @@ import { StepPayment } from './Wizard/StepPayment';
 import type { Invoice } from '@/shared/types';
 
 const steps = [
-  { id: 1, title: 'Consultor', component: StepConsultant },
-  { id: 2, title: 'Cliente', component: StepClient },
-  { id: 3, title: 'Fechas', component: StepDates },
-  { id: 4, title: 'Detalles', component: StepDetails },
-  { id: 5, title: 'Pago', component: StepPayment },
+  { id: 1, name: 'Consultor', title: 'Consultor', component: StepConsultant },
+  { id: 2, name: 'Cliente', title: 'Cliente', component: StepClient },
+  { id: 3, name: 'Fechas', title: 'Fechas', component: StepDates },
+  { id: 4, name: 'Detalles', title: 'Detalles', component: StepDetails },
+  { id: 5, name: 'Pago', title: 'Pago', component: StepPayment },
 ];
 
 export const EditInvoice: React.FC = () => {

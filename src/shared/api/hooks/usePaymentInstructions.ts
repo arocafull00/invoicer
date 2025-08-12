@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPaymentInstructions, createPaymentInstruction } from '../services';
-import type { PaymentInstruction } from '@/shared/types';
 
 export const usePaymentInstructions = () => {
   return useQuery({
