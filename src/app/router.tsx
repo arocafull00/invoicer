@@ -1,20 +1,22 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { RequireAuth } from '@/components/RequireAuth';
-import { DashboardLayout } from '@/components/DashboardLayout';
-import { LoginPage } from '@/pages/login';
-import { DashboardPage } from '@/pages/dashboard';
-import Invoices from '@/pages/invoices';
-import { InvoiceWizard } from '@/pages/invoices/Wizard';
-import { SettingsPage } from '@/pages/settings';
+import { RequireAuth } from '@/login/components/RequireAuth';
+import { AppLayout } from '@/shared/components/AppLayout';
+import { LoginPage } from '@/login';
+import { DashboardPage } from '@/dashboard';
+import Invoices from '@/invoices';
+import { InvoiceWizard } from '@/invoices/Wizard';
+import { EditInvoice } from '@/invoices/EditInvoice';
+import { ViewInvoice } from '@/invoices/ViewInvoice';
+import { SettingsPage } from '@/settings';
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <RequireAuth><DashboardLayout><DashboardPage /></DashboardLayout></RequireAuth>,
+    element: <RequireAuth><AppLayout><DashboardPage /></AppLayout></RequireAuth>,
   },
   {
     path: '/dashboard',
-    element: <RequireAuth><DashboardLayout><DashboardPage /></DashboardLayout></RequireAuth>,
+    element: <RequireAuth><AppLayout><DashboardPage /></AppLayout></RequireAuth>,
   },
   {
     path: '/login',
@@ -22,14 +24,22 @@ export const router = createBrowserRouter([
   },
   {
     path: '/invoices',
-    element: <RequireAuth><DashboardLayout><Invoices /></DashboardLayout></RequireAuth>,
+    element: <RequireAuth><AppLayout><Invoices /></AppLayout></RequireAuth>,
   },
   {
     path: '/invoices/new',
-    element: <RequireAuth><DashboardLayout><InvoiceWizard /></DashboardLayout></RequireAuth>,
+    element: <RequireAuth><AppLayout><InvoiceWizard /></AppLayout></RequireAuth>,
+  },
+  {
+    path: '/invoices/edit/:id',
+    element: <RequireAuth><AppLayout><EditInvoice /></AppLayout></RequireAuth>,
+  },
+  {
+    path: '/invoices/view/:id',
+    element: <RequireAuth><AppLayout><ViewInvoice /></AppLayout></RequireAuth>,
   },
   {
     path: '/settings',
-    element: <RequireAuth><DashboardLayout><SettingsPage /></DashboardLayout></RequireAuth>,
+    element: <RequireAuth><AppLayout><SettingsPage /></AppLayout></RequireAuth>,
   },
 ]); 

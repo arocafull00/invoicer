@@ -1,16 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "react-toastify/dist/ReactToastify.css";
 
 @custom-variant dark (&:is(.dark *));
-
-@theme {
-  --color-primary: #7F5AF0;
-  --color-background: #0D0D0D;
-  --color-accent: #654DD4;
-  --color-text: #FFFFFF;
-  --color-text-medium: #A1A1AA;
-  --color-surface: #FFFFFF14;
-}
 
 @layer base {
   html {
@@ -64,8 +56,9 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  /* Brand colors */
+  --primary: #7F5AF0;
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -83,7 +76,7 @@
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary: #7F5AF0;
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
@@ -98,8 +91,9 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  /* Brand colors */
+  --primary: #7F5AF0;
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);

@@ -8,7 +8,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': path.resolve(__dirname, './src'),
+      'radix-ui': path.resolve(__dirname, './src/shared/components/dialog.tsx'),
+      '@components': path.resolve(__dirname, './src/shared/components')
     }
   }
 })
