@@ -37,7 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '' }) => {
   };
 
   return (
-    <div className={`w-72 bg-[#0D0D0D] border-r border-[#FFFFFF14] flex flex-col flex-1 h-full ${className}`}>
+    <div className={`w-72 bg-[#2c2c2c] border-r border-[#FFFFFF14] flex flex-col flex-1 h-full ${className}`}>
       {/* Logo */}
       <div className="p-6 border-b border-[#FFFFFF14]">
         <div className="flex items-center gap-3">

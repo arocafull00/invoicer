@@ -1,5 +1,5 @@
 import React from 'react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@/lib/utils'
 
 interface BackgroundProps {
   className?: string
@@ -8,19 +8,7 @@ interface BackgroundProps {
 
 export const Background: React.FC<BackgroundProps> = ({ className, children }) => {
   return (
-    <div className={cn('relative min-h-screen w-full', className)}>
-      {/* Radial gradient background using theme colors */}
-      <div
-        className="pointer-events-none absolute top-0 z-[-2] h-screen w-screen bg-background"
-        style={
-          {
-            ['--radial-start' as any]: 'rgba(127, 90, 240, 0.30)',
-            ['--radial-end' as any]: 'rgba(0, 0, 0, 0)',
-          } as React.CSSProperties
-        }
-      >
-        <div className="h-full w-full bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,var(--radial-start),var(--radial-end))]" />
-      </div>
+    <div className={cn('relative min-h-screen w-full bg-[#1e1e1e]', className)}>
 
       <div className="relative z-0">
         {children}
@@ -28,5 +16,3 @@ export const Background: React.FC<BackgroundProps> = ({ className, children }) =
     </div>
   )
 }
-
-
