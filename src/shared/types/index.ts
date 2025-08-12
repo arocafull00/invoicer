@@ -8,6 +8,7 @@ export interface User {
 
 export interface Consultant {
   id: string;
+  user_id?: string;
   name: string;
   email: string;
   address: string;
@@ -18,6 +19,7 @@ export interface Consultant {
 
 export interface Client {
   id: string;
+  user_id?: string;
   name: string;
   email: string;
   address: string;
@@ -28,6 +30,7 @@ export interface Client {
 
 export interface PaymentInstruction {
   id: string;
+  user_id?: string;
   account_holder: string;
   iban: string;
   payment_method: string;
@@ -37,6 +40,7 @@ export interface PaymentInstruction {
 
 export interface Invoice {
   id: string;
+  user_id?: string;
   number: string;
   created_date: string;
   start_date: string;

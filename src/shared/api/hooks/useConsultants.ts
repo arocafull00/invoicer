@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getConsultants, createConsultant } from '../services';
+import type { Consultant } from '@/shared/types';
 
 export const useConsultants = () => {
   return useQuery({
@@ -13,7 +14,7 @@ export const useCreateConsultant = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: createConsultant,
+    mutationFn: (consultant: Omit<Consultant, 'id' | 'user_id'>) => createConsultant(consultant),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['consultants'] });
     },

@@ -5,6 +5,6 @@ export const getPaymentInstructions = async (): Promise<PaymentInstruction[]> =>
   return await apiClient.getPaymentInstructions();
 };
 
-export const createPaymentInstruction = async (paymentInstruction: Omit<PaymentInstruction, 'id'>): Promise<PaymentInstruction> => {
+export const createPaymentInstruction = async (paymentInstruction: Omit<PaymentInstruction, 'id' | 'user_id'>): Promise<PaymentInstruction> => {
   return await apiClient.createPaymentInstruction(paymentInstruction);
 };
