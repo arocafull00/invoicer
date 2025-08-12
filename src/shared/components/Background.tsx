@@ -14,8 +14,8 @@ export const Background: React.FC<BackgroundProps> = ({ className, children }) =
         className="pointer-events-none absolute top-0 z-[-2] h-screen w-screen bg-background"
         style={
           {
-            ['--radial-start' as any]: 'oklch(from var(--primary) l c h / 0.30)',
-            ['--radial-end' as any]: 'oklch(from var(--background) l c h / 0)',
+            ['--radial-start' as any]: 'rgba(127, 90, 240, 0.30)',
+            ['--radial-end' as any]: 'rgba(0, 0, 0, 0)',
           } as React.CSSProperties
         }
       >

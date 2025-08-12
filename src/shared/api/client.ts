@@ -1,10 +1,11 @@
 import { supabase } from '../lib/supabase';
+import { useAuthStore } from '../lib/stores';
 import type { Client, Consultant, Invoice, PaymentInstruction } from '../types';
 
 export class SupabaseApiClient {
   private async getCurrentUserId(): Promise<string> {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) throw new Error('User not authenticated');
+    const { user } = useAuthStore.getState();
+    if (!user?.id) throw new Error('User not authenticated');
     return user.id;
   }
 
@@ -95,14 +96,29 @@ export class SupabaseApiClient {
 
   async createInvoice(invoice: Omit<Invoice, 'id' | 'user_id'>) {
     const userId = await this.getCurrentUserId();
+    // Transform the invoice object into the DB insert shape using foreign keys
+    const insertPayload = {
+      number: invoice.number,
+      created_date: invoice.created_date,
+      start_date: invoice.start_date,
+      end_date: invoice.end_date,
+      consultant_id: invoice.consultant.id,
+      client_id: invoice.client.id,
+      payment_instructions_id: invoice.payment_instructions.id,
+      description: invoice.description,
+      total: invoice.total,
+      vat_exempt: invoice.vat_exempt,
+      user_id: userId,
+    } as const;
+
     const { data, error } = await supabase
       .from('invoices')
-      .insert({ ...invoice, user_id: userId })
+      .insert(insertPayload)
       .select(`
         *,
         consultant:consultants(*),
         client:clients(*),
-        payment_instructions(*)
+        payment_instructions:payment_instructions(*)
       `)
       .single();
     

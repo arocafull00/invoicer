@@ -28,13 +28,18 @@ const statusConfig = {
   },
 };
 
-export function InvoiceTable() {
+type InvoiceTableProps = {
+  invoices?: Invoice[];
+};
+
+export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) {
   const navigate = useNavigate();
-  const { invoices } = useInvoiceStore();
+  const { invoices: storeInvoices } = useInvoiceStore();
   const [loadingPdf, setLoadingPdf] = useState<string | null>(null);
 
   // Mock status for demonstration - in real app this would come from the invoice data
-  const invoicesWithStatus: InvoiceWithStatus[] = invoices.map((invoice) => ({
+  const source = providedInvoices ?? storeInvoices;
+  const invoicesWithStatus: InvoiceWithStatus[] = source.map((invoice) => ({
     ...invoice,
     status: "paid" as const, // Default to paid for demo
   }));

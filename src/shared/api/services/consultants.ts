@@ -5,6 +5,8 @@ export const getConsultants = async (): Promise<Consultant[]> => {
   return await apiClient.getConsultants();
 };
 
-export const createConsultant = async (consultant: Omit<Consultant, 'id' | 'user_id'>): Promise<Consultant> => {
+export const createConsultant = async (
+  consultant: Omit<Consultant, 'id' | 'user_id'>
+): Promise<Consultant> => {
   return await apiClient.createConsultant(consultant);
 };
