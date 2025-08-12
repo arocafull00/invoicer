@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import type { Client, Consultant, Invoice, PaymentInstruction } from '../types';
 
 export class SupabaseApiClient {
   async getConsultants() {
@@ -42,7 +43,7 @@ export class SupabaseApiClient {
     return data;
   }
 
-  async createConsultant(consultant: Omit<any, 'id'>) {
+  async createConsultant(consultant: Omit<Consultant, 'id'>) {
     const { data, error } = await supabase
       .from('consultants')
       .insert(consultant)
@@ -53,7 +54,7 @@ export class SupabaseApiClient {
     return data;
   }
 
-  async createClient(client: Omit<any, 'id'>) {
+  async createClient(client: Omit<Client, 'id'>) {
     const { data, error } = await supabase
       .from('clients')
       .insert(client)
@@ -64,7 +65,7 @@ export class SupabaseApiClient {
     return data;
   }
 
-  async createPaymentInstruction(paymentInstruction: Omit<any, 'id'>) {
+  async createPaymentInstruction(paymentInstruction: Omit<PaymentInstruction, 'id'>) {
     const { data, error } = await supabase
       .from('payment_instructions')
       .insert(paymentInstruction)
@@ -75,7 +76,7 @@ export class SupabaseApiClient {
     return data;
   }
 
-  async createInvoice(invoice: Omit<any, 'id'>) {
+  async createInvoice(invoice: Omit<Invoice, 'id'>) {
     const { data, error } = await supabase
       .from('invoices')
       .insert(invoice)

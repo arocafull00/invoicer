@@ -1,3 +1,5 @@
+import type { Session } from "@supabase/supabase-js";
+
 export interface User {
   id: string;
   email?: string;
@@ -59,7 +61,7 @@ export interface WizardDraft {
 
 export interface AuthState {
   user: User | null;
-  session: any | null;
+  session: Session | null;
   loading: boolean;
 }
 

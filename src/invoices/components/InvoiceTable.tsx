@@ -3,13 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/shared/components/badge";
 import { Button } from "@/shared/components/button";
 import { Card } from "@/shared/components/card";
-import { MoreHorizontal, Download, Eye, Edit } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/shared/components/dropdown-menu";
+import { Download, Eye, Edit } from "lucide-react";
 import { useInvoiceStore } from "@/shared/lib/stores";
 import { formatDate, formatCurrency } from "@/shared/lib/helpers";
 import { downloadInvoicePDF } from "@/shared/lib/pdf";
@@ -152,48 +146,40 @@ export function InvoiceTable() {
                     </td>
                   )}
                   <td className="py-4 px-2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-[#A1A1AA] hover:text-white hover:bg-[#FFFFFF14]"
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="bg-[#0D0D0D] border-[#FFFFFF14]"
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-[#A1A1AA] hover:text-white hover:bg-[#FFFFFF14] p-2"
+                        onClick={() => handleView(invoice)}
+                        title="Ver"
                       >
-                        <DropdownMenuItem 
-                          className="text-white hover:bg-[#FFFFFF14] focus:bg-[#FFFFFF14] focus:text-white cursor-pointer"
-                          onClick={() => handleView(invoice)}
-                        >
-                          <Eye className="w-4 h-4 mr-2" />
-                          Ver
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-white hover:bg-[#FFFFFF14] focus:bg-[#FFFFFF14] focus:text-white cursor-pointer"
-                          onClick={() => handleEdit(invoice)}
-                        >
-                          <Edit className="w-4 h-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-white hover:bg-[#FFFFFF14] focus:bg-[#FFFFFF14] focus:text-white cursor-pointer"
-                          onClick={() => handleDownloadPDF(invoice)}
-                          disabled={loadingPdf === invoice.id}
-                        >
-                          {loadingPdf === invoice.id ? (
-                            <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <Download className="w-4 h-4 mr-2" />
-                          )}
-                          Descargar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-[#A1A1AA] hover:text-white hover:bg-[#FFFFFF14] p-2"
+                        onClick={() => handleEdit(invoice)}
+                        title="Editar"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-[#A1A1AA] hover:text-white hover:bg-[#FFFFFF14] p-2"
+                        onClick={() => handleDownloadPDF(invoice)}
+                        disabled={loadingPdf === invoice.id}
+                        title="Descargar"
+                      >
+                        {loadingPdf === invoice.id ? (
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Download className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

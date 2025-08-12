@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useWizardNav } from '@/shared/hooks/useWizardNav';
 import { useInvoiceStore } from '@/shared/lib/stores';
+import { createInvoice } from '@/shared/api/services';
 import { Stepper } from '@/shared/components/Stepper';
 import { StepConsultant } from './StepConsultant';
 import { StepClient } from './StepClient';
@@ -23,42 +25,53 @@ const steps = [
 
 export const InvoiceWizard: React.FC = () => {
   const navigate = useNavigate();
+  const [isCreating, setIsCreating] = useState(false);
   const { currentStep, canGoNext, canGoPrevious, goNext, goPrevious } = useWizardNav(steps.length);
-  const { wizardDraft, invoices } = useInvoiceStore();
+  const { wizardDraft, addInvoice, setWizardDraft } = useInvoiceStore();
 
   const handleCreateInvoice = async () => {
     if (!wizardDraft.consultant || !wizardDraft.client || !wizardDraft.start_date || 
         !wizardDraft.end_date || !wizardDraft.description || !wizardDraft.total || 
         !wizardDraft.payment_instructions) {
-      alert('Por favor completa todos los campos');
+      toast.error('Por favor completa todos los campos');
       return;
     }
 
-    const newInvoice: Invoice = {
-      id: Date.now().toString(),
-      number: generateInvoiceNumber(),
-      created_date: new Date().toISOString().split('T')[0],
-      start_date: wizardDraft.start_date,
-      end_date: wizardDraft.end_date,
-      consultant: wizardDraft.consultant,
-      client: wizardDraft.client,
-      description: wizardDraft.description,
-      total: wizardDraft.total,
-      payment_instructions: wizardDraft.payment_instructions,
-      vat_exempt: true
-    };
+    setIsCreating(true);
 
-    // Añadir la nueva factura al store
-    useInvoiceStore.setState({
-      invoices: [...invoices, newInvoice],
-      wizardDraft: {}
-    });
+    try {
+      const invoiceData: Omit<Invoice, 'id'> = {
+        number: generateInvoiceNumber(),
+        created_date: new Date().toISOString().split('T')[0],
+        start_date: wizardDraft.start_date,
+        end_date: wizardDraft.end_date,
+        consultant: wizardDraft.consultant,
+        client: wizardDraft.client,
+        description: wizardDraft.description,
+        total: wizardDraft.total,
+        payment_instructions: wizardDraft.payment_instructions,
+        vat_exempt: true
+      };
 
-    // Simular guardado en Supabase
-    console.log('Guardando factura en Supabase:', newInvoice);
-    
-    // Redirigir a la lista de facturas
-    navigate('/invoices');
+      const newInvoice = await createInvoice(invoiceData);
+      
+      // Añadir la nueva factura al store
+      addInvoice(newInvoice);
+      
+      // Limpiar el wizard draft
+      setWizardDraft({});
+      
+      toast.success('Factura creada exitosamente');
+      
+      // Redirigir a la lista de facturas
+      navigate('/invoices');
+      
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      toast.error('Error al crear la factura. Inténtalo de nuevo.');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const CurrentStepComponent = steps[currentStep - 1].component;
@@ -112,8 +125,9 @@ export const InvoiceWizard: React.FC = () => {
               {currentStep === steps.length ? (
                 <Button 
                   onClick={handleCreateInvoice}
+                  disabled={isCreating}
                 >
-                  Crear Factura
+                  {isCreating ? 'Creando...' : 'Crear Factura'}
                 </Button>
               ) : (
                 <Button 
