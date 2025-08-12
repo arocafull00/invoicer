@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import { useInvoiceStore } from '@/shared/lib/stores';
+import { createClient } from '@/shared/api/services';
 import type { Client } from '@/shared/types';
 import { Button } from '@/shared/components/button';
 import { Input } from '@/shared/components/input';
@@ -8,11 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus } from 'lucide-react';
 
 export const StepClient: React.FC = () => {
-  const { clients, wizardDraft } = useInvoiceStore();
+  const { clients, wizardDraft, addClient, setWizardDraft } = useInvoiceStore();
   const [selectedClient, setSelectedClient] = useState<Client | null>(
     wizardDraft.client || null
   );
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [newClient, setNewClient] = useState<Partial<Client>>({
     name: '',
     email: '',
@@ -24,16 +27,20 @@ export const StepClient: React.FC = () => {
 
   const handleClientSelect = (client: Client) => {
     setSelectedClient(client);
-    useInvoiceStore.setState({
-      wizardDraft: { ...wizardDraft, client }
-    });
+    setWizardDraft({ ...wizardDraft, client });
   };
 
-  const handleAddNew = () => {
-    if (newClient.name && newClient.email && newClient.address && 
-        newClient.city && newClient.country) {
-      const client: Client = {
-        id: Date.now().toString(),
+  const handleAddNew = async () => {
+    if (!newClient.name || !newClient.email || !newClient.address || 
+        !newClient.city || !newClient.country) {
+      toast.error('Por favor completa todos los campos obligatorios');
+      return;
+    }
+
+    setIsCreating(true);
+
+    try {
+      const clientData = {
         name: newClient.name,
         email: newClient.email,
         address: newClient.address,
@@ -41,14 +48,17 @@ export const StepClient: React.FC = () => {
         country: newClient.country,
         company_number: newClient.company_number
       };
+
+      const createdClient = await createClient(clientData);
       
-      // Añadir a la lista de clientes
-      useInvoiceStore.setState({
-        clients: [...clients, client],
-        wizardDraft: { ...wizardDraft, client }
-      });
+      // Añadir al store local
+      addClient(createdClient);
       
-      setSelectedClient(client);
+      // Seleccionar el nuevo cliente
+      setSelectedClient(createdClient);
+      setWizardDraft({ ...wizardDraft, client: createdClient });
+      
+      // Limpiar formulario
       setIsAddingNew(false);
       setNewClient({
         name: '',
@@ -58,6 +68,14 @@ export const StepClient: React.FC = () => {
         country: '',
         company_number: ''
       });
+
+      toast.success('Cliente creado exitosamente');
+      
+    } catch (error) {
+      console.error('Error creating client:', error);
+      toast.error('Error al crear el cliente. Inténtalo de nuevo.');
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -140,12 +158,24 @@ export const StepClient: React.FC = () => {
                 value={newClient.city}
                 onChange={(e) => setNewClient({...newClient, city: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="Gibraltar, GX11 1AA"
+                placeholder="Gibraltar"
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="clientePais" className="text-card-foreground">
+                País
+              </Label>
+              <Input
+                id="clientePais"
+                value={newClient.country}
+                onChange={(e) => setNewClient({...newClient, country: e.target.value})}
+                className="bg-input border-border text-card-foreground"
+                placeholder="GX11 1AA"
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="clienteNumeroEmpresa" className="text-card-foreground">
-                Número de empresa
+                Número de empresa (opcional)
               </Label>
               <Input
                 id="clienteNumeroEmpresa"
@@ -161,10 +191,10 @@ export const StepClient: React.FC = () => {
             <Button
               onClick={handleAddNew}
               className="flex-1"
-              disabled={!newClient.name || !newClient.email || !newClient.address || 
-                       !newClient.city}
+              disabled={isCreating || !newClient.name || !newClient.email || !newClient.address || 
+                       !newClient.city || !newClient.country}
             >
-              Añadir cliente
+              {isCreating ? 'Creando...' : 'Añadir cliente'}
             </Button>
             <Button
               variant="outline"
@@ -191,6 +221,9 @@ export const StepClient: React.FC = () => {
             </p>
             <p>
               <span className="font-medium">Ciudad:</span> {selectedClient.city}
+            </p>
+            <p>
+              <span className="font-medium">País:</span> {selectedClient.country}
             </p>
             {selectedClient.company_number && (
               <p>

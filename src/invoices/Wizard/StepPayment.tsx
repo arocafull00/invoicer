@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import { useInvoiceStore } from '@/shared/lib/stores';
+import { createPaymentInstruction } from '@/shared/api/services';
 import type { PaymentInstruction } from '@/shared/types';
 import { Button } from '@/shared/components/button';
 import { Input } from '@/shared/components/input';
 import { Label } from '@/shared/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/select';
 import { Textarea } from '@/shared/components/textarea';
+import { Plus } from 'lucide-react';
 
 export const StepPayment: React.FC = () => {
-  const { payment_instructions, wizardDraft } = useInvoiceStore();
+  const { payment_instructions, wizardDraft, addPaymentInstruction, setWizardDraft } = useInvoiceStore();
   const [selectedPayment, setSelectedPayment] = useState<PaymentInstruction | null>(
     wizardDraft.payment_instructions || null
   );
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [newPayment, setNewPayment] = useState<Partial<PaymentInstruction>>({
     account_holder: '',
     iban: '',
@@ -23,30 +27,37 @@ export const StepPayment: React.FC = () => {
 
   const handlePaymentSelect = (payment: PaymentInstruction) => {
     setSelectedPayment(payment);
-    useInvoiceStore.setState({
-      wizardDraft: { ...wizardDraft, payment_instructions: payment }
-    });
+    setWizardDraft({ ...wizardDraft, payment_instructions: payment });
   };
 
-  const handleAddNew = () => {
-    if (newPayment.account_holder && newPayment.iban && newPayment.payment_method && 
-        newPayment.payment_terms && newPayment.vat_exemption_text) {
-      const payment: PaymentInstruction = {
-        id: Date.now().toString(),
+  const handleAddNew = async () => {
+    if (!newPayment.account_holder || !newPayment.iban || !newPayment.payment_method || 
+        !newPayment.payment_terms || !newPayment.vat_exemption_text) {
+      toast.error('Por favor completa todos los campos');
+      return;
+    }
+
+    setIsCreating(true);
+
+    try {
+      const paymentData = {
         account_holder: newPayment.account_holder,
         iban: newPayment.iban,
         payment_method: newPayment.payment_method,
         payment_terms: newPayment.payment_terms,
         vat_exemption_text: newPayment.vat_exemption_text
       };
+
+      const createdPayment = await createPaymentInstruction(paymentData);
       
-      // Añadir a la lista de instrucciones de pago
-      useInvoiceStore.setState({
-        payment_instructions: [...payment_instructions, payment],
-        wizardDraft: { ...wizardDraft, payment_instructions: payment }
-      });
+      // Añadir al store local
+      addPaymentInstruction(createdPayment);
       
-      setSelectedPayment(payment);
+      // Seleccionar las nuevas instrucciones de pago
+      setSelectedPayment(createdPayment);
+      setWizardDraft({ ...wizardDraft, payment_instructions: createdPayment });
+      
+      // Limpiar formulario
       setIsAddingNew(false);
       setNewPayment({
         account_holder: '',
@@ -55,6 +66,14 @@ export const StepPayment: React.FC = () => {
         payment_terms: 'Payment is due within 14 calendar days from the invoice date.',
         vat_exemption_text: 'THIS TRANSACTION IS EXEMPT FROM VAT UNDER Article 21.1 of the Spanish Value Added Tax Law 37/1992 of December 28.'
       });
+
+      toast.success('Instrucciones de pago creadas exitosamente');
+      
+    } catch (error) {
+      console.error('Error creating payment instruction:', error);
+      toast.error('Error al crear las instrucciones de pago. Inténtalo de nuevo.');
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -63,54 +82,29 @@ export const StepPayment: React.FC = () => {
       {!isAddingNew ? (
         <div className="space-y-6">
           <div className="space-y-2">
-            <Label className="text-card-foreground">Método de pago</Label>
+            <Label className="text-card-foreground">Seleccionar Instrucciones de Pago</Label>
             <Select onValueChange={(value) => {
-              if (value === 'transferencia') {
-                const bankTransfer: PaymentInstruction = {
-                  id: 'default-bank',
-                  account_holder: 'Adrián Rocafull Berbel',
-                  iban: 'ES91 2100 0418 4502 0005 1332',
-                  payment_method: 'Transferencia bancaria',
-                  payment_terms: 'Payment is due within 14 calendar days from the invoice date.',
-                  vat_exemption_text: 'THIS TRANSACTION IS EXEMPT FROM VAT UNDER Article 21.1 of the Spanish Value Added Tax Law 37/1992 of December 28.'
-                };
-                handlePaymentSelect(bankTransfer);
+              const payment = payment_instructions.find(p => p.id === value);
+              if (payment) {
+                handlePaymentSelect(payment);
               }
             }}>
               <SelectTrigger className="bg-input border-border text-card-foreground">
-                <SelectValue placeholder="Selecciona método de pago" />
+                <SelectValue placeholder="Elige instrucciones de pago existentes" />
               </SelectTrigger>
               <SelectContent className="bg-popover border-border">
-                <SelectItem value="transferencia" className="text-popover-foreground">
-                  Transferencia bancaria
-                </SelectItem>
-                <SelectItem value="paypal" className="text-popover-foreground">
-                  PayPal
-                </SelectItem>
-                <SelectItem value="stripe" className="text-popover-foreground">
-                  Tarjeta de crédito
-                </SelectItem>
+                {payment_instructions.map((payment) => (
+                  <SelectItem key={payment.id} value={payment.id} className="text-popover-foreground">
+                    {payment.account_holder} - {payment.payment_method}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-          
-          {selectedPayment && (
-            <div className="space-y-2">
-              <Label htmlFor="cuentaBancaria" className="text-card-foreground">
-                Cuenta bancaria (IBAN)
-              </Label>
-              <Input
-                id="cuentaBancaria"
-                value={selectedPayment.iban}
-                onChange={(e) => setSelectedPayment({...selectedPayment, iban: e.target.value})}
-                placeholder="ES91 2100 0418 4502 0005 1332"
-                className="bg-input border-border text-card-foreground"
-              />
-            </div>
-          )}
 
           <Button variant="outline" onClick={() => setIsAddingNew(true)} className="w-full">
-            + Crear nuevas instrucciones de pago
+            <Plus className="w-4 h-4 mr-2" />
+            Crear nuevas instrucciones de pago
           </Button>
         </div>
       ) : (
@@ -195,10 +189,10 @@ export const StepPayment: React.FC = () => {
             <Button
               onClick={handleAddNew}
               className="flex-1"
-              disabled={!newPayment.account_holder || !newPayment.iban || !newPayment.payment_method || 
+              disabled={isCreating || !newPayment.account_holder || !newPayment.iban || !newPayment.payment_method || 
                        !newPayment.payment_terms || !newPayment.vat_exemption_text}
             >
-              Guardar instrucciones
+              {isCreating ? 'Creando...' : 'Guardar instrucciones'}
             </Button>
             <Button
               variant="outline"

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import { useInvoiceStore } from '@/shared/lib/stores';
+import { createConsultant } from '@/shared/api/services';
 import type { Consultant } from '@/shared/types';
 import { Button } from '@/shared/components/button';
 import { Input } from '@/shared/components/input';
@@ -8,11 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus } from 'lucide-react';
 
 export const StepConsultant: React.FC = () => {
-  const { consultants, wizardDraft } = useInvoiceStore();
+  const { consultants, wizardDraft, addConsultant, setWizardDraft } = useInvoiceStore();
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(
     wizardDraft.consultant || null
   );
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [newConsultant, setNewConsultant] = useState<Partial<Consultant>>({
     name: '',
     email: '',
@@ -24,16 +27,20 @@ export const StepConsultant: React.FC = () => {
 
   const handleConsultantSelect = (consultant: Consultant) => {
     setSelectedConsultant(consultant);
-    useInvoiceStore.setState({
-      wizardDraft: { ...wizardDraft, consultant }
-    });
+    setWizardDraft({ ...wizardDraft, consultant });
   };
 
-  const handleAddNew = () => {
-    if (newConsultant.name && newConsultant.email && newConsultant.address && 
-        newConsultant.city && newConsultant.country && newConsultant.nif) {
-      const consultant: Consultant = {
-        id: Date.now().toString(),
+  const handleAddNew = async () => {
+    if (!newConsultant.name || !newConsultant.email || !newConsultant.address || 
+        !newConsultant.city || !newConsultant.country || !newConsultant.nif) {
+      toast.error('Por favor completa todos los campos');
+      return;
+    }
+
+    setIsCreating(true);
+
+    try {
+      const consultantData = {
         name: newConsultant.name,
         email: newConsultant.email,
         address: newConsultant.address,
@@ -41,14 +48,17 @@ export const StepConsultant: React.FC = () => {
         country: newConsultant.country,
         nif: newConsultant.nif
       };
+
+      const createdConsultant = await createConsultant(consultantData);
       
-      // Añadir a la lista de consultores
-      useInvoiceStore.setState({
-        consultants: [...consultants, consultant],
-        wizardDraft: { ...wizardDraft, consultant }
-      });
+      // Añadir al store local
+      addConsultant(createdConsultant);
       
-      setSelectedConsultant(consultant);
+      // Seleccionar el nuevo consultor
+      setSelectedConsultant(createdConsultant);
+      setWizardDraft({ ...wizardDraft, consultant: createdConsultant });
+      
+      // Limpiar formulario
       setIsAddingNew(false);
       setNewConsultant({
         name: '',
@@ -58,6 +68,14 @@ export const StepConsultant: React.FC = () => {
         country: '',
         nif: ''
       });
+
+      toast.success('Consultor creado exitosamente');
+      
+    } catch (error) {
+      console.error('Error creating consultant:', error);
+      toast.error('Error al crear el consultor. Inténtalo de nuevo.');
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -173,10 +191,10 @@ export const StepConsultant: React.FC = () => {
             <Button
               onClick={handleAddNew}
               className="flex-1"
-              disabled={!newConsultant.name || !newConsultant.email || !newConsultant.address || 
+              disabled={isCreating || !newConsultant.name || !newConsultant.email || !newConsultant.address || 
                        !newConsultant.city || !newConsultant.country || !newConsultant.nif}
             >
-              Añadir consultor
+              {isCreating ? 'Creando...' : 'Añadir consultor'}
             </Button>
             <Button
               variant="outline"
