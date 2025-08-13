@@ -1,6 +1,7 @@
 import React from 'react';
-import { Sidebar } from '@/shared/components/Sidebar';
 import { Background } from '@/shared/components/Background';
+import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/app-sidebar';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -9,17 +10,17 @@ interface AppLayoutProps {
 export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   return (
     <Background>
-      {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 z-50">
-        <Sidebar />
-      </div>
-
-      {/* Main content */}
-      <div className="ml-72">
-        <main className="min-h-screen p-6 space-y-6">
-          {children}
-        </main>
-      </div>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <div className="flex items-center gap-2 p-4">
+            <SidebarTrigger />
+          </div>
+          <main className="min-h-screen p-4 md:p-6 space-y-6">
+            {children}
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
     </Background>
   );
 };

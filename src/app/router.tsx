@@ -8,6 +8,11 @@ import { InvoiceWizard } from '@/invoices/Wizard';
 import { EditInvoice } from '@/invoices/EditInvoice';
 import { ViewInvoice } from '@/invoices/ViewInvoice';
 import { SettingsPage } from '@/settings';
+import ConsultantsPage from '@/consultants';
+import ClientsPage from '@/clients';
+import PaymentsPage from '@/payments';
+import { TermsOfServicePage } from '@/legal/Terms';
+import { PrivacyPolicyPage } from '@/legal/Privacy';
 
 export const router = createBrowserRouter([
   {
@@ -41,5 +46,25 @@ export const router = createBrowserRouter([
   {
     path: '/settings',
     element: <RequireAuth><AppLayout><SettingsPage /></AppLayout></RequireAuth>,
+  },
+  {
+    path: '/consultants',
+    element: <RequireAuth><AppLayout><ConsultantsPage /></AppLayout></RequireAuth>,
+  },
+  {
+    path: '/clients',
+    element: <RequireAuth><AppLayout><ClientsPage /></AppLayout></RequireAuth>,
+  },
+  {
+    path: '/payments',
+    element: <RequireAuth><AppLayout><PaymentsPage /></AppLayout></RequireAuth>,
+  },
+  {
+    path: '/terms',
+    element: <TermsOfServicePage />,
+  },
+  {
+    path: '/privacy',
+    element: <PrivacyPolicyPage />,
   },
 ]); 

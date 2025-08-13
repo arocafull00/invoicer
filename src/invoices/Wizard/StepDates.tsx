@@ -1,7 +1,7 @@
 import React from 'react';
 import { useInvoiceStore } from '@/shared/lib/stores';
-import { Input } from '@/shared/components/input';
-import { Label } from '@/shared/components/label';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export const StepDates: React.FC = () => {
   const { wizardDraft } = useInvoiceStore();

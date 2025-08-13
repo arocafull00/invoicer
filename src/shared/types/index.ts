@@ -35,7 +35,7 @@ export interface PaymentInstruction {
   iban: string;
   payment_method: string;
   payment_terms: string;
-  vat_exemption_text: string;
+  additional_data: string;
 }
 
 export interface Invoice {

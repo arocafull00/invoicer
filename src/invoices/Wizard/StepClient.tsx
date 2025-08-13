@@ -3,10 +3,10 @@ import { toast } from 'react-toastify';
 import { useInvoiceStore } from '@/shared/lib/stores';
 import { createClient } from '@/shared/api/services';
 import type { Client } from '@/shared/types';
-import { Button } from '@/shared/components/button';
-import { Input } from '@/shared/components/input';
-import { Label } from '@/shared/components/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/select';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 
 export const StepClient: React.FC = () => {
@@ -121,7 +121,7 @@ export const StepClient: React.FC = () => {
                 value={newClient.name}
                 onChange={(e) => setNewClient({...newClient, name: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="ViralRankers Ltd"
+                placeholder="Acme Innovations SL"
               />
             </div>
             <div className="space-y-2">
@@ -134,7 +134,7 @@ export const StepClient: React.FC = () => {
                 value={newClient.email}
                 onChange={(e) => setNewClient({...newClient, email: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="info@viralrankers.com"
+                placeholder="contact@acme.co"
               />
             </div>
             <div className="space-y-2 md:col-span-2">
@@ -146,7 +146,7 @@ export const StepClient: React.FC = () => {
                 value={newClient.address}
                 onChange={(e) => setNewClient({...newClient, address: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="Victoria House, Office D, Suite 21/22, 26 Main Street"
+                placeholder="Avenida Principal 45, Oficina 3B"
               />
             </div>
             <div className="space-y-2">
@@ -158,7 +158,7 @@ export const StepClient: React.FC = () => {
                 value={newClient.city}
                 onChange={(e) => setNewClient({...newClient, city: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="Gibraltar"
+                placeholder="Madrid"
               />
             </div>
             <div className="space-y-2">
@@ -170,7 +170,7 @@ export const StepClient: React.FC = () => {
                 value={newClient.country}
                 onChange={(e) => setNewClient({...newClient, country: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="GX11 1AA"
+                placeholder="España"
               />
             </div>
             <div className="space-y-2 md:col-span-2">
@@ -182,7 +182,7 @@ export const StepClient: React.FC = () => {
                 value={newClient.company_number}
                 onChange={(e) => setNewClient({...newClient, company_number: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="125275"
+                placeholder="A12345678"
               />
             </div>
           </div>

@@ -40,7 +40,7 @@ export const exportToCSV = (invoices: Invoice[]): void => {
       csvRows.push(['Company Number: ' + invoice.client.company_number, '', '', '', '', '']);
     }
     csvRows.push(['', '', '', invoice.payment_instructions.payment_terms, '', '']);
-    csvRows.push(['', '', '', invoice.payment_instructions.vat_exemption_text, '', '']);
+    csvRows.push(['', '', '', invoice.payment_instructions.additional_data, '', '']);
     
     // Descripción y Total
     csvRows.push(['DESCRIPTION', '', '', '', '', 'TOTAL']);

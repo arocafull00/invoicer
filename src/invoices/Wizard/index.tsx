@@ -11,8 +11,8 @@ import { StepDates } from './StepDates';
 import { StepDetails } from './StepDetails';
 import { StepPayment } from './StepPayment';
 import { generateInvoiceNumber } from '@/shared/lib/helpers';
-import { Button } from '@/shared/components/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Invoice } from '@/shared/types';
 
 const steps = [

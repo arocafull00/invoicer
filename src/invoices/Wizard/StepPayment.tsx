@@ -3,11 +3,11 @@ import { toast } from 'react-toastify';
 import { useInvoiceStore } from '@/shared/lib/stores';
 import { createPaymentInstruction } from '@/shared/api/services';
 import type { PaymentInstruction } from '@/shared/types';
-import { Button } from '@/shared/components/button';
-import { Input } from '@/shared/components/input';
-import { Label } from '@/shared/components/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/select';
-import { Textarea } from '@/shared/components/textarea';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Plus } from 'lucide-react';
 
 export const StepPayment: React.FC = () => {
@@ -22,7 +22,7 @@ export const StepPayment: React.FC = () => {
     iban: '',
     payment_method: 'Bank transfer',
     payment_terms: 'Payment is due within 14 calendar days from the invoice date.',
-    vat_exemption_text: 'THIS TRANSACTION IS EXEMPT FROM VAT UNDER Article 21.1 of the Spanish Value Added Tax Law 37/1992 of December 28.'
+    additional_data: 'THIS TRANSACTION IS EXEMPT FROM VAT UNDER Article 21.1 of the Spanish Value Added Tax Law 37/1992 of December 28.'
   });
 
   const handlePaymentSelect = (payment: PaymentInstruction) => {
@@ -32,7 +32,7 @@ export const StepPayment: React.FC = () => {
 
   const handleAddNew = async () => {
     if (!newPayment.account_holder || !newPayment.iban || !newPayment.payment_method || 
-        !newPayment.payment_terms || !newPayment.vat_exemption_text) {
+        !newPayment.payment_terms || !newPayment.additional_data) {
       toast.error('Por favor completa todos los campos');
       return;
     }
@@ -45,7 +45,7 @@ export const StepPayment: React.FC = () => {
         iban: newPayment.iban,
         payment_method: newPayment.payment_method,
         payment_terms: newPayment.payment_terms,
-        vat_exemption_text: newPayment.vat_exemption_text
+        additional_data: newPayment.additional_data
       };
 
       const createdPayment = await createPaymentInstruction(paymentData);
@@ -64,7 +64,7 @@ export const StepPayment: React.FC = () => {
         iban: '',
         payment_method: 'Bank transfer',
         payment_terms: 'Payment is due within 14 calendar days from the invoice date.',
-        vat_exemption_text: 'THIS TRANSACTION IS EXEMPT FROM VAT UNDER Article 21.1 of the Spanish Value Added Tax Law 37/1992 of December 28.'
+        additional_data: 'THIS TRANSACTION IS EXEMPT FROM VAT UNDER Article 21.1 of the Spanish Value Added Tax Law 37/1992 of December 28.'
       });
 
       toast.success('Instrucciones de pago creadas exitosamente');
@@ -119,7 +119,7 @@ export const StepPayment: React.FC = () => {
                 value={newPayment.account_holder}
                 onChange={(e) => setNewPayment({...newPayment, account_holder: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="Adrián Rocafull Berbel"
+                placeholder="Lucía Fernández"
               />
             </div>
             
@@ -132,7 +132,7 @@ export const StepPayment: React.FC = () => {
                 value={newPayment.iban}
                 onChange={(e) => setNewPayment({...newPayment, iban: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="ES0931182064032757012974"
+                placeholder="ES9121000418450200051332"
               />
             </div>
             
@@ -172,13 +172,13 @@ export const StepPayment: React.FC = () => {
             </div>
             
             <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="vatExemption" className="text-card-foreground">
-                Texto de exención de IVA
+              <Label htmlFor="additionalData" className="text-card-foreground">
+                Datos adicionales
               </Label>
               <Textarea
-                id="vatExemption"
-                value={newPayment.vat_exemption_text}
-                onChange={(e) => setNewPayment({...newPayment, vat_exemption_text: e.target.value})}
+                id="additionalData"
+                value={newPayment.additional_data}
+                onChange={(e) => setNewPayment({...newPayment, additional_data: e.target.value})}
                 className="bg-input border-border text-card-foreground h-20"
                 placeholder="THIS TRANSACTION IS EXEMPT FROM VAT UNDER Article 21.1 of the Spanish Value Added Tax Law 37/1992 of December 28."
               />
@@ -189,8 +189,8 @@ export const StepPayment: React.FC = () => {
             <Button
               onClick={handleAddNew}
               className="flex-1"
-              disabled={isCreating || !newPayment.account_holder || !newPayment.iban || !newPayment.payment_method || 
-                       !newPayment.payment_terms || !newPayment.vat_exemption_text}
+               disabled={isCreating || !newPayment.account_holder || !newPayment.iban || !newPayment.payment_method || 
+                        !newPayment.payment_terms || !newPayment.additional_data}
             >
               {isCreating ? 'Creando...' : 'Guardar instrucciones'}
             </Button>
@@ -212,7 +212,7 @@ export const StepPayment: React.FC = () => {
             <p><span className="font-medium">IBAN:</span> {selectedPayment.iban}</p>
             <p><span className="font-medium">Método:</span> {selectedPayment.payment_method}</p>
             <p><span className="font-medium">Plazo:</span> {selectedPayment.payment_terms}</p>
-            <p><span className="font-medium">Exención IVA:</span> {selectedPayment.vat_exemption_text}</p>
+            <p><span className="font-medium">Datos adicionales:</span> {selectedPayment.additional_data}</p>
           </div>
         </div>
       )}

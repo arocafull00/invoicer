@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card } from "@/shared/components/card";
-import { Button } from "@/shared/components/button";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useInvoiceStore } from '@/shared/lib/stores';
 import { getRecentInvoices, formatCurrency } from '@/shared/lib/dashboardUtils';

@@ -3,10 +3,10 @@ import { toast } from 'react-toastify';
 import { useInvoiceStore } from '@/shared/lib/stores';
 import { createConsultant } from '@/shared/api/services';
 import type { Consultant } from '@/shared/types';
-import { Button } from '@/shared/components/button';
-import { Input } from '@/shared/components/input';
-import { Label } from '@/shared/components/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/select';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 
 export const StepConsultant: React.FC = () => {
@@ -121,7 +121,7 @@ export const StepConsultant: React.FC = () => {
                 value={newConsultant.name}
                 onChange={(e) => setNewConsultant({...newConsultant, name: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="Adrián Rocafull Berbel"
+                placeholder="Lucía Fernández"
               />
             </div>
             <div className="space-y-2">
@@ -134,7 +134,7 @@ export const StepConsultant: React.FC = () => {
                 value={newConsultant.email}
                 onChange={(e) => setNewConsultant({...newConsultant, email: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="adrianrocafull1@gmail.com"
+                placeholder="lucia.fernandez@example.com"
               />
             </div>
             <div className="space-y-2 md:col-span-2">
@@ -146,7 +146,7 @@ export const StepConsultant: React.FC = () => {
                 value={newConsultant.address}
                 onChange={(e) => setNewConsultant({...newConsultant, address: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="Avenida Rey Juan Carlos I, 12, 16"
+                placeholder="Calle Falsa 123, Piso 4B"
               />
             </div>
             <div className="space-y-2">
@@ -158,7 +158,7 @@ export const StepConsultant: React.FC = () => {
                 value={newConsultant.city}
                 onChange={(e) => setNewConsultant({...newConsultant, city: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="Torrent, Valencia"
+                placeholder="Sevilla"
               />
             </div>
             <div className="space-y-2">
@@ -170,7 +170,7 @@ export const StepConsultant: React.FC = () => {
                 value={newConsultant.country}
                 onChange={(e) => setNewConsultant({...newConsultant, country: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="Spain"
+                placeholder="España"
               />
             </div>
             <div className="space-y-2 md:col-span-2">
@@ -182,7 +182,7 @@ export const StepConsultant: React.FC = () => {
                 value={newConsultant.nif}
                 onChange={(e) => setNewConsultant({...newConsultant, nif: e.target.value})}
                 className="bg-input border-border text-card-foreground"
-                placeholder="53882287A"
+                placeholder="X1234567A"
               />
             </div>
           </div>

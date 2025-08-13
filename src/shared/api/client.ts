@@ -70,6 +70,34 @@ export class SupabaseApiClient {
     return data;
   }
 
+  async updateConsultant(
+    id: string,
+    consultant: Partial<Omit<Consultant, 'id' | 'user_id'>>
+  ) {
+    const userId = await this.getCurrentUserId();
+    const { data, error } = await supabase
+      .from('consultants')
+      .update(consultant)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to update consultant: ${error.message}`);
+    return data;
+  }
+
+  async deleteConsultant(id: string): Promise<void> {
+    const userId = await this.getCurrentUserId();
+    const { error } = await supabase
+      .from('consultants')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) throw new Error(`Failed to delete consultant: ${error.message}`);
+  }
+
   async createClient(client: Omit<Client, 'id' | 'user_id'>) {
     const userId = await this.getCurrentUserId();
     const { data, error } = await supabase
@@ -82,6 +110,34 @@ export class SupabaseApiClient {
     return data;
   }
 
+  async updateClient(
+    id: string,
+    client: Partial<Omit<Client, 'id' | 'user_id'>>
+  ) {
+    const userId = await this.getCurrentUserId();
+    const { data, error } = await supabase
+      .from('clients')
+      .update(client)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to update client: ${error.message}`);
+    return data;
+  }
+
+  async deleteClient(id: string): Promise<void> {
+    const userId = await this.getCurrentUserId();
+    const { error } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) throw new Error(`Failed to delete client: ${error.message}`);
+  }
+
   async createPaymentInstruction(paymentInstruction: Omit<PaymentInstruction, 'id' | 'user_id'>) {
     const userId = await this.getCurrentUserId();
     const { data, error } = await supabase
@@ -92,6 +148,34 @@ export class SupabaseApiClient {
     
     if (error) throw new Error(`Failed to create payment instruction: ${error.message}`);
     return data;
+  }
+
+  async updatePaymentInstruction(
+    id: string,
+    paymentInstruction: Partial<Omit<PaymentInstruction, 'id' | 'user_id'>>
+  ) {
+    const userId = await this.getCurrentUserId();
+    const { data, error } = await supabase
+      .from('payment_instructions')
+      .update(paymentInstruction)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to update payment instruction: ${error.message}`);
+    return data;
+  }
+
+  async deletePaymentInstruction(id: string): Promise<void> {
+    const userId = await this.getCurrentUserId();
+    const { error } = await supabase
+      .from('payment_instructions')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) throw new Error(`Failed to delete payment instruction: ${error.message}`);
   }
 
   async createInvoice(invoice: Omit<Invoice, 'id' | 'user_id'>) {

@@ -1,10 +1,10 @@
 import React from 'react';
-import { Card } from "@/shared/components/card";
-import { Input } from "@/shared/components/input";
-import { Label } from "@/shared/components/label";
-import { Button } from "@/shared/components/button";
-import { Switch } from "@/shared/components/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/select";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const SettingsPage: React.FC = () => {
   return (

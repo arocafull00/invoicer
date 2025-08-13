@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card } from "@/shared/components/card";
-import { Button } from "@/shared/components/button";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   Download,
@@ -215,9 +215,9 @@ export const ViewInvoice: React.FC = () => {
           </p>
         </div>
         <div className="mt-4">
-          <p className="text-[#A1A1AA] text-sm mb-1">Exención de IVA</p>
+          <p className="text-[#A1A1AA] text-sm mb-1">Datos adicionales</p>
           <p className="text-[#A1A1AA] text-sm">
-            {invoice.payment_instructions.vat_exemption_text}
+            {invoice.payment_instructions.additional_data}
           </p>
         </div>
       </Card>

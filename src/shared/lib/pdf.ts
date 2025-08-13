@@ -217,7 +217,7 @@ export const createInvoicePDF = async (invoice: Invoice): Promise<Uint8Array> =>
   
   yPosition -= 20;
   
-  page.drawText(invoice.payment_instructions.vat_exemption_text, {
+  page.drawText(invoice.payment_instructions.additional_data, {
     x: 50,
     y: yPosition,
     size: 8,

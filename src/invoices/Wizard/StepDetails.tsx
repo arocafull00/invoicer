@@ -1,8 +1,8 @@
 import React from 'react';
 import { useInvoiceStore } from '@/shared/lib/stores';
-import { Input } from '@/shared/components/input';
-import { Label } from '@/shared/components/label';
-import { Textarea } from '@/shared/components/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 export const StepDetails: React.FC = () => {
   const { wizardDraft } = useInvoiceStore();
@@ -31,7 +31,7 @@ export const StepDetails: React.FC = () => {
             id="descripcionServicio"
             value={wizardDraft.description || ''}
             onChange={handleDescriptionChange}
-            placeholder="Full stack development and consulting services"
+            placeholder="Software development and consulting services"
             className="bg-input border-border text-card-foreground min-h-[100px]"
           />
         </div>
@@ -46,7 +46,7 @@ export const StepDetails: React.FC = () => {
             onChange={handleTotalChange}
             step="0.01"
             min="0"
-            placeholder="2880"
+            placeholder="2750"
             className="bg-input border-border text-card-foreground"
           />
         </div>
