@@ -27,11 +27,3 @@ export function getRedirectUrl(path: string): string {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${base}${normalizedPath}`;
 }
-
-// Configuración para OAuth providers (opcional)
-export const oAuthConfig = {
-  google: {
-    redirectTo: getRedirectUrl('/dashboard'),
-    scopes: 'email profile'
-  }
-};

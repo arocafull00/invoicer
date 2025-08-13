@@ -17,6 +17,7 @@ export const useAuth = () => {
   };
 
   const signInWithGoogle = async () => {
+    console.log(getRedirectUrl('/dashboard'));
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -27,6 +28,7 @@ export const useAuth = () => {
   };
 
   const signInWithGithub = async () => {
+    console.log(getRedirectUrl('/dashboard'));
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
