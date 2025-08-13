@@ -10,7 +10,7 @@ export const TermsOfServicePage: React.FC = () => {
         <div className="w-full max-w-3xl">
           <h1 className="text-3xl font-bold text-white mb-2">Términos de Servicio</h1>
           <p className="text-sm text-[#A1A1AA] mb-6">Última actualización: {new Date().toLocaleDateString()}</p>
-          <Card className="p-6 md:p-8 bg-[#FFFFFF14] border-[#FFFFFF14] space-y-6">
+          <Card className="p-6 md:p-8   space-y-6">
             <section className="space-y-2">
               <h2 className="text-xl font-semibold text-white">1. Aceptación de los Términos</h2>
               <p className="text-[#E4E4E7]">

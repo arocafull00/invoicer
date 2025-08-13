@@ -97,7 +97,7 @@ export const LoginPage: React.FC = () => {
             </p>
           </div>
 
-          <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+          <Card className="p-6  ">
             {/* Email Input */}
             <div className="mb-4">
               <Input

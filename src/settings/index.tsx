@@ -16,7 +16,7 @@ export const SettingsPage: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Perfil */}
-        <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+        <Card className="p-6  ">
           <h2 className="text-xl font-semibold text-white mb-4">Perfil</h2>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -43,7 +43,7 @@ export const SettingsPage: React.FC = () => {
         </Card>
 
         {/* Seguridad */}
-        <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+        <Card className="p-6  ">
           <h2 className="text-xl font-semibold text-white mb-4">Seguridad</h2>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -71,7 +71,7 @@ export const SettingsPage: React.FC = () => {
         </Card>
 
         {/* Notificaciones */}
-        <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+        <Card className="p-6  ">
           <h2 className="text-xl font-semibold text-white mb-4">Notificaciones</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -95,7 +95,7 @@ export const SettingsPage: React.FC = () => {
         </Card>
 
         {/* Facturación */}
-        <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+        <Card className="p-6  ">
           <h2 className="text-xl font-semibold text-white mb-4">Facturación</h2>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -131,7 +131,7 @@ export const SettingsPage: React.FC = () => {
         </Card>
 
         {/* Exportación */}
-        <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+        <Card className="p-6  ">
           <h2 className="text-xl font-semibold text-white mb-4">Exportación</h2>
           <div className="space-y-4">
             <Button variant="outline" className="w-full bg-[#0D0D0D] border-[#FFFFFF14] text-white hover:bg-[#FFFFFF1A]">
@@ -147,7 +147,7 @@ export const SettingsPage: React.FC = () => {
         </Card>
 
         {/* API */}
-        <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+        <Card className="p-6  ">
           <h2 className="text-xl font-semibold text-white mb-4">API</h2>
           <div className="space-y-4">
             <div className="space-y-2">

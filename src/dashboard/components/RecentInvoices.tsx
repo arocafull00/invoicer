@@ -30,7 +30,7 @@ export const RecentInvoices: React.FC = () => {
 
   if (recentInvoices.length === 0) {
     return (
-      <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+      <Card className="p-6  ">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-white">Facturas Recientes</h2>
           <Button variant="ghost" asChild className="text-[#7F5AF0] hover:bg-[#7F5AF0]/10">
@@ -48,7 +48,7 @@ export const RecentInvoices: React.FC = () => {
   }
 
   return (
-    <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14]">
+    <Card className="p-6  ">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-white">Facturas Recientes</h2>
         <Button variant="ghost" asChild className="text-[#7F5AF0] hover:bg-[#7F5AF0]/10">

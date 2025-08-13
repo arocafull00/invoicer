@@ -271,7 +271,7 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
   }
 
   return (
-    <Card className="bg-[#FFFFFF14] border-[#FFFFFF14]">
+    <Card className=" ">
       <div className="p-6">
         {/* Global search and column filters */}
         <div className="flex flex-col gap-3 mb-4">

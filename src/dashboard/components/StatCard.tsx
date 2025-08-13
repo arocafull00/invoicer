@@ -18,7 +18,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   icon: Icon 
 }) => {
   return (
-    <Card className="p-6 bg-[#FFFFFF14] border-[#FFFFFF14] hover:bg-[#FFFFFF1A] transition-colors">
+    <Card className="p-6 hover:bg-[#FFFFFF1A] transition-colors">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[#A1A1AA] text-sm font-medium">{title}</p>
