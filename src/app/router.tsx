@@ -1,4 +1,4 @@
-import { createHashRouter } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import { RequireAuth } from '@/login/components/RequireAuth';
 import { AppLayout } from '@/shared/components/AppLayout';
 import { LoginPage } from '@/login';
@@ -14,7 +14,7 @@ import PaymentsPage from '@/payments';
 import { TermsOfServicePage } from '@/legal/Terms';
 import { PrivacyPolicyPage } from '@/legal/Privacy';
 
-export const router = createHashRouter([
+export const router = createBrowserRouter([
   {
     path: '/',
     element: <RequireAuth><AppLayout><DashboardPage /></AppLayout></RequireAuth>,
