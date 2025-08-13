@@ -128,7 +128,7 @@ export default function PaymentsPage() {
 												<TableCell>{p.additional_data}</TableCell>
 									<TableCell className="text-right">
 										<div className="flex items-center justify-end gap-2">
-											<Dialog open={openEditId === p.id} onOpenChange={(o) => { setOpenEditId(o ? p.id : null); setForm(o ? p : {}); }}>
+						<Dialog open={openEditId === p.id} onOpenChange={(o: boolean) => { setOpenEditId(o ? p.id : null); setForm(o ? p : {}); }}>
 												<DialogTrigger asChild>
 													<Button variant="outline" size="sm">
 														<Pencil className="size-4" />
@@ -159,7 +159,7 @@ export default function PaymentsPage() {
 				</Table>
 			</div>
 
-			<AlertDialog open={!!confirmDeleteId} onOpenChange={(o) => !o && setConfirmDeleteId(null)}>
+			<AlertDialog open={!!confirmDeleteId} onOpenChange={(o: boolean) => !o && setConfirmDeleteId(null)}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>Eliminar instrucción de pago</AlertDialogTitle>

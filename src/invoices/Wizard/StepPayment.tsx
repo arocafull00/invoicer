@@ -83,7 +83,7 @@ export const StepPayment: React.FC = () => {
         <div className="space-y-6">
           <div className="space-y-2">
             <Label className="text-card-foreground">Seleccionar Instrucciones de Pago</Label>
-            <Select onValueChange={(value) => {
+            <Select onValueChange={(value: string) => {
               const payment = payment_instructions.find(p => p.id === value);
               if (payment) {
                 handlePaymentSelect(payment);
@@ -138,7 +138,7 @@ export const StepPayment: React.FC = () => {
             
             <div className="space-y-2">
               <Label className="text-card-foreground">Método de pago</Label>
-              <Select value={newPayment.payment_method} onValueChange={(value) => setNewPayment({...newPayment, payment_method: value})}>
+              <Select value={newPayment.payment_method} onValueChange={(value: string) => setNewPayment({...newPayment, payment_method: value})}>
                 <SelectTrigger className="bg-input border-border text-card-foreground">
                   <SelectValue />
                 </SelectTrigger>
@@ -153,7 +153,7 @@ export const StepPayment: React.FC = () => {
             
             <div className="space-y-2">
               <Label className="text-card-foreground">Plazo de pago</Label>
-              <Select value={newPayment.payment_terms} onValueChange={(value) => setNewPayment({...newPayment, payment_terms: value})}>
+              <Select value={newPayment.payment_terms} onValueChange={(value: string) => setNewPayment({...newPayment, payment_terms: value})}>
                 <SelectTrigger className="bg-input border-border text-card-foreground">
                   <SelectValue />
                 </SelectTrigger>

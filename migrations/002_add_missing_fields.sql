@@ -119,7 +119,7 @@ ADD COLUMN IF NOT EXISTS account_holder TEXT,
 ADD COLUMN IF NOT EXISTS iban TEXT,
 ADD COLUMN IF NOT EXISTS payment_method TEXT,
 ADD COLUMN IF NOT EXISTS payment_terms TEXT,
-ADD COLUMN IF NOT EXISTS vat_exemption_text TEXT,
+ADD COLUMN IF NOT EXISTS additional_data TEXT,
 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 
 -- Hacer los campos obligatorios si no existen
@@ -149,10 +149,10 @@ BEGIN
         ALTER TABLE payment_instructions ALTER COLUMN payment_terms SET NOT NULL;
     END IF;
     
-    -- Hacer vat_exemption_text obligatorio
+    -- Hacer additional_data obligatorio
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'payment_instructions' AND column_name = 'vat_exemption_text' AND is_nullable = 'NO') THEN
-        ALTER TABLE payment_instructions ALTER COLUMN vat_exemption_text SET NOT NULL;
+                   WHERE table_name = 'payment_instructions' AND column_name = 'additional_data' AND is_nullable = 'NO') THEN
+        ALTER TABLE payment_instructions ALTER COLUMN additional_data SET NOT NULL;
     END IF;
 END $$;
 

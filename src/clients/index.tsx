@@ -104,7 +104,7 @@ export default function ClientsPage() {
           <h1 className="text-3xl font-bold text-white">Clientes</h1>
           <p className="text-[#A1A1AA] mt-1">Gestiona tus clientes</p>
         </div>
-        <Dialog open={openCreate} onOpenChange={(o) => { setOpenCreate(o); if (!o) setForm({}); }}>
+        <Dialog open={openCreate} onOpenChange={(o: boolean) => { setOpenCreate(o); if (!o) setForm({}); }}>
           <DialogTrigger asChild>
             <Button onClick={() => setForm({})}>
               <Plus className="w-4 h-4" />
@@ -161,7 +161,7 @@ export default function ClientsPage() {
                   <TableCell>{c.company_number || '-'}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Dialog open={openEditId === c.id} onOpenChange={(o) => { setOpenEditId(o ? c.id : null); setForm(o ? c : {}); }}>
+                      <Dialog open={openEditId === c.id} onOpenChange={(o: boolean) => { setOpenEditId(o ? c.id : null); setForm(o ? c : {}); }}>
                         <DialogTrigger asChild>
                           <Button variant="outline" size="sm">
                             <Pencil className="size-4" />
@@ -192,7 +192,7 @@ export default function ClientsPage() {
         </Table>
       </div>
 
-      <AlertDialog open={!!confirmDeleteId} onOpenChange={(o) => !o && setConfirmDeleteId(null)}>
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(o: boolean) => !o && setConfirmDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar cliente</AlertDialogTitle>

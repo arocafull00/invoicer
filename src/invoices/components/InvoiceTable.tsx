@@ -287,7 +287,7 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
             <div className="w-56">
               <Select
                 value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"}
-                onValueChange={(v) => table.getColumn("status")?.setFilterValue(v === "all" ? undefined : v)}
+                onValueChange={(v: string) => table.getColumn("status")?.setFilterValue(v === "all" ? undefined : v)}
               >
                 <SelectTrigger className="bg-card border-[#FFFFFF14] text-white">
                   <SelectValue placeholder="Estado" />
@@ -303,7 +303,7 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
             <div className="w-56">
               <Select
                 value={(table.getColumn("consultantName")?.getFilterValue() as string) ?? "all"}
-                onValueChange={(v) => table.getColumn("consultantName")?.setFilterValue(v === "all" ? undefined : v)}
+                onValueChange={(v: string) => table.getColumn("consultantName")?.setFilterValue(v === "all" ? undefined : v)}
               >
                 <SelectTrigger className="bg-card border-[#FFFFFF14] text-white">
                   <SelectValue placeholder="Consultor" />
@@ -319,7 +319,7 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
             <div className="w-56">
               <Select
                 value={(table.getColumn("clientName")?.getFilterValue() as string) ?? "all"}
-                onValueChange={(v) => table.getColumn("clientName")?.setFilterValue(v === "all" ? undefined : v)}
+                onValueChange={(v: string) => table.getColumn("clientName")?.setFilterValue(v === "all" ? undefined : v)}
               >
                 <SelectTrigger className="bg-card border-[#FFFFFF14] text-white">
                   <SelectValue placeholder="Cliente" />
@@ -368,7 +368,7 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
             <div className="w-24">
               <Select
                 value={String(pageSize)}
-                onValueChange={(v) => setPageSize(Number(v))}
+                onValueChange={(v: string) => setPageSize(Number(v))}
               >
                 <SelectTrigger className="bg-card border-[#FFFFFF14] text-white h-8">
                   <SelectValue />

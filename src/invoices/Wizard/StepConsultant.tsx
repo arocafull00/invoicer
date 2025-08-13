@@ -85,7 +85,7 @@ export const StepConsultant: React.FC = () => {
         <div className="space-y-6">
           <div className="space-y-2">
             <Label className="text-card-foreground">Seleccionar Consultor</Label>
-            <Select onValueChange={(value) => {
+            <Select onValueChange={(value: string) => {
               const consultant = consultants.find(c => c.id === value);
               if (consultant) {
                 handleConsultantSelect(consultant);

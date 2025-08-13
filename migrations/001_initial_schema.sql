@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS payment_instructions (
     iban TEXT NOT NULL,
     payment_method TEXT NOT NULL,
     payment_terms TEXT NOT NULL,
-    vat_exemption_text TEXT NOT NULL,
+    additional_data TEXT NOT NULL,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

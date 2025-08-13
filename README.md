@@ -83,7 +83,7 @@ Una aplicación web moderna para gestionar facturas de manera profesional, const
      iban TEXT NOT NULL,
      payment_method TEXT NOT NULL,
      payment_terms TEXT NOT NULL,
-     vat_exemption_text TEXT NOT NULL,
+     additional_data TEXT NOT NULL,
      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
    );
 
