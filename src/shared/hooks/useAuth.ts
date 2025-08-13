@@ -1,5 +1,5 @@
 import { useAuthStore } from '@/shared/lib/stores';
-import { supabase } from '@/shared/lib/supabase';
+import { supabase, getRedirectUrl } from '@/shared/lib/supabase';
 
 /**
  * Hook personalizado para manejar la autenticación
@@ -20,7 +20,7 @@ export const useAuth = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`
+        redirectTo: getRedirectUrl('/dashboard')
       }
     });
     return { error };
@@ -30,7 +30,7 @@ export const useAuth = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`
+        redirectTo: getRedirectUrl('/dashboard')
       }
     });
     return { error };

@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createHashRouter } from 'react-router-dom';
 import { RequireAuth } from '@/login/components/RequireAuth';
 import { AppLayout } from '@/shared/components/AppLayout';
 import { LoginPage } from '@/login';
@@ -14,7 +14,7 @@ import PaymentsPage from '@/payments';
 import { TermsOfServicePage } from '@/legal/Terms';
 import { PrivacyPolicyPage } from '@/legal/Privacy';
 
-export const router = createBrowserRouter([
+export const router = createHashRouter([
   {
     path: '/',
     element: <RequireAuth><AppLayout><DashboardPage /></AppLayout></RequireAuth>,
@@ -66,5 +66,10 @@ export const router = createBrowserRouter([
   {
     path: '/privacy',
     element: <PrivacyPolicyPage />,
+  },
+  // Optional catch-all to handle unknown routes within the SPA
+  {
+    path: '*',
+    element: <LoginPage />,
   },
 ]); 
