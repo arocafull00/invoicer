@@ -9,6 +9,7 @@ import { StepDates } from './Wizard/StepDates';
 import { StepDetails } from './Wizard/StepDetails';
 import { StepPayment } from './Wizard/StepPayment';
 import type { Invoice } from '@/shared/types';
+import { Button } from '@/components/ui/button';
 
 const steps = [
   { id: 1, name: 'Consultor', title: 'Consultor', component: StepConsultant },
@@ -100,36 +101,36 @@ export const EditInvoice: React.FC = () => {
       </div>
 
       <div className="mt-8 flex justify-between">
-        <button
+        <Button
           onClick={goPrevious}
           disabled={!canGoPrevious}
-          className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="outline"
         >
           Anterior
-        </button>
+        </Button>
 
         <div className="flex gap-3">
-          <button
+          <Button
             onClick={() => navigate('/invoices')}
-            className="btn-secondary"
+            variant="outline"
           >
             Cancelar
-          </button>
+          </Button>
           {currentStep < steps.length ? (
-            <button
+            <Button
               onClick={goNext}
               disabled={!canGoNext}
-              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="secondary"
             >
               Siguiente
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
               onClick={handleUpdateInvoice}
-              className="btn-primary"
+              variant="outline"
             >
               Actualizar Factura
-            </button>
+            </Button>
           )}
         </div>
       </div>
