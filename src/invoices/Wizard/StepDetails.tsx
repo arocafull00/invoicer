@@ -31,7 +31,7 @@ export const StepDetails: React.FC = () => {
             id="descripcionServicio"
             value={wizardDraft.description || ''}
             onChange={handleDescriptionChange}
-            placeholder="Software development and consulting services"
+            placeholder="Servicios de desarrollo de software y consultoría"
             className="bg-input border-border text-card-foreground min-h-[100px]"
           />
         </div>

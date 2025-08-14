@@ -20,9 +20,9 @@ export const StepPayment: React.FC = () => {
   const [newPayment, setNewPayment] = useState<Partial<PaymentInstruction>>({
     account_holder: '',
     iban: '',
-    payment_method: 'Bank transfer',
-    payment_terms: 'Payment is due within 14 calendar days from the invoice date.',
-    additional_data: 'THIS TRANSACTION IS EXEMPT FROM VAT UNDER Article 21.1 of the Spanish Value Added Tax Law 37/1992 of December 28.'
+    payment_method: 'Transferencia bancaria',
+    payment_terms: 'El pago debe realizarse dentro de los 14 días naturales desde la fecha de la factura.',
+    additional_data: 'ESTA OPERACIÓN ESTÁ EXENTA DE IVA en virtud del artículo 21.1 de la Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Añadido.'
   });
 
   const handlePaymentSelect = (payment: PaymentInstruction) => {
@@ -62,9 +62,9 @@ export const StepPayment: React.FC = () => {
       setNewPayment({
         account_holder: '',
         iban: '',
-        payment_method: 'Bank transfer',
-        payment_terms: 'Payment is due within 14 calendar days from the invoice date.',
-        additional_data: 'THIS TRANSACTION IS EXEMPT FROM VAT UNDER Article 21.1 of the Spanish Value Added Tax Law 37/1992 of December 28.'
+        payment_method: 'Transferencia bancaria',
+        payment_terms: 'El pago debe realizarse dentro de los 14 días naturales desde la fecha de la factura.',
+        additional_data: 'ESTA OPERACIÓN ESTÁ EXENTA DE IVA en virtud del artículo 21.1 de la Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Añadido.'
       });
 
       toast.success('Instrucciones de pago creadas exitosamente');
@@ -143,10 +143,10 @@ export const StepPayment: React.FC = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border-border">
-                  <SelectItem value="Bank transfer" className="text-popover-foreground">Bank transfer</SelectItem>
+                  <SelectItem value="Transferencia bancaria" className="text-popover-foreground">Transferencia bancaria</SelectItem>
                   <SelectItem value="PayPal" className="text-popover-foreground">PayPal</SelectItem>
-                  <SelectItem value="Credit Card" className="text-popover-foreground">Credit Card</SelectItem>
-                  <SelectItem value="Cash" className="text-popover-foreground">Cash</SelectItem>
+                  <SelectItem value="Tarjeta de crédito" className="text-popover-foreground">Tarjeta de crédito</SelectItem>
+                  <SelectItem value="Efectivo" className="text-popover-foreground">Efectivo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -158,13 +158,13 @@ export const StepPayment: React.FC = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border-border">
-                  <SelectItem value="Payment is due within 14 calendar days from the invoice date." className="text-popover-foreground">
+                  <SelectItem value="El pago debe realizarse dentro de los 14 días naturales desde la fecha de la factura." className="text-popover-foreground">
                     14 días
                   </SelectItem>
-                  <SelectItem value="Payment is due within 30 calendar days from the invoice date." className="text-popover-foreground">
+                  <SelectItem value="El pago debe realizarse dentro de los 30 días naturales desde la fecha de la factura." className="text-popover-foreground">
                     30 días
                   </SelectItem>
-                  <SelectItem value="Payment is due immediately upon receipt of this invoice." className="text-popover-foreground">
+                  <SelectItem value="El pago debe realizarse de forma inmediata a la recepción de esta factura." className="text-popover-foreground">
                     Inmediato
                   </SelectItem>
                 </SelectContent>
@@ -180,7 +180,7 @@ export const StepPayment: React.FC = () => {
                 value={newPayment.additional_data}
                 onChange={(e) => setNewPayment({...newPayment, additional_data: e.target.value})}
                 className="bg-input border-border text-card-foreground h-20"
-                placeholder="THIS TRANSACTION IS EXEMPT FROM VAT UNDER Article 21.1 of the Spanish Value Added Tax Law 37/1992 of December 28."
+                placeholder="ESTA OPERACIÓN ESTÁ EXENTA DE IVA en virtud del artículo 21.1 de la Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Añadido."
               />
             </div>
           </div>

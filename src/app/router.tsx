@@ -4,7 +4,7 @@ import { AppLayout } from '@/shared/components/AppLayout';
 import { LoginPage } from '@/login';
 import { DashboardPage } from '@/dashboard';
 import Invoices from '@/invoices';
-import { InvoiceWizard } from '@/invoices/Wizard';
+import NewInvoice from '@/invoices/NewInvoice';
 import { EditInvoice } from '@/invoices/EditInvoice';
 import { ViewInvoice } from '@/invoices/ViewInvoice';
 import { SettingsPage } from '@/settings';
@@ -33,7 +33,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/invoices/new',
-    element: <RequireAuth><AppLayout><InvoiceWizard /></AppLayout></RequireAuth>,
+    element: <RequireAuth><AppLayout><NewInvoice /></AppLayout></RequireAuth>,
   },
   {
     path: '/invoices/edit/:id',
