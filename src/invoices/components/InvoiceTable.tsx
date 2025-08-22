@@ -12,7 +12,14 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Download, Eye, Edit, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import {
+  Download,
+  Eye,
+  Edit,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+} from "lucide-react";
 import { useInvoiceStore } from "@/shared/lib/stores";
 import { formatDate, formatCurrency } from "@/shared/lib/helpers";
 import { downloadInvoicePDF } from "@/shared/lib/pdf";
@@ -35,10 +42,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface InvoiceWithStatus extends Invoice {
-  status?: "paid" | "pending" | "overdue";
-}
-
 const statusConfig = {
   paid: {
     label: "Pagada",
@@ -54,25 +57,12 @@ const statusConfig = {
   },
 };
 
-type InvoiceTableProps = {
-  invoices?: Invoice[];
-};
-
-export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) {
+export function InvoiceTable() {
   const navigate = useNavigate();
-  const { invoices: storeInvoices } = useInvoiceStore();
+  const { invoices } = useInvoiceStore();
   const [loadingPdf, setLoadingPdf] = useState<string | null>(null);
 
   // Mock status for demonstration - in real app this would come from the invoice data
-  const source = providedInvoices ?? storeInvoices;
-  const invoicesWithStatus: InvoiceWithStatus[] = useMemo(
-    () =>
-      source.map((invoice) => ({
-        ...invoice,
-        status: "paid" as const,
-      })),
-    [source]
-  );
 
   const handleDownloadPDF = async (invoice: Invoice) => {
     setLoadingPdf(invoice.id);
@@ -97,7 +87,7 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
   const [pageSize, setPageSize] = useState<number>(10);
   const [globalFilter, setGlobalFilter] = useState<string>("");
 
-  const columns = useMemo<ColumnDef<InvoiceWithStatus>[]>(
+  const columns = useMemo<ColumnDef<Invoice>[]>(
     () => [
       {
         accessorKey: "number",
@@ -138,7 +128,9 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
           </div>
         ),
         cell: ({ row }) => (
-          <span className="text-[#A1A1AA]">{formatDate(row.original.created_date)}</span>
+          <span className="text-[#A1A1AA]">
+            {formatDate(row.original.created_date)}
+          </span>
         ),
         sortingFn: "datetime",
       },
@@ -148,8 +140,12 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
         header: () => <div>CONSULTOR</div>,
         cell: ({ row }) => (
           <div>
-            <p className="font-medium text-white">{row.original.consultant.name}</p>
-            <p className="text-sm text-[#A1A1AA]">{row.original.consultant.email}</p>
+            <p className="font-medium text-white">
+              {row.original.consultant?.name}
+            </p>
+            <p className="text-sm text-[#A1A1AA]">
+              {row.original.consultant?.email}
+            </p>
           </div>
         ),
       },
@@ -171,7 +167,8 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
         header: () => <div>PERÍODO</div>,
         cell: ({ row }) => (
           <span className="text-[#A1A1AA]">
-            {formatDate(row.original.start_date)} - {formatDate(row.original.end_date)}
+            {formatDate(row.original.start_date)} -{" "}
+            {formatDate(row.original.end_date)}
           </span>
         ),
       },
@@ -193,7 +190,9 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
           </div>
         ),
         cell: ({ row }) => (
-          <span className="font-semibold text-white">{formatCurrency(row.original.total)}</span>
+          <span className="font-semibold text-white">
+            {formatCurrency(row.original.total)}
+          </span>
         ),
       },
       {
@@ -253,7 +252,7 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
   );
 
   const table = useReactTable({
-    data: invoicesWithStatus,
+    data: invoices,
     columns,
     state: { sorting, globalFilter },
     onSortingChange: setSorting,
@@ -286,8 +285,15 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
             </div>
             <div className="w-56">
               <Select
-                value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"}
-                onValueChange={(v: string) => table.getColumn("status")?.setFilterValue(v === "all" ? undefined : v)}
+                value={
+                  (table.getColumn("status")?.getFilterValue() as string) ??
+                  "all"
+                }
+                onValueChange={(v: string) =>
+                  table
+                    .getColumn("status")
+                    ?.setFilterValue(v === "all" ? undefined : v)
+                }
               >
                 <SelectTrigger className="bg-card border-[#FFFFFF14] text-white">
                   <SelectValue placeholder="Estado" />
@@ -302,32 +308,53 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
             </div>
             <div className="w-56">
               <Select
-                value={(table.getColumn("consultantName")?.getFilterValue() as string) ?? "all"}
-                onValueChange={(v: string) => table.getColumn("consultantName")?.setFilterValue(v === "all" ? undefined : v)}
+                value={
+                  (table
+                    .getColumn("consultantName")
+                    ?.getFilterValue() as string) ?? "all"
+                }
+                onValueChange={(v: string) =>
+                  table
+                    .getColumn("consultantName")
+                    ?.setFilterValue(v === "all" ? undefined : v)
+                }
               >
                 <SelectTrigger className="bg-card border-[#FFFFFF14] text-white">
                   <SelectValue placeholder="Consultor" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los consultores</SelectItem>
-                  {Array.from(new Set(invoicesWithStatus.map((i) => i.consultant.name))).map((name) => (
-                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                  {Array.from(
+                    new Set(invoices.map((i) => i.consultant?.name ?? ""))
+                  ).map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="w-56">
               <Select
-                value={(table.getColumn("clientName")?.getFilterValue() as string) ?? "all"}
-                onValueChange={(v: string) => table.getColumn("clientName")?.setFilterValue(v === "all" ? undefined : v)}
+                value={
+                  (table.getColumn("clientName")?.getFilterValue() as string) ??
+                  "all"
+                }
+                onValueChange={(v: string) =>
+                  table
+                    .getColumn("clientName")
+                    ?.setFilterValue(v === "all" ? undefined : v)
+                }
               >
                 <SelectTrigger className="bg-card border-[#FFFFFF14] text-white">
                   <SelectValue placeholder="Cliente" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los clientes</SelectItem>
-                  {Array.from(new Set(invoicesWithStatus.map((i) => i.client.name))).map((name) => (
-                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                  {invoices.map((i) => (
+                    <SelectItem key={i.client.name} value={i.client.name}>
+                      {i.client.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -338,12 +365,21 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
           <Table className="w-full">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="border-b border-[#FFFFFF14]">
+                <TableRow
+                  key={headerGroup.id}
+                  className="border-b border-[#FFFFFF14]"
+                >
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider">
+                    <TableHead
+                      key={header.id}
+                      className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider"
+                    >
                       {header.isPlaceholder
                         ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -351,10 +387,16 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
             </TableHeader>
             <TableBody>
               {table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="border-b border-[#FFFFFF14] hover:bg-[#FFFFFF14]/30 transition-colors">
+                <TableRow
+                  key={row.id}
+                  className="border-b border-[#FFFFFF14] hover:bg-[#FFFFFF14]/30 transition-colors"
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="py-4 px-2">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -385,7 +427,8 @@ export function InvoiceTable({ invoices: providedInvoices }: InvoiceTableProps) 
           </div>
           <div className="flex items-center gap-2 text-sm text-[#A1A1AA]">
             <span>
-              Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount() || 1}
+              Página {table.getState().pagination.pageIndex + 1} de{" "}
+              {table.getPageCount() || 1}
             </span>
             <div className="flex items-center gap-1 ml-2">
               <Button

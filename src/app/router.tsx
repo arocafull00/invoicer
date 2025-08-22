@@ -7,10 +7,11 @@ import Invoices from '@/invoices';
 import NewInvoice from '@/invoices/NewInvoice';
 import { EditInvoice } from '@/invoices/EditInvoice';
 import { ViewInvoice } from '@/invoices/ViewInvoice';
-import { SettingsPage } from '@/settings';
+import { SettingsPage } from '@/settings/SettingsScreen';
 import ConsultantsPage from '@/consultants';
 import ClientsPage from '@/clients';
 import PaymentsPage from '@/payments';
+import IncomesPage from '@/incomes';
 import { TermsOfServicePage } from '@/legal/Terms';
 import { PrivacyPolicyPage } from '@/legal/Privacy';
 
@@ -58,6 +59,10 @@ export const router = createBrowserRouter([
   {
     path: '/payments',
     element: <RequireAuth><AppLayout><PaymentsPage /></AppLayout></RequireAuth>,
+  },
+  {
+    path: '/incomes',
+    element: <RequireAuth><AppLayout><IncomesPage /></AppLayout></RequireAuth>,
   },
   {
     path: '/terms',

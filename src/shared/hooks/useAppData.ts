@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useInvoiceStore, useAuthStore } from '@/shared/lib/stores';
+import { useInvoiceStore, useAuthStore, useSettingsStore } from '@/shared/lib/stores';
 import { 
   getInvoices, 
   getConsultants, 
@@ -17,6 +17,7 @@ export const useAppData = () => {
     setClients, 
     setPaymentInstructions 
   } = useInvoiceStore();
+  const { load: loadSettings } = useSettingsStore();
 
   const loadAppData = async () => {
     if (!user || isInitialized) return;
@@ -24,12 +25,15 @@ export const useAppData = () => {
     setIsLoading(true);
     
     try {
+      // Load settings first (no dependency, but we only need to do it once per session)
       const [invoices, consultants, clients, paymentInstructions] = await Promise.all([
         getInvoices(),
         getConsultants(),
         getClients(),
         getPaymentInstructions()
       ]);
+
+      await loadSettings();
 
       setInvoices(invoices);
       setConsultants(consultants);

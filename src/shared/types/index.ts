@@ -21,7 +21,7 @@ export interface Client {
   id: string;
   user_id?: string;
   name: string;
-  email: string;
+  email?: string | null;
   address: string;
   city: string;
   country: string;
@@ -51,6 +51,7 @@ export interface Invoice {
   total: number;
   payment_instructions: PaymentInstruction;
   vat_exempt: boolean;
+  status: "paid" | "pending" | "overdue";
 }
 
 export interface WizardDraft {
@@ -74,3 +75,27 @@ export interface ApiResponse<T> {
   data?: T;
   message?: string;
 } 
+
+export type SupportedCurrency = 'eur' | 'usd' | 'gbp';
+export type SupportedDateFormat = 'dd/mm/yyyy' | 'mm/dd/yyyy' | 'yyyy-mm-dd';
+
+export interface UserSettings {
+  id?: string;
+  user_id?: string;
+  default_currency: SupportedCurrency;
+  date_format: SupportedDateFormat;
+  // Not persisted in DB; convenience field loaded from storage
+  logo_url?: string | null;
+}
+
+export type IncomePaymentMethod = 'cash' | 'transfer' | 'bizum';
+
+export interface Income {
+  id: string;
+  user_id?: string;
+  date: string;
+  concept: string;
+  amount: number;
+  payment_method: IncomePaymentMethod;
+  client: Client;
+}

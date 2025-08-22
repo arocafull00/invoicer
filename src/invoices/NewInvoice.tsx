@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
@@ -22,129 +22,71 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useInvoiceStore } from "@/shared/lib/stores";
-import { generateInvoiceNumber } from "@/shared/lib/helpers";
-import {
-  createInvoice,
-  createClient,
-  createConsultant,
-  createPaymentInstruction,
-} from "@/shared/api/services";
-import type {
-  Client,
-  Consultant,
-  PaymentInstruction,
-  Invoice,
-} from "@/shared/types";
-
-type LineItem = {
-  description: string;
-  quantity: number;
-  rate: number;
-};
-
-const initialLineItem: LineItem = {
-  description: "",
-  quantity: 1,
-  rate: 0,
-};
+import { useInvoiceFormStore } from "@/invoices/store/useInvoicesStore";
+import { useSettingsStore } from "@/shared/lib/stores";
+import { uploadUserLogo } from "@/shared/api/services/logos";
 
 export default function NewInvoice() {
   const navigate = useNavigate();
+  const { consultants, clients, payment_instructions } = useInvoiceStore();
+  const { settings, load: loadSettings, setLogoUrl } = useSettingsStore();
   const {
-    consultants,
-    clients,
-    payment_instructions,
-    addInvoice,
-    addConsultant,
-    addClient,
-    addPaymentInstruction,
-  } = useInvoiceStore();
+    form,
+    setForm,
+    setLineItem,
+    setLogoFromFile,
+    fetchNextInvoiceNumber,
+    saveInvoice,
+    isFormValid,
+    getSelectedConsultant,
+    getSelectedClient,
+    getSelectedPayment,
+    setDialog,
+    setNewConsultant,
+    setNewClient,
+    setNewPayment,
+    createNewConsultant,
+    createNewClient,
+    createNewPayment,
+    getLineTotal,
+  } = useInvoiceFormStore();
 
-  const [invoiceNumber] = useState<string>(generateInvoiceNumber());
-  const [issueDate, setIssueDate] = useState<string>(
-    new Date().toISOString().slice(0, 10)
-  );
-  const [dueDate, setDueDate] = useState<string>("");
+  useEffect(() => {
+    fetchNextInvoiceNumber();
+  }, [fetchNextInvoiceNumber]);
 
-  const [selectedConsultantId, setSelectedConsultantId] = useState<string>("");
-  const [selectedClientId, setSelectedClientId] = useState<string>("");
-  const [selectedPaymentId, setSelectedPaymentId] = useState<string>("");
+  // Ensure settings are loaded and preload logo from settings as default
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
-  const selectedConsultant = useMemo<Consultant | undefined>(
-    () => consultants.find((c) => c.id === selectedConsultantId),
-    [consultants, selectedConsultantId]
-  );
-  const selectedClient = useMemo<Client | undefined>(
-    () => clients.find((c) => c.id === selectedClientId),
-    [clients, selectedClientId]
-  );
-  const selectedPayment = useMemo<PaymentInstruction | undefined>(
-    () => payment_instructions.find((p) => p.id === selectedPaymentId),
-    [payment_instructions, selectedPaymentId]
-  );
+  useEffect(() => {
+    if (settings?.logo_url && !form.logoPreview) {
+      setForm({ logoPreview: settings.logo_url });
+    }
+  }, [settings?.logo_url, form.logoPreview, setForm]);
 
-  const [lineItem, setLineItem] = useState<LineItem>(initialLineItem);
-  const lineTotal = useMemo<number>(
-    () => Number(((lineItem.quantity || 0) * (lineItem.rate || 0)).toFixed(2)),
-    [lineItem.quantity, lineItem.rate]
-  );
-
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
-
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-
-  // Dialog state for creating new related entities
-  const [openNewConsultant, setOpenNewConsultant] = useState<boolean>(false);
-  const [openNewClient, setOpenNewClient] = useState<boolean>(false);
-  const [openNewPayment, setOpenNewPayment] = useState<boolean>(false);
-
-  const [newConsultant, setNewConsultant] = useState<Partial<Consultant>>({
-    name: "",
-    email: "",
-    address: "",
-    city: "",
-    country: "",
-    nif: "",
-  });
-  const [newClient, setNewClient] = useState<Partial<Client>>({
-    name: "",
-    email: "",
-    address: "",
-    city: "",
-    country: "",
-    company_number: "",
-  });
-  const [newPayment, setNewPayment] = useState<Partial<PaymentInstruction>>({
-    account_holder: "",
-    iban: "",
-    payment_method: "Transferencia bancaria",
-    payment_terms:
-      "El pago debe realizarse dentro de los 14 días naturales desde la fecha de la factura.",
-    additional_data:
-      "ESTA OPERACIÓN ESTÁ EXENTA DE IVA en virtud del artículo 21.1 de la Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Añadido.",
-  });
-
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setLogoPreview(reader.result as string);
-    reader.readAsDataURL(file);
-  };
-
-  const isFormValid = (): boolean => {
-    return Boolean(
-      selectedConsultant &&
-        selectedClient &&
-        selectedPayment &&
-        issueDate &&
-        dueDate &&
-        lineItem.description &&
-        lineTotal > 0
-    );
+    setLogoFromFile(file);
+    // If user has no logo saved in settings, upload and persist it
+    if (!settings?.logo_url) {
+      try {
+        const url = await uploadUserLogo(file);
+        setLogoUrl(url);
+        toast.success("Logo guardado en Configuración");
+      } catch (err) {
+        console.error(err);
+        toast.error("No se pudo subir el logo");
+      }
+    }
   };
 
   const handleSave = async () => {
+    const selectedConsultant = getSelectedConsultant();
+    const selectedClient = getSelectedClient();
+    const selectedPayment = getSelectedPayment();
     if (
       !isFormValid() ||
       !selectedConsultant ||
@@ -154,60 +96,19 @@ export default function NewInvoice() {
       toast.error("Por favor completa todos los campos requeridos");
       return;
     }
-
-    setIsSaving(true);
     try {
-      const payload: Omit<Invoice, "id"> = {
-        number: invoiceNumber,
-        created_date: new Date().toISOString().split("T")[0],
-        start_date: issueDate,
-        end_date: dueDate,
-        consultant: selectedConsultant,
-        client: selectedClient,
-        description: `${lineItem.description} (Cant.: ${
-          lineItem.quantity
-        } × Tarifa: ${lineItem.rate.toFixed(2)})`,
-        total: lineTotal,
-        payment_instructions: selectedPayment,
-        vat_exempt: true,
-      };
-
-      const created = await createInvoice(payload);
-      addInvoice(created);
+      await saveInvoice();
       toast.success("Factura creada exitosamente");
       navigate("/invoices");
     } catch (error) {
       console.error(error);
       toast.error("Error al crear la factura");
-    } finally {
-      setIsSaving(false);
     }
   };
 
   const handleCreateConsultant = async () => {
-    if (
-      !newConsultant.name ||
-      !newConsultant.email ||
-      !newConsultant.address ||
-      !newConsultant.city ||
-      !newConsultant.country ||
-      !newConsultant.nif
-    ) {
-      toast.error("Completa todos los campos del consultor");
-      return;
-    }
     try {
-      const created = await createConsultant({
-        name: newConsultant.name,
-        email: newConsultant.email,
-        address: newConsultant.address,
-        city: newConsultant.city,
-        country: newConsultant.country,
-        nif: newConsultant.nif,
-      });
-      addConsultant(created);
-      setOpenNewConsultant(false);
-      setSelectedConsultantId(created.id);
+      await createNewConsultant();
       toast.success("Consultor creado");
     } catch (e) {
       console.error(e);
@@ -216,28 +117,8 @@ export default function NewInvoice() {
   };
 
   const handleCreateClient = async () => {
-    if (
-      !newClient.name ||
-      !newClient.email ||
-      !newClient.address ||
-      !newClient.city ||
-      !newClient.country
-    ) {
-      toast.error("Completa todos los campos del cliente");
-      return;
-    }
     try {
-      const created = await createClient({
-        name: newClient.name,
-        email: newClient.email,
-        address: newClient.address,
-        city: newClient.city,
-        country: newClient.country,
-        company_number: newClient.company_number,
-      });
-      addClient(created);
-      setOpenNewClient(false);
-      setSelectedClientId(created.id);
+      await createNewClient();
       toast.success("Cliente creado");
     } catch (e) {
       console.error(e);
@@ -246,27 +127,8 @@ export default function NewInvoice() {
   };
 
   const handleCreatePayment = async () => {
-    if (
-      !newPayment.account_holder ||
-      !newPayment.iban ||
-      !newPayment.payment_method ||
-      !newPayment.payment_terms ||
-      !newPayment.additional_data
-    ) {
-      toast.error("Completa todos los campos del pago");
-      return;
-    }
     try {
-      const created = await createPaymentInstruction({
-        account_holder: newPayment.account_holder,
-        iban: newPayment.iban,
-        payment_method: newPayment.payment_method,
-        payment_terms: newPayment.payment_terms,
-        additional_data: newPayment.additional_data,
-      });
-      addPaymentInstruction(created);
-      setOpenNewPayment(false);
-      setSelectedPaymentId(created.id);
+      await createNewPayment();
       toast.success("Método de pago creado");
     } catch (e) {
       console.error(e);
@@ -283,19 +145,19 @@ export default function NewInvoice() {
             Crear nueva factura con vista previa
           </p>
         </div>
-        <Button onClick={handleSave} disabled={!isFormValid() || isSaving}>
-          {isSaving ? "Guardando..." : "Crear factura"}
+        <Button onClick={handleSave} disabled={!isFormValid() || form.isSaving}>
+          {form.isSaving ? "Guardando..." : "Crear factura"}
         </Button>
       </div>
 
-      <Card className="bg-[#FFFFFF14] border-border">
+      <Card>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-4">
               <div className="space-y-2">
                 <Label className="text-white">Número de factura</Label>
                 <Input
-                  value={invoiceNumber}
+                  value={form.invoiceNumber}
                   readOnly
                   className="bg-input border-border text-card-foreground"
                 />
@@ -305,8 +167,8 @@ export default function NewInvoice() {
                   <Label className="text-white">Fecha de emisión</Label>
                   <Input
                     type="date"
-                    value={issueDate}
-                    onChange={(e) => setIssueDate(e.target.value)}
+                    value={form.issueDate}
+                    onChange={(e) => setForm({ issueDate: e.target.value })}
                     className="bg-input border-border text-card-foreground"
                   />
                 </div>
@@ -314,8 +176,8 @@ export default function NewInvoice() {
                   <Label className="text-white">Fecha de vencimiento</Label>
                   <Input
                     type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
+                    value={form.dueDate}
+                    onChange={(e) => setForm({ dueDate: e.target.value })}
                     className="bg-input border-border text-card-foreground"
                   />
                 </div>
@@ -329,9 +191,9 @@ export default function NewInvoice() {
                   className="hidden"
                   onChange={handleLogoChange}
                 />
-                {logoPreview ? (
+                {form.logoPreview ? (
                   <img
-                    src={logoPreview}
+                    src={form.logoPreview}
                     alt="Logo"
                     className="max-h-36 object-contain"
                   />
@@ -346,7 +208,7 @@ export default function NewInvoice() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Bill From - Consultant */}
-        <Card className="bg-[#FFFFFF14] border-border">
+        <Card>
           <CardHeader>
             <CardTitle className="text-white">Emitido por</CardTitle>
           </CardHeader>
@@ -354,8 +216,8 @@ export default function NewInvoice() {
             <div className="flex gap-3">
               <div className="flex-1">
                 <Select
-                  value={selectedConsultantId}
-                  onValueChange={setSelectedConsultantId}
+                  value={form.selectedConsultantId}
+                  onValueChange={(v) => setForm({ selectedConsultantId: v })}
                 >
                   <SelectTrigger className="bg-input border-border text-card-foreground">
                     <SelectValue placeholder="Seleccionar consultor" />
@@ -374,8 +236,8 @@ export default function NewInvoice() {
                 </Select>
               </div>
               <Dialog
-                open={openNewConsultant}
-                onOpenChange={setOpenNewConsultant}
+                open={form.openNewConsultant}
+                onOpenChange={(o) => setDialog("consultant", o)}
               >
                 <DialogTrigger asChild>
                   <Button variant="outline">Nuevo</Button>
@@ -391,12 +253,9 @@ export default function NewInvoice() {
                       <Label className="text-card-foreground">Nombre</Label>
                       <Input
                         className="bg-input border-border text-card-foreground"
-                        value={newConsultant.name || ""}
+                        value={form.newConsultant.name || ""}
                         onChange={(e) =>
-                          setNewConsultant({
-                            ...newConsultant,
-                            name: e.target.value,
-                          })
+                          setNewConsultant({ name: e.target.value })
                         }
                       />
                     </div>
@@ -405,12 +264,9 @@ export default function NewInvoice() {
                       <Input
                         type="email"
                         className="bg-input border-border text-card-foreground"
-                        value={newConsultant.email || ""}
+                        value={form.newConsultant.email || ""}
                         onChange={(e) =>
-                          setNewConsultant({
-                            ...newConsultant,
-                            email: e.target.value,
-                          })
+                          setNewConsultant({ email: e.target.value })
                         }
                       />
                     </div>
@@ -418,12 +274,9 @@ export default function NewInvoice() {
                       <Label className="text-card-foreground">Dirección</Label>
                       <Input
                         className="bg-input border-border text-card-foreground"
-                        value={newConsultant.address || ""}
+                        value={form.newConsultant.address || ""}
                         onChange={(e) =>
-                          setNewConsultant({
-                            ...newConsultant,
-                            address: e.target.value,
-                          })
+                          setNewConsultant({ address: e.target.value })
                         }
                       />
                     </div>
@@ -431,12 +284,9 @@ export default function NewInvoice() {
                       <Label className="text-card-foreground">Ciudad</Label>
                       <Input
                         className="bg-input border-border text-card-foreground"
-                        value={newConsultant.city || ""}
+                        value={form.newConsultant.city || ""}
                         onChange={(e) =>
-                          setNewConsultant({
-                            ...newConsultant,
-                            city: e.target.value,
-                          })
+                          setNewConsultant({ city: e.target.value })
                         }
                       />
                     </div>
@@ -444,12 +294,9 @@ export default function NewInvoice() {
                       <Label className="text-card-foreground">País</Label>
                       <Input
                         className="bg-input border-border text-card-foreground"
-                        value={newConsultant.country || ""}
+                        value={form.newConsultant.country || ""}
                         onChange={(e) =>
-                          setNewConsultant({
-                            ...newConsultant,
-                            country: e.target.value,
-                          })
+                          setNewConsultant({ country: e.target.value })
                         }
                       />
                     </div>
@@ -457,12 +304,9 @@ export default function NewInvoice() {
                       <Label className="text-card-foreground">NIF</Label>
                       <Input
                         className="bg-input border-border text-card-foreground"
-                        value={newConsultant.nif || ""}
+                        value={form.newConsultant.nif || ""}
                         onChange={(e) =>
-                          setNewConsultant({
-                            ...newConsultant,
-                            nif: e.target.value,
-                          })
+                          setNewConsultant({ nif: e.target.value })
                         }
                       />
                     </div>
@@ -474,24 +318,25 @@ export default function NewInvoice() {
               </Dialog>
             </div>
 
-            {selectedConsultant && (
+            {getSelectedConsultant() && (
               <div className="text-sm text-[#A1A1AA] leading-6">
                 <div className="font-semibold text-white">
-                  {selectedConsultant.name}
+                  {getSelectedConsultant()!.name}
                 </div>
-                <div>{selectedConsultant.address}</div>
+                <div>{getSelectedConsultant()!.address}</div>
                 <div>
-                  {selectedConsultant.city}, {selectedConsultant.country}
+                  {getSelectedConsultant()!.city},{" "}
+                  {getSelectedConsultant()!.country}
                 </div>
-                <div>{selectedConsultant.email}</div>
-                <div>NIF: {selectedConsultant.nif}</div>
+                <div>{getSelectedConsultant()!.email}</div>
+                <div>NIF: {getSelectedConsultant()!.nif}</div>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Bill To - Client */}
-        <Card className="bg-[#FFFFFF14] border-border">
+        <Card>
           <CardHeader>
             <CardTitle className="text-white">Facturar a</CardTitle>
           </CardHeader>
@@ -499,8 +344,8 @@ export default function NewInvoice() {
             <div className="flex gap-3">
               <div className="flex-1">
                 <Select
-                  value={selectedClientId}
-                  onValueChange={setSelectedClientId}
+                  value={form.selectedClientId}
+                  onValueChange={(v) => setForm({ selectedClientId: v })}
                 >
                   <SelectTrigger className="bg-input border-border text-card-foreground">
                     <SelectValue placeholder="Seleccionar cliente" />
@@ -518,7 +363,10 @@ export default function NewInvoice() {
                   </SelectContent>
                 </Select>
               </div>
-              <Dialog open={openNewClient} onOpenChange={setOpenNewClient}>
+              <Dialog
+                open={form.openNewClient}
+                onOpenChange={(o) => setDialog("client", o)}
+              >
                 <DialogTrigger asChild>
                   <Button variant="outline">Nuevo</Button>
                 </DialogTrigger>
@@ -533,10 +381,8 @@ export default function NewInvoice() {
                       <Label className="text-card-foreground">Nombre</Label>
                       <Input
                         className="bg-input border-border text-card-foreground"
-                        value={newClient.name || ""}
-                        onChange={(e) =>
-                          setNewClient({ ...newClient, name: e.target.value })
-                        }
+                        value={form.newClient.name || ""}
+                        onChange={(e) => setNewClient({ name: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
@@ -544,9 +390,9 @@ export default function NewInvoice() {
                       <Input
                         type="email"
                         className="bg-input border-border text-card-foreground"
-                        value={newClient.email || ""}
+                        value={form.newClient.email || ""}
                         onChange={(e) =>
-                          setNewClient({ ...newClient, email: e.target.value })
+                          setNewClient({ email: e.target.value })
                         }
                       />
                     </div>
@@ -554,12 +400,9 @@ export default function NewInvoice() {
                       <Label className="text-card-foreground">Dirección</Label>
                       <Input
                         className="bg-input border-border text-card-foreground"
-                        value={newClient.address || ""}
+                        value={form.newClient.address || ""}
                         onChange={(e) =>
-                          setNewClient({
-                            ...newClient,
-                            address: e.target.value,
-                          })
+                          setNewClient({ address: e.target.value })
                         }
                       />
                     </div>
@@ -567,22 +410,17 @@ export default function NewInvoice() {
                       <Label className="text-card-foreground">Ciudad</Label>
                       <Input
                         className="bg-input border-border text-card-foreground"
-                        value={newClient.city || ""}
-                        onChange={(e) =>
-                          setNewClient({ ...newClient, city: e.target.value })
-                        }
+                        value={form.newClient.city || ""}
+                        onChange={(e) => setNewClient({ city: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-card-foreground">País</Label>
                       <Input
                         className="bg-input border-border text-card-foreground"
-                        value={newClient.country || ""}
+                        value={form.newClient.country || ""}
                         onChange={(e) =>
-                          setNewClient({
-                            ...newClient,
-                            country: e.target.value,
-                          })
+                          setNewClient({ country: e.target.value })
                         }
                       />
                     </div>
@@ -592,12 +430,9 @@ export default function NewInvoice() {
                       </Label>
                       <Input
                         className="bg-input border-border text-card-foreground"
-                        value={newClient.company_number || ""}
+                        value={form.newClient.company_number || ""}
                         onChange={(e) =>
-                          setNewClient({
-                            ...newClient,
-                            company_number: e.target.value,
-                          })
+                          setNewClient({ company_number: e.target.value })
                         }
                       />
                     </div>
@@ -609,19 +444,21 @@ export default function NewInvoice() {
               </Dialog>
             </div>
 
-            {selectedClient && (
+            {getSelectedClient() && (
               <div className="text-sm text-[#A1A1AA] leading-6">
                 <div className="font-semibold text-white">
-                  {selectedClient.name}
+                  {getSelectedClient()!.name}
                 </div>
-                <div>{selectedClient.address}</div>
+                <div>{getSelectedClient()!.address}</div>
                 <div>
-                  {selectedClient.city}, {selectedClient.country}
+                  {getSelectedClient()!.city}, {getSelectedClient()!.country}
                 </div>
-                {selectedClient.company_number && (
-                  <div>Número de empresa: {selectedClient.company_number}</div>
+                {getSelectedClient()!.company_number && (
+                  <div>
+                    Número de empresa: {getSelectedClient()!.company_number}
+                  </div>
                 )}
-                <div>{selectedClient.email}</div>
+                <div>{getSelectedClient()!.email}</div>
               </div>
             )}
           </CardContent>
@@ -629,7 +466,7 @@ export default function NewInvoice() {
       </div>
 
       {/* Line item and totals */}
-      <Card className="bg-[#FFFFFF14] border-border">
+      <Card>
         <CardHeader>
           <CardTitle className="text-white">Conceptos</CardTitle>
         </CardHeader>
@@ -639,10 +476,8 @@ export default function NewInvoice() {
               <Label className="text-card-foreground">Descripción</Label>
               <Input
                 className="bg-input border-border text-card-foreground"
-                value={lineItem.description}
-                onChange={(e) =>
-                  setLineItem({ ...lineItem, description: e.target.value })
-                }
+                value={form.lineItem.description}
+                onChange={(e) => setLineItem({ description: e.target.value })}
                 placeholder="Descripción del servicio"
               />
             </div>
@@ -653,9 +488,9 @@ export default function NewInvoice() {
                 min="0"
                 step="1"
                 className="bg-input border-border text-card-foreground"
-                value={lineItem.quantity}
+                value={form.lineItem.quantity}
                 onChange={(e) =>
-                  setLineItem({ ...lineItem, quantity: Number(e.target.value) })
+                  setLineItem({ quantity: Number(e.target.value) })
                 }
               />
             </div>
@@ -666,10 +501,8 @@ export default function NewInvoice() {
                 min="0"
                 step="0.01"
                 className="bg-input border-border text-card-foreground"
-                value={lineItem.rate}
-                onChange={(e) =>
-                  setLineItem({ ...lineItem, rate: Number(e.target.value) })
-                }
+                value={form.lineItem.rate}
+                onChange={(e) => setLineItem({ rate: Number(e.target.value) })}
               />
             </div>
           </div>
@@ -677,7 +510,7 @@ export default function NewInvoice() {
             <div className="w-full md:w-1/2 lg:w-1/3">
               <div className="flex items-center justify-between py-2">
                 <span className="text-[#A1A1AA]">Subtotal</span>
-                <span>€ {lineTotal.toFixed(2)}</span>
+                <span>€ {getLineTotal().toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -685,7 +518,7 @@ export default function NewInvoice() {
       </Card>
 
       {/* Payment method */}
-      <Card className="bg-[#FFFFFF14] border-border">
+      <Card>
         <CardHeader>
           <CardTitle className="text-white">Método de pago</CardTitle>
         </CardHeader>
@@ -693,8 +526,8 @@ export default function NewInvoice() {
           <div className="flex gap-3">
             <div className="flex-1">
               <Select
-                value={selectedPaymentId}
-                onValueChange={setSelectedPaymentId}
+                value={form.selectedPaymentId}
+                onValueChange={(v) => setForm({ selectedPaymentId: v })}
               >
                 <SelectTrigger className="bg-input border-border text-card-foreground">
                   <SelectValue placeholder="Seleccionar método de pago" />
@@ -712,7 +545,10 @@ export default function NewInvoice() {
                 </SelectContent>
               </Select>
             </div>
-            <Dialog open={openNewPayment} onOpenChange={setOpenNewPayment}>
+            <Dialog
+              open={form.openNewPayment}
+              onOpenChange={(o) => setDialog("payment", o)}
+            >
               <DialogTrigger asChild>
                 <Button variant="outline">Nuevo</Button>
               </DialogTrigger>
@@ -727,12 +563,9 @@ export default function NewInvoice() {
                     <Label className="text-card-foreground">Titular</Label>
                     <Input
                       className="bg-input border-border text-card-foreground"
-                      value={newPayment.account_holder || ""}
+                      value={form.newPayment.account_holder || ""}
                       onChange={(e) =>
-                        setNewPayment({
-                          ...newPayment,
-                          account_holder: e.target.value,
-                        })
+                        setNewPayment({ account_holder: e.target.value })
                       }
                     />
                   </div>
@@ -740,18 +573,16 @@ export default function NewInvoice() {
                     <Label className="text-card-foreground">IBAN</Label>
                     <Input
                       className="bg-input border-border text-card-foreground"
-                      value={newPayment.iban || ""}
-                      onChange={(e) =>
-                        setNewPayment({ ...newPayment, iban: e.target.value })
-                      }
+                      value={form.newPayment.iban || ""}
+                      onChange={(e) => setNewPayment({ iban: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-card-foreground">Método</Label>
                     <Select
-                      value={newPayment.payment_method || ""}
+                      value={form.newPayment.payment_method || ""}
                       onValueChange={(v: string) =>
-                        setNewPayment({ ...newPayment, payment_method: v })
+                        setNewPayment({ payment_method: v })
                       }
                     >
                       <SelectTrigger className="bg-input border-border text-card-foreground">
@@ -788,9 +619,9 @@ export default function NewInvoice() {
                   <div className="space-y-2">
                     <Label className="text-card-foreground">Plazo</Label>
                     <Select
-                      value={newPayment.payment_terms || ""}
+                      value={form.newPayment.payment_terms || ""}
                       onValueChange={(v: string) =>
-                        setNewPayment({ ...newPayment, payment_terms: v })
+                        setNewPayment({ payment_terms: v })
                       }
                     >
                       <SelectTrigger className="bg-input border-border text-card-foreground">
@@ -824,12 +655,9 @@ export default function NewInvoice() {
                     </Label>
                     <Textarea
                       className="bg-input border-border text-card-foreground h-24"
-                      value={newPayment.additional_data || ""}
+                      value={form.newPayment.additional_data || ""}
                       onChange={(e) =>
-                        setNewPayment({
-                          ...newPayment,
-                          additional_data: e.target.value,
-                        })
+                        setNewPayment({ additional_data: e.target.value })
                       }
                     />
                   </div>
@@ -841,16 +669,16 @@ export default function NewInvoice() {
             </Dialog>
           </div>
 
-          {selectedPayment && (
+          {getSelectedPayment() && (
             <div className="text-sm text-[#A1A1AA] leading-6">
               <div className="font-semibold text-white">
-                {selectedPayment.account_holder} —{" "}
-                {selectedPayment.payment_method}
+                {getSelectedPayment().account_holder} —{" "}
+                {getSelectedPayment().payment_method}
               </div>
-              <div>IBAN: {selectedPayment.iban}</div>
-              <div>{selectedPayment.payment_terms}</div>
+              <div>IBAN: {getSelectedPayment().iban}</div>
+              <div>{getSelectedPayment().payment_terms}</div>
               <div className="text-xs opacity-80">
-                {selectedPayment.additional_data}
+                {getSelectedPayment()!.additional_data}
               </div>
             </div>
           )}

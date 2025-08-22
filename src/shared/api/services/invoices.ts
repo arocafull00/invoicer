@@ -10,3 +10,7 @@ export const createInvoice = async (
 ): Promise<Invoice> => {
   return await apiClient.createInvoice(invoice);
 };
+
+export const getNextInvoiceNumber = async (): Promise<string> => {
+  return await apiClient.getNextInvoiceNumber();
+};

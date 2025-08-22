@@ -3,14 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useWizardNav } from '@/shared/hooks/useWizardNav';
 import { useInvoiceStore } from '@/shared/lib/stores';
-import { createInvoice } from '@/shared/api/services';
+import { createInvoice, getNextInvoiceNumber } from '@/shared/api/services';
 import { Stepper } from '@/shared/components/Stepper';
 import { StepConsultant } from './StepConsultant';
 import { StepClient } from './StepClient';
 import { StepDates } from './StepDates';
 import { StepDetails } from './StepDetails';
 import { StepPayment } from './StepPayment';
-import { generateInvoiceNumber } from '@/shared/lib/helpers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Invoice } from '@/shared/types';
@@ -40,8 +39,9 @@ export const InvoiceWizard: React.FC = () => {
     setIsCreating(true);
 
     try {
+      const number = await getNextInvoiceNumber();
       const invoiceData: Omit<Invoice, 'id'> = {
-        number: generateInvoiceNumber(),
+        number,
         created_date: new Date().toISOString().split('T')[0],
         start_date: wizardDraft.start_date,
         end_date: wizardDraft.end_date,
