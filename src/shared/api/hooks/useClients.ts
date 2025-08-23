@@ -14,7 +14,7 @@ export const useCreateClient = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (client: Omit<Client, 'id' | 'user_id'>) => createClient(client),
+    mutationFn: (client: Partial<Omit<Client, 'id' | 'user_id'>>) => createClient(client),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
     },

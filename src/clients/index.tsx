@@ -13,27 +13,27 @@ function ClientForm({ value, onChange }: { value: Partial<Client>; onChange: (v:
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Nombre</Label>
+        <Label htmlFor="name">Nombre (Opcional)</Label>
         <Input id="name" value={value.name || ''} onChange={(e) => onChange({ ...value, name: e.target.value })} />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Email (Opcional)</Label>
         <Input id="email" type="email" value={value.email || ''} onChange={(e) => onChange({ ...value, email: e.target.value })} />
       </div>
       <div className="space-y-2 md:col-span-2">
-        <Label htmlFor="address">Dirección</Label>
+        <Label htmlFor="address">Dirección (Opcional)</Label>
         <Input id="address" value={value.address || ''} onChange={(e) => onChange({ ...value, address: e.target.value })} />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="city">Ciudad</Label>
+        <Label htmlFor="city">Ciudad (Opcional)</Label>
         <Input id="city" value={value.city || ''} onChange={(e) => onChange({ ...value, city: e.target.value })} />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="country">País</Label>
+        <Label htmlFor="country">País (Opcional)</Label>
         <Input id="country" value={value.country || ''} onChange={(e) => onChange({ ...value, country: e.target.value })} />
       </div>
       <div className="space-y-2 md:col-span-2">
-        <Label htmlFor="company_number">Número de empresa</Label>
+        <Label htmlFor="company_number">Número de empresa (Opcional)</Label>
         <Input id="company_number" value={value.company_number || ''} onChange={(e) => onChange({ ...value, company_number: e.target.value })} />
       </div>
     </div>
@@ -59,20 +59,12 @@ export default function ClientsPage() {
     return clients.filter((c) => !term || [c.name, c.email, c.city, c.country, c.company_number].some((f) => normalized(String(f || '')).includes(term)));
   }, [clients, search]);
 
-  const canSubmit = (v: Partial<Client>) => !!(v.name && v.address && v.city && v.country);
+  const canSubmit = (_v: Partial<Client>) => true;
 
   async function handleCreate() {
-    if (!canSubmit(form)) return;
     setPending(true);
     try {
-      await createMutation.mutateAsync({
-        name: form.name!,
-        email: form.email!,
-        address: form.address!,
-        city: form.city!,
-        country: form.country!,
-        company_number: form.company_number,
-      });
+      await createMutation.mutateAsync({ ...form });
       setOpenCreate(false);
       setForm({});
     } finally {
@@ -81,10 +73,9 @@ export default function ClientsPage() {
   }
 
   async function handleUpdate(id: string) {
-    if (!canSubmit(form)) return;
     setPending(true);
     try {
-      await updateMutation.mutateAsync({ id, client: { name: form.name!, email: form.email!, address: form.address!, city: form.city!, country: form.country!, company_number: form.company_number } });
+      await updateMutation.mutateAsync({ id, client: { ...form } });
       setOpenEditId(null);
       setForm({});
     } finally {
@@ -118,7 +109,7 @@ export default function ClientsPage() {
             <ClientForm value={form} onChange={setForm} />
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancelar</Button>
-              <Button onClick={handleCreate} disabled={!canSubmit(form) || pending}>{pending ? 'Guardando...' : 'Guardar'}</Button>
+              <Button onClick={handleCreate} disabled={pending}>{pending ? 'Guardando...' : 'Guardar'}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -154,10 +145,10 @@ export default function ClientsPage() {
             ) : (
               filtered.map((c) => (
                 <TableRow key={c.id}>
-                  <TableCell>{c.name}</TableCell>
-                  <TableCell>{c.email}</TableCell>
-                  <TableCell>{c.city}</TableCell>
-                  <TableCell>{c.country}</TableCell>
+                  <TableCell>{c.name || '-'}</TableCell>
+                  <TableCell>{c.email || '-'}</TableCell>
+                  <TableCell>{c.city || '-'}</TableCell>
+                  <TableCell>{c.country || '-'}</TableCell>
                   <TableCell>{c.company_number || '-'}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -175,7 +166,7 @@ export default function ClientsPage() {
                           <ClientForm value={form} onChange={setForm} />
                           <DialogFooter>
                             <Button variant="outline" onClick={() => setOpenEditId(null)}>Cancelar</Button>
-                            <Button onClick={() => handleUpdate(c.id)} disabled={!canSubmit(form) || pending}>{pending ? 'Guardando...' : 'Guardar'}</Button>
+                            <Button onClick={() => handleUpdate(c.id)} disabled={pending}>{pending ? 'Guardando...' : 'Guardar'}</Button>
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>

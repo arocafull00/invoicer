@@ -5,9 +5,11 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
 
 export type IncomeFormValue = Partial<Omit<Income, "id" | "user_id">> & {
   client?: Client;
@@ -22,6 +24,7 @@ export function IncomeForm({
   onChange: (v: IncomeFormValue) => void;
   clients: Client[];
 }) {
+  const navigate = useNavigate();
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
@@ -57,9 +60,13 @@ export function IncomeForm({
         <Label>Cliente</Label>
         <Select
           value={value.client?.id || ""}
-          onValueChange={(id) =>
-            onChange({ ...value, client: clients.find((c) => c.id === id) })
-          }
+          onValueChange={(id) => {
+            if (id === "__create__") {
+              navigate("/clients");
+              return;
+            }
+            onChange({ ...value, client: clients.find((c) => c.id === id) });
+          }}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecciona cliente" />
@@ -70,6 +77,8 @@ export function IncomeForm({
                 {c.name}
               </SelectItem>
             ))}
+            <SelectSeparator />
+            <SelectItem value="__create__">Crear cliente</SelectItem>
           </SelectContent>
         </Select>
       </div>

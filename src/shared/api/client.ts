@@ -1,6 +1,6 @@
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../lib/stores";
-import type { Client, Consultant, Invoice, PaymentInstruction, Income } from "../types";
+import type { Client, Consultant, Invoice, PaymentInstruction, Income, Expense, ExpenseType } from "../types";
 
 export class SupabaseApiClient {
   private async getCurrentUserId(): Promise<string> {
@@ -78,6 +78,141 @@ export class SupabaseApiClient {
     return data as unknown as Income[];
   }
 
+  async getExpenseTypes() {
+    const userId = await this.getCurrentUserId();
+    const { data, error } = await supabase
+      .from("expense_types")
+      .select("*")
+      .eq("user_id", userId)
+      .order("name", { ascending: true });
+
+    if (error) throw new Error(`Failed to fetch expense types: ${error.message}`);
+    return data as unknown as ExpenseType[];
+  }
+
+  async createExpenseType(expenseType: Omit<ExpenseType, "id" | "user_id">) {
+    const userId = await this.getCurrentUserId();
+    const { data, error } = await supabase
+      .from("expense_types")
+      .insert({ ...expenseType, user_id: userId })
+      .select("*")
+      .single();
+
+    if (error) throw new Error(`Failed to create expense type: ${error.message}`);
+    return data as unknown as ExpenseType;
+  }
+
+  async updateExpenseType(id: string, expenseType: Partial<Omit<ExpenseType, "id" | "user_id">>) {
+    const userId = await this.getCurrentUserId();
+    const { data, error } = await supabase
+      .from("expense_types")
+      .update(expenseType)
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select("*")
+      .single();
+
+    if (error) throw new Error(`Failed to update expense type: ${error.message}`);
+    return data as unknown as ExpenseType;
+  }
+
+  async deleteExpenseType(id: string): Promise<void> {
+    const userId = await this.getCurrentUserId();
+    const { error } = await supabase
+      .from("expense_types")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
+
+    if (error) throw new Error(`Failed to delete expense type: ${error.message}`);
+  }
+
+  async getExpenses() {
+    const userId = await this.getCurrentUserId();
+    const { data, error } = await supabase
+      .from("expenses")
+      .select(
+        `
+        *,
+        expense_type:expense_types(*)
+      `
+      )
+      .eq("user_id", userId)
+      .order("date", { ascending: false });
+
+    if (error) throw new Error(`Failed to fetch expenses: ${error.message}`);
+    return data as unknown as Expense[];
+  }
+
+  async createExpense(expense: Omit<Expense, "id" | "user_id">) {
+    const userId = await this.getCurrentUserId();
+    const insertPayload = {
+      date: expense.date,
+      invoice_number: expense.invoice_number,
+      provider: expense.provider,
+      concept: expense.concept,
+      base_amount: expense.base_amount,
+      vat_amount: expense.vat_amount,
+      total: expense.total,
+      expense_type_id: expense.expense_type.id,
+      user_id: userId,
+    } as const;
+
+    const { data, error } = await supabase
+      .from("expenses")
+      .insert(insertPayload)
+      .select(
+        `
+        *,
+        expense_type:expense_types(*)
+      `
+      )
+      .single();
+
+    if (error) throw new Error(`Failed to create expense: ${error.message}`);
+    return data as unknown as Expense;
+  }
+
+  async updateExpense(id: string, expense: Partial<Omit<Expense, "id" | "user_id">>) {
+    const userId = await this.getCurrentUserId();
+    const updatePayload: Record<string, unknown> = {};
+    if (expense.date !== undefined) updatePayload.date = expense.date;
+    if (expense.invoice_number !== undefined) updatePayload.invoice_number = expense.invoice_number;
+    if (expense.provider !== undefined) updatePayload.provider = expense.provider;
+    if (expense.concept !== undefined) updatePayload.concept = expense.concept;
+    if (expense.base_amount !== undefined) updatePayload.base_amount = expense.base_amount;
+    if (expense.vat_amount !== undefined) updatePayload.vat_amount = expense.vat_amount;
+    if (expense.total !== undefined) updatePayload.total = expense.total;
+    if (expense.expense_type?.id) updatePayload.expense_type_id = expense.expense_type.id;
+
+    const { data, error } = await supabase
+      .from("expenses")
+      .update(updatePayload)
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select(
+        `
+        *,
+        expense_type:expense_types(*)
+      `
+      )
+      .single();
+
+    if (error) throw new Error(`Failed to update expense: ${error.message}`);
+    return data as unknown as Expense;
+  }
+
+  async deleteExpense(id: string): Promise<void> {
+    const userId = await this.getCurrentUserId();
+    const { error } = await supabase
+      .from("expenses")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
+
+    if (error) throw new Error(`Failed to delete expense: ${error.message}`);
+  }
+
   async createConsultant(consultant: Omit<Consultant, "id" | "user_id">) {
     const userId = await this.getCurrentUserId();
     const { data, error } = await supabase
@@ -118,11 +253,20 @@ export class SupabaseApiClient {
     if (error) throw new Error(`Failed to delete consultant: ${error.message}`);
   }
 
-  async createClient(client: Omit<Client, "id" | "user_id">) {
+  async createClient(client: Partial<Omit<Client, "id" | "user_id">>) {
     const userId = await this.getCurrentUserId();
+    const insertPayload = {
+      name: client.name ?? "",
+      email: client.email ?? "",
+      address: client.address ?? "",
+      city: client.city ?? "",
+      country: client.country ?? "",
+      company_number: client.company_number ?? null,
+      user_id: userId,
+    } as const;
     const { data, error } = await supabase
       .from("clients")
-      .insert({ ...client, user_id: userId })
+      .insert(insertPayload)
       .select()
       .single();
 

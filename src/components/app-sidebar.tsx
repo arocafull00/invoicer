@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { FileText, Home, LogOut, Settings, UserCog, Users, CreditCard, Banknote } from 'lucide-react';
+import { FileText, Home, LogOut, Settings, UserCog, Users, CreditCard, Banknote, Receipt } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -30,6 +30,7 @@ const navItems: NavItem[] = [
   { title: 'Facturas', to: '/invoices', icon: FileText },
   { title: 'Pagos', to: '/payments', icon: CreditCard },
   { title: 'Ingresos', to: '/incomes', icon: Banknote },
+  { title: 'Gastos', to: '/expenses', icon: Receipt },
   { title: 'Consultores', to: '/consultants', icon: UserCog },
   { title: 'Clientes', to: '/clients', icon: Users },
   { title: 'Configuración', to: '/settings', icon: Settings },

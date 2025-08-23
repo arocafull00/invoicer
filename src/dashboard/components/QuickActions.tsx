@@ -22,9 +22,9 @@ export const QuickActions: React.FC = () => {
           </Link>
         </Button>
         <Button variant="outline" asChild className="w-full   text-white hover:bg-[#FFFFFF1A]">
-          <Link to="/reports">
+          <Link to="/incomes">
             <BarChart3 className="w-4 h-4 mr-2" />
-            Ver reportes
+            Ver ingresos
           </Link>
         </Button>
       </div>

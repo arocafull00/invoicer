@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { RequireAuth } from '@/login/components/RequireAuth';
 import { AppLayout } from '@/shared/components/AppLayout';
 import { LoginPage } from '@/login';
-import { DashboardPage } from '@/dashboard';
+import { DashboardPage } from '@/dashboard/DashboardScreen';
 import Invoices from '@/invoices';
 import NewInvoice from '@/invoices/NewInvoice';
 import { EditInvoice } from '@/invoices/EditInvoice';
@@ -12,6 +12,7 @@ import ConsultantsPage from '@/consultants';
 import ClientsPage from '@/clients';
 import PaymentsPage from '@/payments/PaymentsScreen';
 import IncomesPage from '@/incomes/IncomesScreen';
+import ExpensesPage from '@/expenses/ExpensesScreen';
 import { TermsOfServicePage } from '@/legal/Terms';
 import { PrivacyPolicyPage } from '@/legal/Privacy';
 
@@ -63,6 +64,10 @@ export const router = createBrowserRouter([
   {
     path: '/incomes',
     element: <RequireAuth><AppLayout><IncomesPage /></AppLayout></RequireAuth>,
+  },
+  {
+    path: '/expenses',
+    element: <RequireAuth><AppLayout><ExpensesPage /></AppLayout></RequireAuth>,
   },
   {
     path: '/terms',

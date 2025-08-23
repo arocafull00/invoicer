@@ -3,3 +3,4 @@ export * from './useClients';
 export * from './usePaymentInstructions';
 export * from './useInvoices';
 export * from './useIncomes';
+export * from './useExpenses';

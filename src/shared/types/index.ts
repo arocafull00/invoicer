@@ -99,3 +99,22 @@ export interface Income {
   payment_method: IncomePaymentMethod;
   client: Client;
 }
+
+export interface ExpenseType {
+  id: string;
+  user_id?: string;
+  name: string;
+}
+
+export interface Expense {
+  id: string;
+  user_id?: string;
+  date: string;
+  invoice_number: string;
+  provider: string;
+  concept: string;
+  base_amount: number;
+  vat_amount: number;
+  total: number;
+  expense_type: ExpenseType;
+}
