@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useInvoiceStore } from '@/shared/lib/stores';
 import { getRecentInvoices, formatCurrency } from '@/shared/lib/dashboardUtils';
+import type { Invoice } from '@/shared/types';
 
-const getInvoiceStatus = (invoice: any) => {
+const getInvoiceStatus = (invoice: Invoice) => {
   // Por ahora, asignamos estados de ejemplo basados en la fecha
   const daysSinceCreated = Math.floor(
     (Date.now() - new Date(invoice.created_date).getTime()) / (1000 * 60 * 60 * 24)

@@ -135,7 +135,7 @@ export const createInvoicePDF = async (invoice: Invoice): Promise<Uint8Array> =>
   
   yPosition -= 20;
   
-  page.drawText(invoice.client.address, {
+  page.drawText(invoice?.client?.address ?? '', {
     x: 50,
     y: yPosition,
     size: 10,

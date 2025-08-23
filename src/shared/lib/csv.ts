@@ -34,7 +34,7 @@ export const exportToCSV = (invoices: Invoice[]): void => {
     // Sección Client y Payment instructions
     csvRows.push(['Client', '', '', 'Payment instructions', '', '']);
     csvRows.push([invoice.client.name, '', '', 'Account Holder', invoice.payment_instructions.account_holder, '']);
-    csvRows.push([invoice.client.address, '', '', 'IBAN', invoice.payment_instructions.iban, '']);
+    csvRows.push([invoice.client.address ?? '', '', '', 'IBAN', invoice.payment_instructions.iban ?? '', '']);
     csvRows.push([invoice.client.city + ', ' + invoice.client.country, '', '', 'Payment method', invoice.payment_instructions.payment_method, '']);
     if (invoice.client.company_number) {
       csvRows.push(['Company Number: ' + invoice.client.company_number, '', '', '', '', '']);

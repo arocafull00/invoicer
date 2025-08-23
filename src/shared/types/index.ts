@@ -22,9 +22,9 @@ export interface Client {
   user_id?: string;
   name: string;
   email?: string | null;
-  address: string;
-  city: string;
-  country: string;
+  address?: string;
+  city?: string;
+  country?: string;
   company_number?: string;
 }
 

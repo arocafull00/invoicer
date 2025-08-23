@@ -3,7 +3,7 @@ import { RequireAuth } from '@/login/components/RequireAuth';
 import { AppLayout } from '@/shared/components/AppLayout';
 import { LoginPage } from '@/login';
 import { DashboardPage } from '@/dashboard/DashboardScreen';
-import Invoices from '@/invoices';
+import Invoices from '@/invoices/InvoicesScreen';
 import NewInvoice from '@/invoices/NewInvoice';
 import { EditInvoice } from '@/invoices/EditInvoice';
 import { ViewInvoice } from '@/invoices/ViewInvoice';
@@ -15,6 +15,7 @@ import IncomesPage from '@/incomes/IncomesScreen';
 import ExpensesPage from '@/expenses/ExpensesScreen';
 import { TermsOfServicePage } from '@/legal/Terms';
 import { PrivacyPolicyPage } from '@/legal/Privacy';
+import ImportPage from '@/imports/ImportScreen';
 
 export const router = createBrowserRouter([
   {
@@ -68,6 +69,10 @@ export const router = createBrowserRouter([
   {
     path: '/expenses',
     element: <RequireAuth><AppLayout><ExpensesPage /></AppLayout></RequireAuth>,
+  },
+  {
+    path: '/import',
+    element: <RequireAuth><AppLayout><ImportPage /></AppLayout></RequireAuth>,
   },
   {
     path: '/terms',
