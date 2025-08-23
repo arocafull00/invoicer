@@ -237,6 +237,49 @@ export class SupabaseApiClient {
     return data;
   }
 
+  async updateInvoice(
+    id: string,
+    invoice: Partial<Omit<Invoice, "id" | "user_id">>
+  ) {
+    const userId = await this.getCurrentUserId();
+    const updatePayload: Record<string, unknown> = {};
+    if (invoice.number !== undefined) updatePayload.number = invoice.number;
+    if (invoice.created_date !== undefined)
+      updatePayload.created_date = invoice.created_date;
+    if (invoice.start_date !== undefined)
+      updatePayload.start_date = invoice.start_date;
+    if (invoice.end_date !== undefined) updatePayload.end_date = invoice.end_date;
+    if (invoice.consultant?.id)
+      updatePayload.consultant_id = invoice.consultant.id;
+    if (invoice.client?.id) updatePayload.client_id = invoice.client.id;
+    if (invoice.payment_instructions?.id)
+      updatePayload.payment_instructions_id = invoice.payment_instructions.id;
+    if (invoice.description !== undefined)
+      updatePayload.description = invoice.description;
+    if (invoice.total !== undefined) updatePayload.total = invoice.total;
+    if (invoice.vat_exempt !== undefined)
+      updatePayload.vat_exempt = invoice.vat_exempt;
+    if (invoice.status !== undefined) updatePayload.status = invoice.status;
+
+    const { data, error } = await supabase
+      .from("invoices")
+      .update(updatePayload)
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select(
+        `
+        *,
+        consultant:consultants(*),
+        client:clients(*),
+        payment_instructions:payment_instructions(*)
+      `
+      )
+      .single();
+
+    if (error) throw new Error(`Failed to update invoice: ${error.message}`);
+    return data;
+  }
+
   async createIncome(income: Omit<Income, "id" | "user_id">) {
     const userId = await this.getCurrentUserId();
     const insertPayload = {

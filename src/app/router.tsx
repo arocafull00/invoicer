@@ -10,8 +10,8 @@ import { ViewInvoice } from '@/invoices/ViewInvoice';
 import { SettingsPage } from '@/settings/SettingsScreen';
 import ConsultantsPage from '@/consultants';
 import ClientsPage from '@/clients';
-import PaymentsPage from '@/payments';
-import IncomesPage from '@/incomes';
+import PaymentsPage from '@/payments/PaymentsScreen';
+import IncomesPage from '@/incomes/IncomesScreen';
 import { TermsOfServicePage } from '@/legal/Terms';
 import { PrivacyPolicyPage } from '@/legal/Privacy';
 

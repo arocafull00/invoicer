@@ -11,6 +11,13 @@ export const createInvoice = async (
   return await apiClient.createInvoice(invoice);
 };
 
+export const updateInvoice = async (
+  id: string,
+  invoice: Partial<Omit<Invoice, 'id' | 'user_id'>>
+): Promise<Invoice> => {
+  return await apiClient.updateInvoice(id, invoice);
+};
+
 export const getNextInvoiceNumber = async (): Promise<string> => {
   return await apiClient.getNextInvoiceNumber();
 };

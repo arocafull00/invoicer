@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -11,10 +12,12 @@ import {
 } from "@/components/ui/select";
 import { uploadUserLogo } from "@/shared/api/services/logos";
 import { useSettingsStore } from "@/shared/lib/stores";
+import { useTheme } from "next-themes";
 
 export const SettingsPage: React.FC = () => {
   const { settings, update, setLogoUrl } = useSettingsStore();
   const [isUploading, setIsUploading] = useState(false);
+  const { theme, setTheme, systemTheme } = useTheme();
 
   const handleLogoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -133,6 +136,38 @@ export const SettingsPage: React.FC = () => {
             <Button className="w-full bg-[#7F5AF0] text-white hover:bg-[#654DD4]" disabled>
               Guardado automáticamente
             </Button>
+          </div>
+        </Card>
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">Apariencia</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="theme-switch" className="text-white">Modo oscuro</Label>
+                <p className="text-sm text-[#A1A1AA]">Activa el modo oscuro o usa el sistema</p>
+              </div>
+              <Switch
+                id="theme-switch"
+                checked={(theme ?? systemTheme) === "dark"}
+                onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="theme-select" className="text-white">Preferencia de tema</Label>
+              <Select
+                value={theme ?? "system"}
+                onValueChange={(v: "light" | "dark" | "system") => setTheme(v)}
+              >
+                <SelectTrigger id="theme-select" className="bg-[#0D0D0D] border-[#FFFFFF14] text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#0D0D0D] border-[#FFFFFF14]">
+                  <SelectItem value="light" className="text-white hover:bg-[#FFFFFF14]">Claro</SelectItem>
+                  <SelectItem value="dark" className="text-white hover:bg-[#FFFFFF14]">Oscuro</SelectItem>
+                  <SelectItem value="system" className="text-white hover:bg-[#FFFFFF14]">Sistema</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </Card>
       </div>

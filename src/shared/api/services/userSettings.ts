@@ -1,6 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../lib/stores';
-import type { UserSettings } from '@/shared/types';
+import type { SupportedCurrency, SupportedDateFormat, UserSettings } from '@/shared/types';
 
 async function getRequiredUserId(): Promise<string> {
   const { user } = useAuthStore.getState();
@@ -8,7 +8,12 @@ async function getRequiredUserId(): Promise<string> {
   return user.id;
 }
 
-function mapRowToSettings(row: any): UserSettings {
+function mapRowToSettings(row: {
+  id: string;
+  user_id: string;
+  default_currency: SupportedCurrency;
+  date_format: SupportedDateFormat;
+}): UserSettings {
   return {
     id: row?.id,
     user_id: row?.user_id,
