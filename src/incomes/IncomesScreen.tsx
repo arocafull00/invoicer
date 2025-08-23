@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { IncomeForm, type IncomeFormValue } from './components/IncomeForm';
 
+
 export default function IncomesPage() {
   const { data: incomes = [], isLoading } = useIncomes();
   const { data: clients = [] } = useClients();
