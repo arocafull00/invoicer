@@ -1,5 +1,5 @@
-import React from 'react';
-import { CheckCircle } from 'lucide-react';
+import React from "react";
+import { CheckCircle } from "lucide-react";
 
 interface Step {
   id: number;
@@ -15,7 +15,7 @@ interface StepperProps {
 
 export const Stepper: React.FC<StepperProps> = ({ steps, currentStep }) => {
   return (
-    <div className="flex items-center justify-between mb-8 px-4">
+    <div className="flex items-center justify-center mb-8 px-4">
       {steps.map((step, index) => (
         <div key={step.id} className="flex items-center">
           <div className="flex items-center">
@@ -26,8 +26,8 @@ export const Stepper: React.FC<StepperProps> = ({ steps, currentStep }) => {
                   currentStep > step.id
                     ? "bg-primary border-primary text-primary-foreground"
                     : currentStep === step.id
-                      ? "bg-primary border-primary text-primary-foreground"
-                      : "border-muted text-muted-foreground"
+                    ? "bg-primary border-primary text-primary-foreground"
+                    : "border-muted text-muted-foreground"
                 }
               `}
             >
@@ -37,15 +37,25 @@ export const Stepper: React.FC<StepperProps> = ({ steps, currentStep }) => {
                 <span className="text-sm font-semibold">{step.id}</span>
               )}
             </div>
-            <span className={`ml-3 text-sm font-medium ${currentStep >= step.id ? "text-foreground" : "text-muted-foreground"}`}>
+            <span
+              className={`ml-3 text-sm font-medium ${
+                currentStep >= step.id
+                  ? "text-foreground"
+                  : "text-muted-foreground"
+              }`}
+            >
               {step.name}
             </span>
           </div>
           {index < steps.length - 1 && (
-            <div className={`w-16 h-0.5 mx-4 ${currentStep > step.id ? "bg-primary" : "bg-muted"}`} />
+            <div
+              className={`w-16 h-0.5 mx-4 ${
+                currentStep > step.id ? "bg-primary" : "bg-muted"
+              }`}
+            />
           )}
         </div>
       ))}
     </div>
   );
-}; 
+};
