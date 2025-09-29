@@ -452,7 +452,7 @@ export class SupabaseApiClient {
     if (invoice.deleted !== undefined) updatePayload.deleted = invoice.deleted;
 
     // Update the invoice
-    const { data: invoiceData, error: invoiceError } = await supabase
+    const { error: invoiceError } = await supabase
       .from("invoices")
       .update(updatePayload)
       .eq("id", id)
