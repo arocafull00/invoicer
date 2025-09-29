@@ -4,6 +4,7 @@ import type {
   Client,
   PaymentInstruction,
   Invoice,
+  LineItem,
 } from "@/shared/types";
 import {
   createInvoice,
@@ -14,8 +15,6 @@ import {
 } from "@/shared/api/services";
 import { useInvoiceStore } from "@/shared/lib/stores";
 
-type LineItem = { description: string; quantity: number; rate: number };
-
 interface NewInvoiceFormState {
   invoiceNumber: string;
   issueDate: string;
@@ -23,7 +22,8 @@ interface NewInvoiceFormState {
   selectedConsultantId: string;
   selectedClientId: string;
   selectedPaymentId: string;
-  lineItem: LineItem;
+  lineItems: Omit<LineItem, 'id' | 'total'>[];
+  currentLineItem: Omit<LineItem, 'id' | 'total'>;
   logoPreview: string | null;
   isSaving: boolean;
   // dialogs
@@ -40,7 +40,10 @@ interface InvoiceFormStoreState {
   form: NewInvoiceFormState;
   // setters
   setForm: (updater: Partial<NewInvoiceFormState>) => void;
-  setLineItem: (updater: Partial<LineItem>) => void;
+  setCurrentLineItem: (updater: Partial<Omit<LineItem, 'id' | 'total'>>) => void;
+  addLineItem: () => void;
+  removeLineItem: (index: number) => void;
+  updateLineItem: (index: number, updater: Partial<Omit<LineItem, 'id' | 'total'>>) => void;
   setLogoFromFile: (file: File) => void;
   setDialog: (
     which: "consultant" | "client" | "payment",
@@ -54,7 +57,8 @@ interface InvoiceFormStoreState {
   getSelectedConsultant: () => Consultant | undefined;
   getSelectedClient: () => Client | undefined;
   getSelectedPayment: () => PaymentInstruction;
-  getLineTotal: () => number;
+  getLineItemTotal: (item: Omit<LineItem, 'id' | 'total'>) => number;
+  getTotalAmount: () => number;
   isFormValid: () => boolean;
   // async actions
   fetchNextInvoiceNumber: () => Promise<void>;
@@ -76,7 +80,8 @@ const initialFormState = (): NewInvoiceFormState => ({
   selectedConsultantId: "",
   selectedClientId: "",
   selectedPaymentId: "",
-  lineItem: { description: "", quantity: 1, rate: 0 },
+  lineItems: [],
+  currentLineItem: { description: "", quantity: 1, rate: 0 },
   logoPreview: null,
   isSaving: false,
   openNewConsultant: false,
@@ -116,11 +121,41 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
     // setters
     setForm: (updater) =>
       set((state) => ({ form: { ...state.form, ...updater } })),
-    setLineItem: (updater) =>
+    setCurrentLineItem: (updater) =>
       set((state) => ({
         form: {
           ...state.form,
-          lineItem: { ...state.form.lineItem, ...updater },
+          currentLineItem: { ...state.form.currentLineItem, ...updater },
+        },
+      })),
+    addLineItem: () =>
+      set((state) => {
+        const { currentLineItem } = state.form;
+        if (!currentLineItem.description || currentLineItem.quantity <= 0 || currentLineItem.rate <= 0) {
+          return state;
+        }
+        return {
+          form: {
+            ...state.form,
+            lineItems: [...state.form.lineItems, { ...currentLineItem }],
+            currentLineItem: { description: "", quantity: 1, rate: 0 },
+          },
+        };
+      }),
+    removeLineItem: (index) =>
+      set((state) => ({
+        form: {
+          ...state.form,
+          lineItems: state.form.lineItems.filter((_, i) => i !== index),
+        },
+      })),
+    updateLineItem: (index, updater) =>
+      set((state) => ({
+        form: {
+          ...state.form,
+          lineItems: state.form.lineItems.map((item, i) =>
+            i === index ? { ...item, ...updater } : item
+          ),
         },
       })),
     setLogoFromFile: (file) => {
@@ -187,16 +222,23 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
         useInvoiceStore.getState().payment_instructions[0]
       );
     },
-    getLineTotal: () => {
-      const { quantity, rate } = get().form.lineItem;
-      return Number(((quantity || 0) * (rate || 0)).toFixed(2));
+    getLineItemTotal: (item) => {
+      return Number(((item.quantity || 0) * (item.rate || 0)).toFixed(2));
+    },
+    getTotalAmount: () => {
+      const { lineItems } = get().form;
+      return Number(
+        lineItems
+          .reduce((total, item) => total + (item.quantity || 0) * (item.rate || 0), 0)
+          .toFixed(2)
+      );
     },
     isFormValid: () => {
       const s = get();
       const {
         issueDate,
         dueDate,
-        lineItem,
+        lineItems,
         selectedClientId,
         selectedConsultantId,
         selectedPaymentId,
@@ -207,8 +249,8 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
           selectedPaymentId &&
           issueDate &&
           dueDate &&
-          lineItem.description &&
-          s.getLineTotal() > 0
+          lineItems.length > 0 &&
+          s.getTotalAmount() > 0
       );
     },
 
@@ -230,6 +272,12 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
 
       set((state) => ({ form: { ...state.form, isSaving: true } }));
       try {
+        const lineItemsWithIds: LineItem[] = s.form.lineItems.map((item, index) => ({
+          id: `line-${index + 1}`,
+          ...item,
+          total: s.getLineItemTotal(item),
+        }));
+
         const payload: Omit<Invoice, "id"> = {
           number: s.form.invoiceNumber,
           created_date: new Date().toISOString().split("T")[0],
@@ -237,10 +285,9 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
           end_date: s.form.dueDate,
           consultant,
           client,
-          description: `${s.form.lineItem.description} (Cant.: ${
-            s.form.lineItem.quantity
-          } × Tarifa: ${s.form.lineItem.rate.toFixed(2)})`,
-          total: s.getLineTotal(),
+          description: lineItemsWithIds.map(item => item.description).join(", "), // Keep for backward compatibility
+          line_items: lineItemsWithIds,
+          total: s.getTotalAmount(),
           payment_instructions: payment,
           vat_exempt: true,
           status: "pending",

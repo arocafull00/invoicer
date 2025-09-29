@@ -1,6 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -16,6 +15,7 @@ import {
   Download,
   Eye,
   Edit,
+  Trash2,
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
@@ -24,6 +24,17 @@ import { useInvoiceStore } from "@/shared/lib/stores";
 import { formatDate, formatCurrency } from "@/shared/lib/helpers";
 import { downloadInvoicePDF } from "@/shared/lib/pdf";
 import type { Invoice } from "@/shared/types";
+import { updateInvoice, softDeleteInvoice } from "@/shared/api/services/invoices";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   type ColumnDef,
   type SortingState,
@@ -42,20 +53,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const statusConfig = {
-  paid: {
-    label: "Pagada",
-    color: "bg-green-500/20 text-green-400 border-green-500/30",
-  },
-  pending: {
-    label: "Pendiente",
-    color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  },
-  overdue: {
-    label: "Vencida",
-    color: "bg-red-500/20 text-red-400 border-red-500/30",
-  },
-};
+// Removed badge rendering for status; using editable Select instead
 
 export function InvoiceTable() {
   const navigate = useNavigate();
@@ -75,17 +73,55 @@ export function InvoiceTable() {
     }
   };
 
-  const handleEdit = (invoice: Invoice) => {
+  const handleEdit = useCallback((invoice: Invoice) => {
     navigate(`/invoices/edit/${invoice.id}`);
-  };
+  }, [navigate]);
 
-  const handleView = (invoice: Invoice) => {
+  const handleView = useCallback((invoice: Invoice) => {
     navigate(`/invoices/view/${invoice.id}`);
-  };
+  }, [navigate]);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pageSize, setPageSize] = useState<number>(10);
   const [globalFilter, setGlobalFilter] = useState<string>("");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+
+  const handleStatusChange = useCallback(async (inv: Invoice, next: Invoice["status"]) => {
+    if (inv.status === next) return;
+    try {
+      setUpdatingId(inv.id);
+      const updated = await updateInvoice(inv.id, { status: next });
+      const current = useInvoiceStore.getState().invoices;
+      const mapped = current.map((i) => (i.id === updated.id ? updated : i));
+      useInvoiceStore.getState().setInvoices(mapped);
+    } catch (err) {
+      console.error("Failed to update invoice status", err);
+    } finally {
+      setUpdatingId(null);
+    }
+  }, []);
+
+  const handleDelete = useCallback(async (invoice: Invoice) => {
+    setConfirmId(invoice.id);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!confirmId) return;
+    try {
+      setDeletingId(confirmId);
+      await softDeleteInvoice(confirmId);
+      const current = useInvoiceStore.getState().invoices;
+      const remaining = current.filter((i) => i.id !== confirmId);
+      useInvoiceStore.getState().setInvoices(remaining);
+    } catch (err) {
+      console.error("Failed to delete invoice", err);
+    } finally {
+      setDeletingId(null);
+      setConfirmId(null);
+    }
+  }, [confirmId]);
 
   const columns = useMemo<ColumnDef<Invoice>[]>(
     () => [
@@ -199,12 +235,25 @@ export function InvoiceTable() {
         id: "status",
         accessorFn: (row) => row.status ?? "",
         header: () => <div>ESTADO</div>,
-        cell: ({ row }) =>
-          row.original.status ? (
-            <Badge className={statusConfig[row.original.status].color}>
-              {statusConfig[row.original.status].label}
-            </Badge>
-          ) : null,
+        cell: ({ row }) => (
+          <div className="min-w-[140px]">
+            <Select
+              value={row.original.status}
+              onValueChange={(v: string) =>
+                handleStatusChange(row.original, v as Invoice["status"]) }
+              disabled={updatingId === row.original.id}
+            >
+              <SelectTrigger className="bg-card border-[#FFFFFF14] text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="paid">Pagada</SelectItem>
+                <SelectItem value="pending">Pendiente</SelectItem>
+                <SelectItem value="overdue">Vencida</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        ),
       },
       {
         id: "actions",
@@ -244,11 +293,25 @@ export function InvoiceTable() {
                 <Download className="w-4 h-4" />
               )}
             </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[#EF4444] hover:text-white hover:bg-[#EF4444]/20 p-2"
+              onClick={() => handleDelete(row.original)}
+              disabled={deletingId === row.original.id}
+              title="Eliminar"
+            >
+              {deletingId === row.original.id ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+            </Button>
           </div>
         ),
       },
     ],
-    [loadingPdf]
+    [loadingPdf, updatingId, deletingId, handleEdit, handleView, handleStatusChange, handleDelete]
   );
 
   const table = useReactTable({
@@ -453,6 +516,22 @@ export function InvoiceTable() {
           </div>
         </div>
       </div>
+      <AlertDialog open={Boolean(confirmId)} onOpenChange={(open) => !open && setConfirmId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar factura</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Seguro que quieres eliminar esta factura? Podrás recuperarla desde la base de datos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="bg-[#EF4444] hover:bg-[#DC2626]" onClick={confirmDelete}>
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

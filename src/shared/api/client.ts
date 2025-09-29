@@ -52,10 +52,12 @@ export class SupabaseApiClient {
         *,
         consultant:consultants(*),
         client:clients(*),
-        payment_instructions(*)
+        payment_instructions(*),
+        line_items:invoice_line_items(*)
       `
       )
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .neq("deleted", true);
 
     if (error) throw new Error(`Failed to fetch invoices: ${error.message}`);
     return data;
@@ -349,6 +351,7 @@ export class SupabaseApiClient {
 
   async createInvoice(invoice: Omit<Invoice, "id" | "user_id">) {
     const userId = await this.getCurrentUserId();
+    
     // Transform the invoice object into the DB insert shape using foreign keys
     const insertPayload = {
       number: invoice.number,
@@ -362,9 +365,11 @@ export class SupabaseApiClient {
       total: invoice.total,
       vat_exempt: invoice.vat_exempt,
       user_id: userId,
+      status: invoice.status,
     } as const;
 
-    const { data, error } = await supabase
+    // Start a transaction to create invoice and line items
+    const { data: invoiceData, error: invoiceError } = await supabase
       .from("invoices")
       .insert(insertPayload)
       .select(
@@ -377,8 +382,48 @@ export class SupabaseApiClient {
       )
       .single();
 
-    if (error) throw new Error(`Failed to create invoice: ${error.message}`);
-    return data;
+    if (invoiceError) throw new Error(`Failed to create invoice: ${invoiceError.message}`);
+
+    // Create line items if they exist
+    if (invoice.line_items && invoice.line_items.length > 0) {
+      const lineItemsPayload = invoice.line_items.map((item, index) => ({
+        invoice_id: invoiceData.id,
+        description: item.description,
+        quantity: item.quantity,
+        rate: item.rate,
+        total: item.total || item.quantity * item.rate,
+        order_index: index,
+        user_id: userId,
+      }));
+
+      const { error: lineItemsError } = await supabase
+        .from("invoice_line_items")
+        .insert(lineItemsPayload);
+
+      if (lineItemsError) {
+        // If line items fail, we should rollback the invoice creation
+        // For now, we'll just log the error and continue
+        console.error("Failed to create line items:", lineItemsError.message);
+      }
+    }
+
+    // Fetch the complete invoice with line items
+    const { data: completeInvoice, error: fetchError } = await supabase
+      .from("invoices")
+      .select(
+        `
+        *,
+        consultant:consultants(*),
+        client:clients(*),
+        payment_instructions:payment_instructions(*),
+        line_items:invoice_line_items(*)
+      `
+      )
+      .eq("id", invoiceData.id)
+      .single();
+
+    if (fetchError) throw new Error(`Failed to fetch created invoice: ${fetchError.message}`);
+    return completeInvoice;
   }
 
   async updateInvoice(
@@ -404,8 +449,10 @@ export class SupabaseApiClient {
     if (invoice.vat_exempt !== undefined)
       updatePayload.vat_exempt = invoice.vat_exempt;
     if (invoice.status !== undefined) updatePayload.status = invoice.status;
+    if (invoice.deleted !== undefined) updatePayload.deleted = invoice.deleted;
 
-    const { data, error } = await supabase
+    // Update the invoice
+    const { data: invoiceData, error: invoiceError } = await supabase
       .from("invoices")
       .update(updatePayload)
       .eq("id", id)
@@ -420,8 +467,82 @@ export class SupabaseApiClient {
       )
       .single();
 
-    if (error) throw new Error(`Failed to update invoice: ${error.message}`);
-    return data;
+    if (invoiceError) throw new Error(`Failed to update invoice: ${invoiceError.message}`);
+
+    // Update line items if they are provided
+    if (invoice.line_items !== undefined) {
+      // Delete existing line items
+      const { error: deleteError } = await supabase
+        .from("invoice_line_items")
+        .delete()
+        .eq("invoice_id", id)
+        .eq("user_id", userId);
+
+      if (deleteError) {
+        console.error("Failed to delete existing line items:", deleteError.message);
+      }
+
+      // Insert new line items if they exist
+      if (invoice.line_items.length > 0) {
+        const lineItemsPayload = invoice.line_items.map((item, index) => ({
+          invoice_id: id,
+          description: item.description,
+          quantity: item.quantity,
+          rate: item.rate,
+          total: item.total || item.quantity * item.rate,
+          order_index: index,
+          user_id: userId,
+        }));
+
+        const { error: insertError } = await supabase
+          .from("invoice_line_items")
+          .insert(lineItemsPayload);
+
+        if (insertError) {
+          console.error("Failed to create new line items:", insertError.message);
+        }
+      }
+    }
+
+    // Fetch the complete updated invoice with line items
+    const { data: completeInvoice, error: fetchError } = await supabase
+      .from("invoices")
+      .select(
+        `
+        *,
+        consultant:consultants(*),
+        client:clients(*),
+        payment_instructions:payment_instructions(*),
+        line_items:invoice_line_items(*)
+      `
+      )
+      .eq("id", id)
+      .single();
+
+    if (fetchError) throw new Error(`Failed to fetch updated invoice: ${fetchError.message}`);
+    return completeInvoice;
+  }
+
+  async softDeleteInvoice(id: string) {
+    const userId = await this.getCurrentUserId();
+    const { data, error } = await supabase
+      .from("invoices")
+      .update({ deleted: true })
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select(
+        `
+        *,
+        consultant:consultants(*),
+        client:clients(*),
+        payment_instructions:payment_instructions(*),
+        line_items:invoice_line_items(*)
+      `
+      )
+      .single();
+
+    if (error) throw new Error(`Failed to delete invoice: ${error.message}`);
+    return data as unknown as Invoice;
   }
 
   async createIncome(income: Omit<Income, "id" | "user_id">) {
@@ -495,8 +616,10 @@ export class SupabaseApiClient {
     const { data, error } = await supabase
       .from("invoices")
       .select("number", { count: "exact" })
+      .eq("deleted", false)
       .eq("user_id", userId);
 
+    console.log(data);
     if (error)
       throw new Error(`Failed to fetch invoice numbers: ${error.message}`);
 

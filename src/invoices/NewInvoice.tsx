@@ -25,6 +25,7 @@ import { useInvoiceStore } from "@/shared/lib/stores";
 import { useInvoiceFormStore } from "@/invoices/store/useInvoicesStore";
 import { useSettingsStore } from "@/shared/lib/stores";
 import { uploadUserLogo } from "@/shared/api/services/logos";
+import { X, Plus, Trash2 } from "lucide-react";
 
 export default function NewInvoice() {
   const navigate = useNavigate();
@@ -33,7 +34,10 @@ export default function NewInvoice() {
   const {
     form,
     setForm,
-    setLineItem,
+    setCurrentLineItem,
+    addLineItem,
+    removeLineItem,
+    updateLineItem,
     setLogoFromFile,
     fetchNextInvoiceNumber,
     saveInvoice,
@@ -48,7 +52,8 @@ export default function NewInvoice() {
     createNewConsultant,
     createNewClient,
     createNewPayment,
-    getLineTotal,
+    getLineItemTotal,
+    getTotalAmount,
   } = useInvoiceFormStore();
 
   useEffect(() => {
@@ -138,6 +143,9 @@ export default function NewInvoice() {
 
   return (
     <div className="space-y-6 max-w-[900px] mx-auto">
+      <Button className="fixed top-4 right-4" variant="ghost" onClick={() => navigate("/invoices")}>
+        <X className="w-4 h-4" />
+      </Button>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white">Facturas</h1>
@@ -465,19 +473,91 @@ export default function NewInvoice() {
         </Card>
       </div>
 
-      {/* Line item and totals */}
+      {/* Line items */}
       <Card>
         <CardHeader>
           <CardTitle className="text-white">Conceptos</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Existing line items */}
+          {form.lineItems.length > 0 && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center px-4 pb-2">
+                <div className="md:col-span-2">
+                  <Label className="text-[#A1A1AA] text-sm">Descripción</Label>
+                </div>
+                <div>
+                  <Label className="text-[#A1A1AA] text-sm">Cantidad</Label>
+                </div>
+                <div>
+                  <Label className="text-[#A1A1AA] text-sm">Tarifa (€)</Label>
+                </div>
+                <div>
+                  <Label className="text-[#A1A1AA] text-sm">Total</Label>
+                </div>
+              </div>
+              {form.lineItems.map((item, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center p-4 bg-[#FFFFFF14]/30 rounded-lg">
+                  <div className="md:col-span-2">
+                    <Input
+                      className="bg-input border-border text-card-foreground"
+                      value={item.description}
+                      onChange={(e) => updateLineItem(index, { description: e.target.value })}
+                      placeholder="Descripción del servicio"
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      className="bg-input border-border text-card-foreground"
+                      value={item.quantity}
+                      onChange={(e) => updateLineItem(index, { quantity: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="bg-input border-border text-card-foreground"
+                      value={item.rate}
+                      onChange={(e) => updateLineItem(index, { rate: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white">€ {getLineItemTotal(item).toFixed(2)}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeLineItem(index)}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                onClick={addLineItem}
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Añadir concepto
+              </Button>
+            </div>
+          )}
+
+          {/* Add new line item form */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div className="md:col-span-2 space-y-2">
               <Label className="text-card-foreground">Descripción</Label>
               <Input
                 className="bg-input border-border text-card-foreground"
-                value={form.lineItem.description}
-                onChange={(e) => setLineItem({ description: e.target.value })}
+                value={form.currentLineItem.description}
+                onChange={(e) => setCurrentLineItem({ description: e.target.value })}
                 placeholder="Descripción del servicio"
               />
             </div>
@@ -488,9 +568,9 @@ export default function NewInvoice() {
                 min="0"
                 step="1"
                 className="bg-input border-border text-card-foreground"
-                value={form.lineItem.quantity}
+                value={form.currentLineItem.quantity}
                 onChange={(e) =>
-                  setLineItem({ quantity: Number(e.target.value) })
+                  setCurrentLineItem({ quantity: Number(e.target.value) })
                 }
               />
             </div>
@@ -501,16 +581,31 @@ export default function NewInvoice() {
                 min="0"
                 step="0.01"
                 className="bg-input border-border text-card-foreground"
-                value={form.lineItem.rate}
-                onChange={(e) => setLineItem({ rate: Number(e.target.value) })}
+                value={form.currentLineItem.rate}
+                onChange={(e) => setCurrentLineItem({ rate: Number(e.target.value) })}
               />
             </div>
           </div>
-          <div className="flex justify-end text-white">
-            <div className="w-full md:w-1/2 lg:w-1/3">
+
+          <div className="flex items-center justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addLineItem}
+              disabled={
+                !form.currentLineItem.description ||
+                form.currentLineItem.quantity <= 0 ||
+                form.currentLineItem.rate <= 0
+              }
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Añadir concepto
+            </Button>
+            <div className="text-white">
               <div className="flex items-center justify-between py-2">
-                <span className="text-[#A1A1AA]">Subtotal</span>
-                <span>€ {getLineTotal().toFixed(2)}</span>
+                <span className="text-[#A1A1AA] mr-4">Total</span>
+                <span className="text-lg font-semibold">€ {getTotalAmount().toFixed(2)}</span>
               </div>
             </div>
           </div>

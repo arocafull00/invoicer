@@ -38,6 +38,14 @@ export interface PaymentInstruction {
   additional_data: string;
 }
 
+export interface LineItem {
+  id: string;
+  description: string;
+  quantity: number;
+  rate: number;
+  total: number;
+}
+
 export interface Invoice {
   id: string;
   user_id?: string;
@@ -47,11 +55,13 @@ export interface Invoice {
   end_date: string;
   consultant: Consultant;
   client: Client;
-  description: string;
+  description?: string; // Keep for backward compatibility
+  line_items: LineItem[];
   total: number;
   payment_instructions: PaymentInstruction;
   vat_exempt: boolean;
   status: "paid" | "pending" | "overdue";
+  deleted?: boolean;
 }
 
 export interface WizardDraft {
@@ -84,7 +94,6 @@ export interface UserSettings {
   user_id?: string;
   default_currency: SupportedCurrency;
   date_format: SupportedDateFormat;
-  // Not persisted in DB; convenience field loaded from storage
   logo_url?: string | null;
 }
 

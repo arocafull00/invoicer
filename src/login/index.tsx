@@ -155,7 +155,7 @@ export const LoginPage: React.FC = () => {
               onClick={handleGithubSignIn}
               variant="outline"
               disabled={loading}
-              className="w-full bg-[#0D0D0D] border-[#FFFFFF14] text-white hover:bg-[#FFFFFF1A]"
+              className="w-full mb-2 bg-[#0D0D0D] border-[#FFFFFF14] text-white hover:bg-[#FFFFFF1A]"
             >
               <GitHubIcon className="w-4 h-4 mr-2" />
               GitHub

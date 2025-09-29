@@ -42,9 +42,23 @@ export const exportToCSV = (invoices: Invoice[]): void => {
     csvRows.push(['', '', '', invoice.payment_instructions.payment_terms, '', '']);
     csvRows.push(['', '', '', invoice.payment_instructions.additional_data, '', '']);
     
-    // Descripción y Total
-    csvRows.push(['DESCRIPTION', '', '', '', '', 'TOTAL']);
-    csvRows.push([invoice.description, '', '', '', '', formatCurrency(invoice.total)]);
+    // Line Items
+    csvRows.push(['DESCRIPTION', 'QTY', 'RATE', '', '', 'TOTAL']);
+    
+    const lineItems = invoice.line_items && invoice.line_items.length > 0 
+      ? invoice.line_items 
+      : [{ description: invoice.description || "", quantity: 1, rate: invoice.total, total: invoice.total }];
+
+    lineItems.forEach((item) => {
+      csvRows.push([
+        item.description, 
+        item.quantity.toString(), 
+        formatCurrency(item.rate), 
+        '', 
+        '', 
+        formatCurrency(item.total || item.quantity * item.rate)
+      ]);
+    });
     
     // Filas vacías
     csvRows.push(['', '', '', '', '', '']);
