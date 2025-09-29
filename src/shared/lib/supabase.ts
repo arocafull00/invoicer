@@ -21,9 +21,30 @@ export const db = supabase;
 
 // Utilidad para construir URLs de redirección de OAuth de forma consistente
 export function getRedirectUrl(path: string): string {
-  const base = siteUrlFromEnv && siteUrlFromEnv.length > 0
-    ? siteUrlFromEnv.replace(/\/$/, '')
-    : (import.meta.env.PROD ? 'https://invoicer-sooty.vercel.app' : window.location.origin);
+  // Detectar si estamos en localhost - versión más simple y directa
+  const hostname = window.location.hostname;
+  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+  
+  // Debug para ver qué está pasando
+  console.log('🔍 getRedirectUrl debug:', {
+    hostname,
+    origin: window.location.origin,
+    isLocalhost,
+    siteUrlFromEnv,
+    path
+  });
+  
+  // FORZAR localhost si estamos en desarrollo local
+  if (isLocalhost) {
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    const url = `${window.location.origin}${normalizedPath}`;
+    console.log('✅ Using localhost URL:', url);
+    return url;
+  }
+  
+  // Solo usar producción si NO estamos en localhost
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${base}${normalizedPath}`;
+  const url = `https://invoicer-sooty.vercel.app${normalizedPath}`;
+  console.log('🌐 Using production URL:', url);
+  return url;
 }

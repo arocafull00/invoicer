@@ -24,6 +24,8 @@ interface NewInvoiceFormState {
   selectedPaymentId: string;
   lineItems: Omit<LineItem, 'id' | 'total'>[];
   currentLineItem: Omit<LineItem, 'id' | 'total'>;
+  includeVat: boolean;
+  vatRate: number;
   logoPreview: string | null;
   isSaving: boolean;
   // dialogs
@@ -58,6 +60,8 @@ interface InvoiceFormStoreState {
   getSelectedClient: () => Client | undefined;
   getSelectedPayment: () => PaymentInstruction;
   getLineItemTotal: (item: Omit<LineItem, 'id' | 'total'>) => number;
+  getSubtotal: () => number;
+  getVatAmount: () => number;
   getTotalAmount: () => number;
   isFormValid: () => boolean;
   // async actions
@@ -82,6 +86,8 @@ const initialFormState = (): NewInvoiceFormState => ({
   selectedPaymentId: "",
   lineItems: [],
   currentLineItem: { description: "", quantity: 1, rate: 0 },
+  includeVat: false,
+  vatRate: 21,
   logoPreview: null,
   isSaving: false,
   openNewConsultant: false,
@@ -225,13 +231,24 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
     getLineItemTotal: (item) => {
       return Number(((item.quantity || 0) * (item.rate || 0)).toFixed(2));
     },
-    getTotalAmount: () => {
+    getSubtotal: () => {
       const { lineItems } = get().form;
       return Number(
         lineItems
           .reduce((total, item) => total + (item.quantity || 0) * (item.rate || 0), 0)
           .toFixed(2)
       );
+    },
+    getVatAmount: () => {
+      const { includeVat, vatRate } = get().form;
+      if (!includeVat) return 0;
+      const subtotal = get().getSubtotal();
+      return Number((subtotal * (vatRate / 100)).toFixed(2));
+    },
+    getTotalAmount: () => {
+      const subtotal = get().getSubtotal();
+      const vatAmount = get().getVatAmount();
+      return Number((subtotal + vatAmount).toFixed(2));
     },
     isFormValid: () => {
       const s = get();
@@ -278,6 +295,10 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
           total: s.getLineItemTotal(item),
         }));
 
+        const subtotal = s.getSubtotal();
+        const vatAmount = s.getVatAmount();
+        const total = s.getTotalAmount();
+
         const payload: Omit<Invoice, "id"> = {
           number: s.form.invoiceNumber,
           created_date: new Date().toISOString().split("T")[0],
@@ -287,9 +308,12 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
           client,
           description: lineItemsWithIds.map(item => item.description).join(", "), // Keep for backward compatibility
           line_items: lineItemsWithIds,
-          total: s.getTotalAmount(),
+          subtotal,
+          vat_rate: s.form.includeVat ? s.form.vatRate : 0,
+          vat_amount: vatAmount,
+          total,
           payment_instructions: payment,
-          vat_exempt: true,
+          vat_exempt: !s.form.includeVat,
           status: "pending",
         };
         const created = await createInvoice(payload);

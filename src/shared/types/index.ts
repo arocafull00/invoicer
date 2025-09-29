@@ -46,6 +46,19 @@ export interface LineItem {
   total: number;
 }
 
+export interface LineItemTemplate {
+  id: string;
+  user_id?: string;
+  description: string;
+  default_quantity: number;
+  default_rate: number;
+  category?: string;
+  usage_count: number;
+  last_used_at?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Invoice {
   id: string;
   user_id?: string;
@@ -57,7 +70,10 @@ export interface Invoice {
   client: Client;
   description?: string; // Keep for backward compatibility
   line_items: LineItem[];
-  total: number;
+  subtotal: number; // Total without VAT
+  vat_rate: number; // VAT percentage (e.g., 21)
+  vat_amount: number; // Calculated VAT amount
+  total: number; // Total including VAT
   payment_instructions: PaymentInstruction;
   vat_exempt: boolean;
   status: "paid" | "pending" | "overdue";

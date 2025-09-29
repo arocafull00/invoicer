@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from './supabase';
-import type { AuthState, WizardDraft, Invoice, Consultant, Client, PaymentInstruction, UserSettings } from '@/shared/types';
+import type { AuthState, WizardDraft, Invoice, Consultant, Client, PaymentInstruction, UserSettings, LineItemTemplate } from '@/shared/types';
 import { getUserSettings, updateUserSettings } from '@/shared/api/services/userSettings';
 import { getUserLogoUrl } from '@/shared/api/services/logos';
 
@@ -48,17 +48,22 @@ interface InvoiceStoreState {
   consultants: Consultant[];
   clients: Client[];
   payment_instructions: PaymentInstruction[];
+  line_item_templates: LineItemTemplate[];
   wizardDraft: WizardDraft;
   invoiceNumber: string;
   setInvoices: (invoices: Invoice[]) => void;
   setConsultants: (consultants: Consultant[]) => void;
   setClients: (clients: Client[]) => void;
   setPaymentInstructions: (paymentInstructions: PaymentInstruction[]) => void;
+  setLineItemTemplates: (templates: LineItemTemplate[]) => void;
   setWizardDraft: (draft: WizardDraft) => void;
   addInvoice: (invoice: Invoice) => void;
   addConsultant: (consultant: Consultant) => void;
   addClient: (client: Client) => void;
   addPaymentInstruction: (paymentInstruction: PaymentInstruction) => void;
+  addLineItemTemplate: (template: LineItemTemplate) => void;
+  updateLineItemTemplate: (id: string, template: Partial<LineItemTemplate>) => void;
+  removeLineItemTemplate: (id: string) => void;
 }
 
 export const useInvoiceStore = create<InvoiceStoreState>((set) => ({
@@ -66,17 +71,26 @@ export const useInvoiceStore = create<InvoiceStoreState>((set) => ({
   consultants: [],
   clients: [],
   payment_instructions: [],
+  line_item_templates: [],
   wizardDraft: {},
   invoiceNumber: "",
   setInvoices: (invoices) => set({ invoices }),
   setConsultants: (consultants) => set({ consultants }),
   setClients: (clients) => set({ clients }),
   setPaymentInstructions: (paymentInstructions) => set({ payment_instructions: paymentInstructions }),
+  setLineItemTemplates: (templates) => set({ line_item_templates: templates }),
   setWizardDraft: (draft) => set({ wizardDraft: draft }),
   addInvoice: (invoice) => set((state) => ({ invoices: [...state.invoices, invoice] })),
   addConsultant: (consultant) => set((state) => ({ consultants: [...state.consultants, consultant] })),
   addClient: (client) => set((state) => ({ clients: [...state.clients, client] })),
   addPaymentInstruction: (paymentInstruction) => set((state) => ({ payment_instructions: [...state.payment_instructions, paymentInstruction] })),
+  addLineItemTemplate: (template) => set((state) => ({ line_item_templates: [...state.line_item_templates, template] })),
+  updateLineItemTemplate: (id, updatedTemplate) => set((state) => ({
+    line_item_templates: state.line_item_templates.map(t => t.id === id ? { ...t, ...updatedTemplate } : t)
+  })),
+  removeLineItemTemplate: (id) => set((state) => ({
+    line_item_templates: state.line_item_templates.filter(t => t.id !== id)
+  })),
 })); 
 
 interface SettingsStoreState {

@@ -512,6 +512,11 @@ export const createInvoicePDF = async (
 
   yPosition -= 30;
 
+  // Totales breakdown
+  const subtotal = invoice.subtotal || invoice.total;
+  const vatAmount = invoice.vat_amount || 0;
+  const total = invoice.total;
+
   // Subtotal
   page.drawText("Subtotal", {
     x: width - 260,
@@ -521,13 +526,63 @@ export const createInvoicePDF = async (
     color: textColor,
   });
 
-  page.drawText(formatCurrency(invoice.total), {
+  page.drawText(formatCurrency(subtotal), {
     x: width - 150,
     y: yPosition,
     size: BASE_FONT_SIZE,
     font: font,
     color: textColor,
   });
+
+  // IVA (if applicable)
+  if (!invoice.vat_exempt && vatAmount > 0) {
+    yPosition -= 20;
+    
+    page.drawText(`IVA (${invoice.vat_rate || 21}%)`, {
+      x: width - 260,
+      y: yPosition,
+      size: BASE_FONT_SIZE,
+      font: font,
+      color: textColor,
+    });
+
+    page.drawText(formatCurrency(vatAmount), {
+      x: width - 150,
+      y: yPosition,
+      size: BASE_FONT_SIZE,
+      font: font,
+      color: textColor,
+    });
+
+    yPosition -= 20;
+
+    // Línea separadora para total
+    page.drawLine({
+      start: { x: width - 260, y: yPosition },
+      end: { x: width - 50, y: yPosition },
+      thickness: 1,
+      color: lightGray,
+    });
+
+    yPosition -= 20;
+
+    // Total final
+    page.drawText("TOTAL", {
+      x: width - 260,
+      y: yPosition,
+      size: BASE_FONT_SIZE + 2,
+      font: boldFont,
+      color: primaryColor,
+    });
+
+    page.drawText(formatCurrency(total), {
+      x: width - 150,
+      y: yPosition,
+      size: BASE_FONT_SIZE + 2,
+      font: boldFont,
+      color: primaryColor,
+    });
+  }
 
   return await pdfDoc.save();
 };
@@ -537,7 +592,7 @@ export const createInvoicePDF = async (
  */
 export const downloadInvoicePDF = async (invoice: Invoice): Promise<void> => {
   const pdfBytes = await createInvoicePDF(invoice);
-  const blob = new Blob([pdfBytes], { type: "application/pdf" });
+  const blob = new Blob([pdfBytes as BlobPart], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
 
   const link = document.createElement("a");

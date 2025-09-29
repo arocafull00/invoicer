@@ -65,8 +65,20 @@ export const exportToCSV = (invoices: Invoice[]): void => {
     csvRows.push(['', '', '', '', '', '']);
     csvRows.push(['', '', '', '', '', '']);
     
+    // Totales breakdown
+    const subtotal = invoice.subtotal || invoice.total;
+    const vatAmount = invoice.vat_amount || 0;
+    const total = invoice.total;
+
     // Subtotal
-    csvRows.push(['', '', '', '', 'Subtotal', formatCurrency(invoice.total)]);
+    csvRows.push(['', '', '', '', 'Subtotal', formatCurrency(subtotal)]);
+    
+    // IVA (if applicable)
+    if (!invoice.vat_exempt && vatAmount > 0) {
+      csvRows.push(['', '', '', '', `IVA (${invoice.vat_rate || 21}%)`, formatCurrency(vatAmount)]);
+      csvRows.push(['', '', '', '', '', '']); // Línea separadora
+      csvRows.push(['', '', '', '', 'TOTAL', formatCurrency(total)]);
+    }
   });
 
   // Convertir a CSV

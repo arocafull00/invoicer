@@ -1,6 +1,6 @@
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../lib/stores";
-import type { Client, Consultant, Invoice, PaymentInstruction, Income, Expense, ExpenseType } from "../types";
+import type { Client, Consultant, Invoice, PaymentInstruction, Income, Expense, ExpenseType, LineItemTemplate } from "../types";
 
 export class SupabaseApiClient {
   private async getCurrentUserId(): Promise<string> {
@@ -362,6 +362,9 @@ export class SupabaseApiClient {
       client_id: invoice.client.id,
       payment_instructions_id: invoice.payment_instructions.id,
       description: invoice.description,
+      subtotal: invoice.subtotal,
+      vat_rate: invoice.vat_rate,
+      vat_amount: invoice.vat_amount,
       total: invoice.total,
       vat_exempt: invoice.vat_exempt,
       user_id: userId,
@@ -445,6 +448,9 @@ export class SupabaseApiClient {
       updatePayload.payment_instructions_id = invoice.payment_instructions.id;
     if (invoice.description !== undefined)
       updatePayload.description = invoice.description;
+    if (invoice.subtotal !== undefined) updatePayload.subtotal = invoice.subtotal;
+    if (invoice.vat_rate !== undefined) updatePayload.vat_rate = invoice.vat_rate;
+    if (invoice.vat_amount !== undefined) updatePayload.vat_amount = invoice.vat_amount;
     if (invoice.total !== undefined) updatePayload.total = invoice.total;
     if (invoice.vat_exempt !== undefined)
       updatePayload.vat_exempt = invoice.vat_exempt;
@@ -625,6 +631,78 @@ export class SupabaseApiClient {
 
     const next = data.length + 1;
     return next.toString();
+  }
+
+  // =====================================================
+  // LINE ITEM TEMPLATES METHODS
+  // =====================================================
+
+  async getLineItemTemplates(): Promise<LineItemTemplate[]> {
+    const userId = await this.getCurrentUserId();
+    const { data, error } = await supabase
+      .from("line_item_templates")
+      .select("*")
+      .eq("user_id", userId)
+      .order("usage_count", { ascending: false });
+
+    if (error) throw new Error(`Failed to fetch line item templates: ${error.message}`);
+    return data as LineItemTemplate[];
+  }
+
+  async createLineItemTemplate(template: Omit<LineItemTemplate, "id" | "user_id" | "usage_count" | "last_used_at" | "created_at" | "updated_at">): Promise<LineItemTemplate> {
+    const userId = await this.getCurrentUserId();
+    const { data, error } = await supabase
+      .from("line_item_templates")
+      .insert({
+        ...template,
+        user_id: userId,
+        usage_count: 0,
+      })
+      .select("*")
+      .single();
+
+    if (error) throw new Error(`Failed to create line item template: ${error.message}`);
+    return data as LineItemTemplate;
+  }
+
+  async updateLineItemTemplate(id: string, template: Partial<Omit<LineItemTemplate, "id" | "user_id" | "created_at">>): Promise<LineItemTemplate> {
+    const userId = await this.getCurrentUserId();
+    const { data, error } = await supabase
+      .from("line_item_templates")
+      .update(template)
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select("*")
+      .single();
+
+    if (error) throw new Error(`Failed to update line item template: ${error.message}`);
+    return data as LineItemTemplate;
+  }
+
+  async deleteLineItemTemplate(id: string): Promise<void> {
+    const userId = await this.getCurrentUserId();
+    const { error } = await supabase
+      .from("line_item_templates")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
+
+    if (error) throw new Error(`Failed to delete line item template: ${error.message}`);
+  }
+
+  async updateTemplateUsage(id: string): Promise<void> {
+    const { error } = await supabase.rpc('update_template_usage', { template_uuid: id });
+    if (error) {
+      console.error("Failed to update template usage:", error.message);
+    }
+  }
+
+  async createDefaultTemplatesForUser(): Promise<void> {
+    const userId = await this.getCurrentUserId();
+    const { error } = await supabase.rpc('create_default_templates_for_user', { user_uuid: userId });
+    if (error) {
+      console.error("Failed to create default templates:", error.message);
+    }
   }
 }
 

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -27,6 +28,7 @@ import { useSettingsStore } from "@/shared/lib/stores";
 import { uploadUserLogo } from "@/shared/api/services/logos";
 import { updateInvoice } from "@/shared/api/services/invoices";
 import { X, Plus, Trash2 } from "lucide-react";
+import { LineItemTemplateSelector } from "@/shared/components/LineItemTemplateSelector";
 
 export const EditInvoice: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -51,6 +53,8 @@ export const EditInvoice: React.FC = () => {
     setNewClient,
     setNewPayment,
     getLineItemTotal,
+    getSubtotal,
+    getVatAmount,
     getTotalAmount,
   } = useInvoiceFormStore();
 
@@ -95,6 +99,8 @@ export const EditInvoice: React.FC = () => {
       logoPreview: form.logoPreview ?? null,
       lineItems,
       currentLineItem: { description: "", quantity: 1, rate: 0 },
+      includeVat: !invoice.vat_exempt,
+      vatRate: invoice.vat_rate || 21,
     });
   }, [invoice, navigate, setForm, form.logoPreview]);
 
@@ -146,6 +152,10 @@ export const EditInvoice: React.FC = () => {
         total: getLineItemTotal(item),
       }));
 
+      const subtotal = getSubtotal();
+      const vatAmount = getVatAmount();
+      const total = getTotalAmount();
+
       const payload = {
         number: form.invoiceNumber,
         start_date: form.issueDate,
@@ -154,9 +164,12 @@ export const EditInvoice: React.FC = () => {
         client: selectedClient,
         description: lineItemsWithIds.map(item => item.description).join(", "), // Keep for backward compatibility
         line_items: lineItemsWithIds,
-        total: getTotalAmount(),
+        subtotal,
+        vat_rate: form.includeVat ? form.vatRate : 0,
+        vat_amount: vatAmount,
+        total,
         payment_instructions: selectedPayment,
-        vat_exempt: true,
+        vat_exempt: !form.includeVat,
         status: invoice.status,
       } as const;
 
@@ -605,13 +618,21 @@ export const EditInvoice: React.FC = () => {
 
           {/* Add new line item form */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div className="md:col-span-2 space-y-2">
-              <Label className="text-card-foreground">Descripción</Label>
-              <Input
-                className="bg-input border-border text-card-foreground"
-                value={form.currentLineItem.description}
-                onChange={(e) => setCurrentLineItem({ description: e.target.value })}
-                placeholder="Descripción del servicio"
+            <div className="md:col-span-2">
+              <LineItemTemplateSelector
+                onSelectTemplate={(template) => {
+                  setCurrentLineItem({
+                    description: template.description,
+                    quantity: template.default_quantity,
+                    rate: template.default_rate,
+                  });
+                }}
+                currentDescription={form.currentLineItem.description}
+                currentQuantity={form.currentLineItem.quantity}
+                currentRate={form.currentLineItem.rate}
+                onDescriptionChange={(description) => 
+                  setCurrentLineItem({ description })
+                }
               />
             </div>
             <div className="space-y-2">
@@ -655,11 +676,45 @@ export const EditInvoice: React.FC = () => {
               <Plus className="w-4 h-4" />
               Añadir concepto
             </Button>
-            <div className="text-white">
-              <div className="flex items-center justify-between py-2">
-                <span className="text-[#A1A1AA] mr-4">Total</span>
-                <span className="text-lg font-semibold">€ {getTotalAmount().toFixed(2)}</span>
+            <div className="text-white min-w-[200px]">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[#A1A1AA]">Subtotal</span>
+                  <span>€ {getSubtotal().toFixed(2)}</span>
+                </div>
+                {form.includeVat && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#A1A1AA]">IVA ({form.vatRate}%)</span>
+                    <span>€ {getVatAmount().toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between border-t border-border pt-2">
+                  <span className="font-semibold">Total</span>
+                  <span className="text-lg font-semibold">€ {getTotalAmount().toFixed(2)}</span>
+                </div>
               </div>
+            </div>
+          </div>
+
+          {/* VAT Toggle */}
+          <div className="flex items-center justify-between pt-4 border-t border-border">
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="include-vat"
+                  checked={form.includeVat}
+                  onCheckedChange={(checked) => setForm({ includeVat: checked })}
+                />
+                <Label htmlFor="include-vat" className="text-card-foreground">
+                  Incluir IVA ({form.vatRate}%)
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {form.includeVat 
+                  ? "La factura incluirá IVA en el total"
+                  : "Esta operación está exenta de IVA"
+                }
+              </p>
             </div>
           </div>
         </CardContent>
