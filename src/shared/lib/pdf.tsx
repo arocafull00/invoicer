@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Document,
   Page,
@@ -37,12 +36,15 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 20,
   },
   logo: {
-    maxWidth: 180,
-    maxHeight: 50,
+    maxWidth: 240,
+    maxHeight: 80,
+    height: 80,
+    width: 240,
+    objectFit: "contain",
   },
   headerRight: {
     flexDirection: "row",
@@ -170,10 +172,11 @@ interface InvoicePDFDocumentProps {
 }
 
 // Componente del documento PDF
-const InvoicePDFDocument: React.FC<InvoicePDFDocumentProps> = ({
+// eslint-disable-next-line react-refresh/only-export-components
+const InvoicePDFDocument = ({
   invoice,
   logoUrl,
-}) => {
+}: InvoicePDFDocumentProps) => {
   const lineItems =
     invoice.line_items && invoice.line_items.length > 0
       ? invoice.line_items
@@ -200,7 +203,7 @@ const InvoicePDFDocument: React.FC<InvoicePDFDocumentProps> = ({
         {/* Header */}
         <View style={styles.header}>
           {logoUrl ? (
-            <Image src={logoUrl} style={styles.logo} />
+            <Image src={logoUrl} style={styles.logo} cache={false} />
           ) : (
             <Text style={styles.invoiceTitle}>INVOICE</Text>
           )}
@@ -328,6 +331,88 @@ const InvoicePDFDocument: React.FC<InvoicePDFDocumentProps> = ({
 };
 
 /**
+ * Convierte una imagen blob a PNG usando canvas (para compatibilidad con react-pdf)
+ */
+const convertBlobToPNG = async (blob: Blob): Promise<string | null> => {
+  return new Promise((resolve) => {
+    const img = document.createElement("img");
+    const blobUrl = URL.createObjectURL(blob);
+    
+    img.onload = () => {
+      try {
+        console.log("Image loaded, dimensions:", img.width, "x", img.height);
+        
+        // Crear canvas con las dimensiones de la imagen
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        // Dibujar la imagen en el canvas
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          console.error("Could not get canvas context");
+          URL.revokeObjectURL(blobUrl);
+          resolve(null);
+          return;
+        }
+        
+        ctx.drawImage(img, 0, 0);
+        
+        // Convertir a PNG base64
+        const pngBase64 = canvas.toDataURL("image/png");
+        console.log("Image converted to PNG, length:", pngBase64.length);
+        
+        // Limpiar blob URL
+        URL.revokeObjectURL(blobUrl);
+        resolve(pngBase64);
+      } catch (error) {
+        console.error("Error converting image to PNG:", error);
+        URL.revokeObjectURL(blobUrl);
+        resolve(null);
+      }
+    };
+    
+    img.onerror = () => {
+      console.error("Error loading image");
+      URL.revokeObjectURL(blobUrl);
+      resolve(null);
+    };
+    
+    img.src = blobUrl;
+  });
+};
+
+/**
+ * Convierte una imagen URL a base64 en formato PNG (compatible con react-pdf)
+ */
+const imageUrlToBase64 = async (url: string): Promise<string | null> => {
+  try {
+    console.log("Fetching image from:", url);
+    const response = await fetch(url, { 
+      cache: "no-store",
+      mode: "cors",
+      credentials: "omit"
+    });
+    
+    if (!response.ok) {
+      console.error("Failed to fetch image:", response.status, response.statusText);
+      return null;
+    }
+    
+    const blob = await response.blob();
+    console.log("Image blob type:", blob.type, "size:", blob.size);
+    
+    // Convertir blob a PNG usando canvas
+    const pngBase64 = await convertBlobToPNG(blob);
+    
+    return pngBase64;
+  } catch (error) {
+    console.error("Error converting image to base64:", error);
+    return null;
+  }
+};
+
+/**
  * Genera un PDF de factura con el formato específico
  */
 export const createInvoicePDF = async (
@@ -339,9 +424,17 @@ export const createInvoicePDF = async (
     await load();
   }
   const logoUrl = useSettingsStore.getState().settings?.logo_url ?? null;
-
+  
+  console.log("Logo URL:", logoUrl);
+  
+  // Convertir logo a base64 si existe
+  const logoBase64 = logoUrl ? await imageUrlToBase64(logoUrl) : null;
+  
+  console.log("Logo Base64 length:", logoBase64?.length);
+  console.log("Logo Base64 prefix:", logoBase64?.substring(0, 50));
+  
   // Generar el PDF
-  const blob = await pdf(<InvoicePDFDocument invoice={invoice} logoUrl={logoUrl} />).toBlob();
+  const blob = await pdf(<InvoicePDFDocument invoice={invoice} logoUrl={logoBase64} />).toBlob();
 
   // Convertir blob a Uint8Array
   const arrayBuffer = await blob.arrayBuffer();
