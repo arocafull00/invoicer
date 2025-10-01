@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     maxWidth: 240,
     maxHeight: 80,
     height: 80,
-    width: 240,
+    width: 80,
     objectFit: "contain",
   },
   headerRight: {
@@ -66,6 +66,9 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 15,
+    display: "flex",
+    flexDirection: "column",
+    gap: 3,
   },
   sectionTitle: {
     fontSize: 12,
@@ -131,18 +134,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     marginBottom: 6,
-    gap: 30,
+    gap: 6,
   },
   totalLabel: {
     fontSize: 12,
     color: "#09090B",
-    width: 90,
+    width: 100,
     textAlign: "right",
   },
   totalValue: {
     fontSize: 12,
     color: "#09090B",
-    width: 80,
+    width: 100,
     textAlign: "right",
   },
   totalFinal: {
@@ -154,14 +157,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#7F5AF0",
     fontWeight: 700,
-    width: 90,
+    width: 100,
     textAlign: "right",
   },
   totalFinalValue: {
     fontSize: 12,
     color: "#7F5AF0",
     fontWeight: 700,
-    width: 80,
+    width: 100,
     textAlign: "right",
   },
 });
@@ -209,7 +212,7 @@ const InvoicePDFDocument = ({
           )}
           <View style={styles.headerRight}>
             <Text style={styles.date}>{formatDate(invoice.created_date)}</Text>
-            <Text style={styles.invoiceNumber}>N.º {invoice.number}</Text>
+            <Text style={styles.invoiceNumber}>Factura nº {invoice.number}</Text>
           </View>
         </View>
 
@@ -226,7 +229,7 @@ const InvoicePDFDocument = ({
 
         {/* Client Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Client</Text>
+          <Text style={styles.sectionTitle}>Cliente</Text>
           <Text style={styles.text}>{invoice.client.name}</Text>
           {invoice.client.address && (
             <Text style={styles.text}>{invoice.client.address}</Text>
@@ -244,16 +247,16 @@ const InvoicePDFDocument = ({
         {/* Invoice Details Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            Factura {invoice.number} - {formatDate(invoice.created_date)}
+            Datos de pago
           </Text>
           <Text style={styles.text}>
-            Account Holder: {invoice.payment_instructions.account_holder}
+            Titular de la cuenta: {invoice.payment_instructions.account_holder}
           </Text>
           <Text style={styles.text}>
             IBAN: {invoice.payment_instructions.iban}
           </Text>
           <Text style={styles.text}>
-            Payment Method: {invoice.payment_instructions.payment_method}
+            Método de pago: {invoice.payment_instructions.payment_method}
           </Text>
           <Text style={styles.text}>
             {invoice.payment_instructions.payment_terms}
@@ -263,20 +266,18 @@ const InvoicePDFDocument = ({
           </Text>
         </View>
 
-        <View style={styles.separator} />
-
         {/* Line Items Table */}
         <View style={styles.tableHeader}>
           <Text style={[styles.tableHeaderCell, styles.colDescription]}>
-            CONCEPTO
+            Concepto
           </Text>
           <Text style={[styles.tableHeaderCell, styles.colQuantity]}>
-            HORAS
+            Horas
           </Text>
           <Text style={[styles.tableHeaderCell, styles.colRate]}>
-            €/HORA
+            €/Hora
           </Text>
-          <Text style={[styles.tableHeaderCell, styles.colTotal]}>TOTAL</Text>
+          <Text style={[styles.tableHeaderCell, styles.colTotal]}>Total</Text>
         </View>
 
         {lineItems.map((item, index) => (
