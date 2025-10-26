@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run dev` - Start development server with Vite
 - `npm run build` - Build for production (TypeScript compilation + Vite build)
 - `npm run lint` - Run ESLint for code quality checks
+- `npm run type-check` - Run TypeScript type checking
 - `npm run preview` - Preview production build locally
 
 ### Database
@@ -22,7 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **State Management**: Zustand stores
 - **Routing**: React Router DOM v7
 - **Backend**: Supabase (authentication + database)
-- **PDF Generation**: pdf-lib
+- **PDF Generation**: pdf-lib and @react-pdf/renderer
 - **Icons**: Lucide React
 
 ### Color Palette
@@ -85,7 +86,17 @@ src/
 - Use TypeScript with strict typing from `src/types/`
 - Install dependencies with `npm install <package>`, never add to package.json first
 
+### Git Commit Guidelines
+- All commit messages MUST be in English
+- Keep commit messages short and concise (50 characters or less for subject line)
+- Use imperative mood (e.g., "Add feature" not "Added feature")
+- Be concrete and direct - describe what the commit does, not why
+- Start with a capital letter, no ending period
+- Use present tense
+
 ### Restrictions
-- Never create tests, documentation, or example components
+- Never create tests, documentation, or example components  
 - Never launch/run the project unless explicitly requested
 - Always use existing UI patterns and component structure
+- Never create barrel files
+- Never use git commands unless explicitly requested
