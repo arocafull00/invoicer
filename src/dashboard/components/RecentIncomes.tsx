@@ -29,13 +29,13 @@ export const RecentIncomes: React.FC = () => {
     return (
       <Card className="p-6  ">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-white">Ingresos Recientes</h2>
+          <h2 className="text-xl font-semibold text-foreground">Ingresos Recientes</h2>
           <div className="h-9" />
         </div>
         <div className="space-y-3">
-          <div className="h-6 bg-white/10 rounded" />
-          <div className="h-6 bg-white/10 rounded" />
-          <div className="h-6 bg-white/10 rounded" />
+          <div className="h-6 bg-muted rounded" />
+          <div className="h-6 bg-muted rounded" />
+          <div className="h-6 bg-muted rounded" />
         </div>
       </Card>
     );
@@ -45,12 +45,12 @@ export const RecentIncomes: React.FC = () => {
     return (
       <Card className="p-6  ">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-white">Ingresos Recientes</h2>
-          <Button variant="ghost" asChild className="text-[#7F5AF0] hover:bg-[#7F5AF0]/10">
+          <h2 className="text-xl font-semibold text-foreground">Ingresos Recientes</h2>
+          <Button variant="ghost" asChild className="text-primary hover:bg-primary/10">
             <Link to="/incomes">Ver todos</Link>
           </Button>
         </div>
-        <div className="text-center py-8 text-[#A1A1AA]">
+        <div className="text-center py-8 text-muted-foreground">
           <p>No hay ingresos recientes</p>
           <Button asChild className="mt-4">
             <Link to="/incomes">Añadir ingreso</Link>
@@ -63,21 +63,21 @@ export const RecentIncomes: React.FC = () => {
   return (
     <Card className="p-6  ">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-white">Ingresos Recientes</h2>
-        <Button variant="ghost" asChild className="text-[#7F5AF0] hover:bg-[#7F5AF0]/10">
+        <h2 className="text-xl font-semibold text-foreground">Ingresos Recientes</h2>
+        <Button variant="ghost" asChild className="text-primary hover:bg-primary/10">
           <Link to="/incomes">Ver todos</Link>
         </Button>
       </div>
       <div className="space-y-4">
         {recentIncomes.map((income) => (
-          <div key={income.id} className="flex items-center justify-between py-3 border-b border-[#FFFFFF14] last:border-0">
+          <div key={income.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
             <div className="flex-1">
-              <p className="font-medium text-white">{income.concept}</p>
-              <p className="text-sm text-[#A1A1AA]">{income.client?.name}</p>
+              <p className="font-medium text-foreground">{income.concept}</p>
+              <p className="text-sm text-muted-foreground">{income.client?.name}</p>
             </div>
             <div className="text-right">
-              <p className="font-semibold text-white">{formatCurrency(income.amount)}</p>
-              <p className="text-sm text-[#A1A1AA]">{formatDate(income.date)}</p>
+              <p className="font-semibold text-foreground">{formatCurrency(income.amount)}</p>
+              <p className="text-sm text-muted-foreground">{formatDate(income.date)}</p>
             </div>
           </div>
         ))}

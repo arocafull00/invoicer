@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
   },
   invoiceTitle: {
     fontSize: 12,
-    color: "#7F5AF0",
+    color: "#09090B",
   },
   invoiceNumber: {
     fontSize: 12,
@@ -72,8 +72,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    color: "#7F5AF0",
+    color: "#09090B",
     marginBottom: 6,
+    fontWeight: 700,
   },
   text: {
     fontSize: 12,
@@ -82,7 +83,7 @@ const styles = StyleSheet.create({
   },
   textLight: {
     fontSize: 12,
-    color: "#24242B",
+    color: "#09090B",
     marginBottom: 3,
   },
   consultantSection: {
@@ -90,19 +91,19 @@ const styles = StyleSheet.create({
   },
   separator: {
     borderBottomWidth: 1,
-    borderBottomColor: "#24242B",
+    borderBottomColor: "#09090B",
     marginVertical: 15,
   },
   tableHeader: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#24242B",
+    borderBottomColor: "#09090B",
     paddingBottom: 6,
     marginBottom: 8,
   },
   tableHeaderCell: {
     fontSize: 12,
-    color: "#7F5AF0",
+    color: "#09090B",
     fontWeight: 600,
   },
   tableRow: {
@@ -150,19 +151,19 @@ const styles = StyleSheet.create({
   },
   totalFinal: {
     borderTopWidth: 1,
-    borderTopColor: "#24242B",
+    borderTopColor: "#09090B",
     paddingTop: 6,
   },
   totalFinalLabel: {
     fontSize: 12,
-    color: "#7F5AF0",
+    color: "#09090B",
     fontWeight: 700,
     width: 100,
     textAlign: "right",
   },
   totalFinalValue: {
     fontSize: 12,
-    color: "#7F5AF0",
+    color: "#09090B",
     fontWeight: 700,
     width: 100,
     textAlign: "right",
@@ -189,6 +190,7 @@ const InvoicePDFDocument = ({
             quantity: 1,
             rate: invoice.total,
             total: invoice.total,
+            includeVat: !invoice.vat_exempt,
           },
         ];
 
@@ -272,10 +274,10 @@ const InvoicePDFDocument = ({
             Concepto
           </Text>
           <Text style={[styles.tableHeaderCell, styles.colQuantity]}>
-            Horas
+            Unidades
           </Text>
           <Text style={[styles.tableHeaderCell, styles.colRate]}>
-            €/Hora
+            €/Unidad
           </Text>
           <Text style={[styles.tableHeaderCell, styles.colTotal]}>Total</Text>
         </View>

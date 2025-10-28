@@ -36,20 +36,20 @@ export const SettingsPage: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Configuración</h1>
-        <p className="text-[#A1A1AA]">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Configuración</h1>
+        <p className="text-muted-foreground">
           Gestiona la configuración de tu cuenta y preferencias
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Identidad</h2>
+          <h2 className="text-xl font-semibold text-card-foreground mb-4">Identidad</h2>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="logo" className="text-white">Logo</Label>
+              <Label htmlFor="logo" className="text-card-foreground">Logo</Label>
               <div className="flex items-center justify-center">
-                <label className="w-full h-40 rounded-xl border-2 border-dashed border-[#654DD4] bg-[#FFFFFF14]/50 flex items-center justify-center cursor-pointer">
+                <label className="w-full h-40 rounded-xl border-2 border-dashed border-primary bg-accent/50 flex items-center justify-center cursor-pointer">
                   <input
                     id="logo"
                     type="file"
@@ -60,43 +60,43 @@ export const SettingsPage: React.FC = () => {
                   {settings?.logo_url ? (
                     <img src={settings.logo_url} alt="Logo" className="max-h-36 object-contain" />
                   ) : (
-                    <span className="text-[#A1A1AA]">Añadir logo</span>
+                    <span className="text-muted-foreground">Añadir logo</span>
                   )}
                 </label>
               </div>
               {isUploading && (
-                <p className="text-sm text-[#A1A1AA]">Subiendo...</p>
+                <p className="text-sm text-muted-foreground">Subiendo...</p>
               )}
             </div>
           </div>
         </Card>
         <Card className="p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Facturación</h2>
+          <h2 className="text-xl font-semibold text-card-foreground mb-4">Facturación</h2>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="default-currency" className="text-white">
+              <Label htmlFor="default-currency" className="text-card-foreground">
                 Moneda por defecto
               </Label>
               <Select defaultValue={settings?.default_currency ?? "eur"} onValueChange={(v: "eur" | "usd" | "gbp") => update({ default_currency: v })}>
-                <SelectTrigger className="bg-[#0D0D0D] border-[#FFFFFF14] text-white">
+                <SelectTrigger className="bg-input border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0D0D0D] border-[#FFFFFF14]">
+                <SelectContent className="bg-popover border-border">
                   <SelectItem
                     value="eur"
-                    className="text-white hover:bg-[#FFFFFF14]"
+                    className="text-popover-foreground"
                   >
                     EUR (€)
                   </SelectItem>
                   <SelectItem
                     value="usd"
-                    className="text-white hover:bg-[#FFFFFF14]"
+                    className="text-popover-foreground"
                   >
                     USD ($)
                   </SelectItem>
                   <SelectItem
                     value="gbp"
-                    className="text-white hover:bg-[#FFFFFF14]"
+                    className="text-popover-foreground"
                   >
                     GBP (£)
                   </SelectItem>
@@ -104,47 +104,47 @@ export const SettingsPage: React.FC = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="date-format" className="text-white">
+              <Label htmlFor="date-format" className="text-card-foreground">
                 Formato de fecha
               </Label>
               <Select defaultValue={settings?.date_format ?? "dd/mm/yyyy"} onValueChange={(v: "dd/mm/yyyy" | "mm/dd/yyyy" | "yyyy-mm-dd") => update({ date_format: v })}>
-                <SelectTrigger className="bg-[#0D0D0D] border-[#FFFFFF14] text-white">
+                <SelectTrigger className="bg-input border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0D0D0D] border-[#FFFFFF14]">
+                <SelectContent className="bg-popover border-border">
                   <SelectItem
                     value="dd/mm/yyyy"
-                    className="text-white hover:bg-[#FFFFFF14]"
+                    className="text-popover-foreground"
                   >
                     DD/MM/YYYY
                   </SelectItem>
                   <SelectItem
                     value="mm/dd/yyyy"
-                    className="text-white hover:bg-[#FFFFFF14]"
+                    className="text-popover-foreground"
                   >
                     MM/DD/YYYY
                   </SelectItem>
                   <SelectItem
                     value="yyyy-mm-dd"
-                    className="text-white hover:bg-[#FFFFFF14]"
+                    className="text-popover-foreground"
                   >
                     YYYY-MM-DD
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <Button className="w-full bg-[#7F5AF0] text-white hover:bg-[#654DD4]" disabled>
+            <Button className="w-full" disabled>
               Guardado automáticamente
             </Button>
           </div>
         </Card>
         <Card className="p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Apariencia</h2>
+          <h2 className="text-xl font-semibold text-card-foreground mb-4">Apariencia</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="theme-switch" className="text-white">Modo oscuro</Label>
-                <p className="text-sm text-[#A1A1AA]">Activa el modo oscuro o usa el sistema</p>
+                <Label htmlFor="theme-switch" className="text-card-foreground">Modo oscuro</Label>
+                <p className="text-sm text-muted-foreground">Activa el modo oscuro o usa el sistema</p>
               </div>
               <Switch
                 id="theme-switch"
@@ -153,18 +153,18 @@ export const SettingsPage: React.FC = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="theme-select" className="text-white">Preferencia de tema</Label>
+              <Label htmlFor="theme-select" className="text-card-foreground">Preferencia de tema</Label>
               <Select
                 value={theme ?? "system"}
                 onValueChange={(v: "light" | "dark" | "system") => setTheme(v)}
               >
-                <SelectTrigger id="theme-select" className="bg-[#0D0D0D] border-[#FFFFFF14] text-white">
+                <SelectTrigger id="theme-select" className="bg-input border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0D0D0D] border-[#FFFFFF14]">
-                  <SelectItem value="light" className="text-white hover:bg-[#FFFFFF14]">Claro</SelectItem>
-                  <SelectItem value="dark" className="text-white hover:bg-[#FFFFFF14]">Oscuro</SelectItem>
-                  <SelectItem value="system" className="text-white hover:bg-[#FFFFFF14]">Sistema</SelectItem>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="light" className="text-popover-foreground">Claro</SelectItem>
+                  <SelectItem value="dark" className="text-popover-foreground">Oscuro</SelectItem>
+                  <SelectItem value="system" className="text-popover-foreground">Sistema</SelectItem>
                 </SelectContent>
               </Select>
             </div>

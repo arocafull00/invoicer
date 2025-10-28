@@ -8,3 +8,4 @@ Utiliza siempre tailwind
 Utiliza siempre los colores de la paleta de colores
 Reutiliza todos los componentes que puedas
 Instala siempre usando npm install dependency, nunca añadiendolo primero al package.json
+Componetiza siempre todo lo que puedas.

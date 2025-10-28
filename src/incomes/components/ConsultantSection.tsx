@@ -57,7 +57,7 @@ export const ConsultantSection: React.FC<ConsultantSectionProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-white">Emitido por</CardTitle>
+        <CardTitle className="text-card-foreground">Emitido por</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex gap-3">
@@ -162,8 +162,8 @@ export const ConsultantSection: React.FC<ConsultantSectionProps> = ({
           </Dialog>
         </div>
         {selectedConsultant && (
-          <div className="text-sm text-[#A1A1AA] leading-6">
-            <div className="font-semibold text-white">
+          <div className="text-sm text-muted-foreground leading-6">
+            <div className="font-semibold text-card-foreground">
               {selectedConsultant.name}
             </div>
             <div>{selectedConsultant.address}</div>

@@ -44,6 +44,7 @@ export interface LineItem {
   quantity: number;
   rate: number;
   total: number;
+  includeVat: boolean;
 }
 
 export interface LineItemTemplate {

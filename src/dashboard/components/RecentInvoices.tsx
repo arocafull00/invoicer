@@ -33,12 +33,12 @@ export const RecentInvoices: React.FC = () => {
     return (
       <Card className="p-6  ">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-white">Facturas Recientes</h2>
-          <Button variant="ghost" asChild className="text-[#7F5AF0] hover:bg-[#7F5AF0]/10">
+          <h2 className="text-xl font-semibold text-foreground">Facturas Recientes</h2>
+          <Button variant="ghost" asChild className="text-primary hover:bg-primary/10">
             <Link to="/invoices">Ver todas</Link>
           </Button>
         </div>
-        <div className="text-center py-8 text-[#A1A1AA]">
+        <div className="text-center py-8 text-muted-foreground">
           <p>No hay facturas recientes</p>
           <Button asChild className="mt-4">
             <Link to="/invoices/wizard">Crear primera factura</Link>
@@ -51,8 +51,8 @@ export const RecentInvoices: React.FC = () => {
   return (
     <Card className="p-6  ">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-white">Facturas Recientes</h2>
-        <Button variant="ghost" asChild className="text-[#7F5AF0] hover:bg-[#7F5AF0]/10">
+        <h2 className="text-xl font-semibold text-foreground">Facturas Recientes</h2>
+        <Button variant="ghost" asChild className="text-primary hover:bg-primary/10">
           <Link to="/invoices">Ver todas</Link>
         </Button>
       </div>
@@ -60,14 +60,14 @@ export const RecentInvoices: React.FC = () => {
         {recentInvoices.map((invoice) => {
           const status = getInvoiceStatus(invoice);
           return (
-            <div key={invoice.id} className="flex items-center justify-between py-3 border-b border-[#FFFFFF14] last:border-0">
+            <div key={invoice.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
               <div className="flex-1">
-                <p className="font-medium text-white">{invoice.number}</p>
-                <p className="text-sm text-[#A1A1AA]">{invoice.client.name}</p>
+                <p className="font-medium text-foreground">{invoice.number}</p>
+                <p className="text-sm text-muted-foreground">{invoice.client.name}</p>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-white">{formatCurrency(invoice.total)}</p>
-                <p className="text-sm text-[#A1A1AA]">{formatDate(invoice.created_date)}</p>
+                <p className="font-semibold text-foreground">{formatCurrency(invoice.total)}</p>
+                <p className="text-sm text-muted-foreground">{formatDate(invoice.created_date)}</p>
               </div>
               <div className="ml-4">
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${

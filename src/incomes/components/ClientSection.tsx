@@ -57,7 +57,7 @@ export const ClientSection: React.FC<ClientSectionProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-white">Facturar a</CardTitle>
+        <CardTitle className="text-card-foreground">Facturar a</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex gap-3">
@@ -157,8 +157,8 @@ export const ClientSection: React.FC<ClientSectionProps> = ({
           </Dialog>
         </div>
         {selectedClient && (
-          <div className="text-sm text-[#A1A1AA] leading-6">
-            <div className="font-semibold text-white">{selectedClient.name}</div>
+          <div className="text-sm text-muted-foreground leading-6">
+            <div className="font-semibold text-card-foreground">{selectedClient.name}</div>
             <div>{selectedClient.address}</div>
             <div>
               {selectedClient.city}, {selectedClient.country}

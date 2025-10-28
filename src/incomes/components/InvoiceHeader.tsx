@@ -31,8 +31,8 @@ export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({
       </Button>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">{title}</h1>
-          <p className="text-[#A1A1AA] mt-1">{subtitle}</p>
+          <h1 className="text-3xl font-bold text-foreground">{title}</h1>
+          <p className="text-muted-foreground mt-1">{subtitle}</p>
         </div>
         <Button onClick={onAction} disabled={actionDisabled}>
           {actionLabel}

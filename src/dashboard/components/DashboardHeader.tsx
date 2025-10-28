@@ -7,8 +7,8 @@ export const DashboardHeader: React.FC = () => {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-        <p className="text-[#A1A1AA] mt-1">Resumen de tu actividad de facturación</p>
+        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-muted-foreground mt-1">Resumen de tu actividad de facturación</p>
       </div>
       <Button asChild>
         <Link to="/invoices/new">

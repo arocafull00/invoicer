@@ -395,6 +395,7 @@ export class SupabaseApiClient {
         quantity: item.quantity,
         rate: item.rate,
         total: item.total || item.quantity * item.rate,
+        include_vat: item.includeVat ?? false,
         order_index: index,
         user_id: userId,
       }));
@@ -496,6 +497,7 @@ export class SupabaseApiClient {
           quantity: item.quantity,
           rate: item.rate,
           total: item.total || item.quantity * item.rate,
+          include_vat: item.includeVat ?? false,
           order_index: index,
           user_id: userId,
         }));

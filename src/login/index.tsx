@@ -75,7 +75,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] flex">
+    <div className="min-h-screen bg-background flex">
       <LoginBackground>
         <div className="w-full max-w-md">
           {/* Header */}
@@ -87,10 +87,10 @@ export const LoginPage: React.FC = () => {
                 className="w-16 h-16 mx-auto mb-4"
               />
             </div>
-            <h2 className="text-3xl font-bold text-white mb-2">
+            <h2 className="text-3xl font-bold text-foreground mb-2">
               {isSignUp ? "Crear cuenta" : "Iniciar sesión"}
             </h2>
-            <p className="text-[#A1A1AA]">
+            <p className="text-muted-foreground">
               {isSignUp
                 ? "Ingresa tu email para crear tu cuenta"
                 : "Ingresa tus credenciales para acceder"}
@@ -106,7 +106,7 @@ export const LoginPage: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
                 required
-                className="bg-[#0D0D0D] border-[#FFFFFF14] text-white placeholder:text-[#A1A1AA]"
+                className="bg-background border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
@@ -118,7 +118,7 @@ export const LoginPage: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="bg-[#0D0D0D] border-[#FFFFFF14] text-white placeholder:text-[#A1A1AA]"
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                 />
               </div>
             )}
@@ -127,11 +127,11 @@ export const LoginPage: React.FC = () => {
             <Button
               onClick={isSignUp ? handleGoogleSignIn : handleSubmit}
               disabled={loading}
-              className="w-full bg-[#7F5AF0] text-white hover:bg-[#654DD4] mb-4"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 mb-4"
             >
               {loading ? (
                 <div className="flex items-center justify-center">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
                   {isSignUp ? "Creando cuenta..." : "Iniciando sesión..."}
                 </div>
               ) : isSignUp ? (
@@ -143,11 +143,11 @@ export const LoginPage: React.FC = () => {
 
             {/* Divider */}
             <div className="my-4 flex items-center justify-center gap-4 overflow-hidden">
-              <Separator className="w-20 bg-[#FFFFFF14]" />
-              <span className="text-xs text-[#A1A1AA] whitespace-nowrap">
+              <Separator className="w-20 bg-border" />
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
                 O CONTINÚA CON
               </span>
-              <Separator className="w-20 bg-[#FFFFFF14]" />
+              <Separator className="w-20 bg-border" />
             </div>
 
             {/* GitHub Button */}
@@ -155,7 +155,7 @@ export const LoginPage: React.FC = () => {
               onClick={handleGithubSignIn}
               variant="outline"
               disabled={loading}
-              className="w-full mb-2 bg-[#0D0D0D] border-[#FFFFFF14] text-white hover:bg-[#FFFFFF1A]"
+              className="w-full mb-2"
             >
               <GitHubIcon className="w-4 h-4 mr-2" />
               GitHub
@@ -164,7 +164,7 @@ export const LoginPage: React.FC = () => {
               onClick={handleGoogleSignIn}
               variant="outline"
               disabled={loading}
-              className="w-full bg-[#0D0D0D] border-[#FFFFFF14] text-white hover:bg-[#FFFFFF1A]"
+              className="w-full"
             >
               <GoogleIcon className="w-4 h-4 mr-2" />
               Google
@@ -178,13 +178,13 @@ export const LoginPage: React.FC = () => {
 
           {/* Footer */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-[#A1A1AA]">
+            <p className="text-sm text-muted-foreground">
               Al hacer clic en continuar, aceptas nuestros{" "}
-              <a href="/terms" className="text-[#7F5AF0] hover:underline">
+              <a href="/terms" className="text-primary hover:underline">
                 Términos de Servicio
               </a>{" "}
               y{" "}
-              <a href="/privacy" className="text-[#7F5AF0] hover:underline">
+              <a href="/privacy" className="text-primary hover:underline">
                 Política de Privacidad
               </a>
             </p>

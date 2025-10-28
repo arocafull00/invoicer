@@ -85,7 +85,7 @@ const initialFormState = (): NewInvoiceFormState => ({
   selectedClientId: "",
   selectedPaymentId: "",
   lineItems: [],
-  currentLineItem: { description: "", quantity: 1, rate: 0 },
+  currentLineItem: { description: "", quantity: 1, rate: 0, includeVat: false },
   includeVat: false,
   vatRate: 21,
   logoPreview: null,
@@ -144,7 +144,7 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
           form: {
             ...state.form,
             lineItems: [...state.form.lineItems, { ...currentLineItem }],
-            currentLineItem: { description: "", quantity: 1, rate: 0 },
+            currentLineItem: { description: "", quantity: 1, rate: 0, includeVat: false },
           },
         };
       }),
@@ -240,10 +240,12 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
       );
     },
     getVatAmount: () => {
-      const { includeVat, vatRate } = get().form;
-      if (!includeVat) return 0;
-      const subtotal = get().getSubtotal();
-      return Number((subtotal * (vatRate / 100)).toFixed(2));
+      const { lineItems, vatRate } = get().form;
+      // Calculate VAT only for items that have includeVat set to true
+      const vatableAmount = lineItems
+        .filter(item => item.includeVat)
+        .reduce((total, item) => total + (item.quantity || 0) * (item.rate || 0), 0);
+      return Number((vatableAmount * (vatRate / 100)).toFixed(2));
     },
     getTotalAmount: () => {
       const subtotal = get().getSubtotal();
@@ -298,6 +300,9 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
         const subtotal = s.getSubtotal();
         const vatAmount = s.getVatAmount();
         const total = s.getTotalAmount();
+        
+        // Check if any line item has VAT applied
+        const hasVatItems = s.form.lineItems.some(item => item.includeVat);
 
         const payload: Omit<Invoice, "id"> = {
           number: s.form.invoiceNumber,
@@ -309,11 +314,11 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
           description: lineItemsWithIds.map(item => item.description).join(", "), // Keep for backward compatibility
           line_items: lineItemsWithIds,
           subtotal,
-          vat_rate: s.form.includeVat ? s.form.vatRate : 0,
+          vat_rate: hasVatItems ? s.form.vatRate : 0,
           vat_amount: vatAmount,
           total,
           payment_instructions: payment,
-          vat_exempt: !s.form.includeVat,
+          vat_exempt: !hasVatItems,
           status: "pending",
         };
         const created = await createInvoice(payload);

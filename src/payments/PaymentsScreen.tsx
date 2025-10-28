@@ -102,8 +102,8 @@ export default function PaymentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Pagos</h1>
-        <p className="text-[#A1A1AA] mt-1">
+        <h1 className="text-3xl font-bold text-foreground">Pagos</h1>
+        <p className="text-muted-foreground mt-1">
           Gestiona tus instrucciones de pago
         </p>
       </div>
@@ -114,7 +114,7 @@ export default function PaymentsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por titular, IBAN, método, términos o exención"
-              className="pl-9 bg-card border-[#FFFFFF14] text-white placeholder:text-[#A1A1AA]"
+              className="pl-9 bg-card border-border text-foreground placeholder:text-muted-foreground"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -123,31 +123,31 @@ export default function PaymentsPage() {
           <div className="overflow-x-auto">
             <Table className="w-full">
               <TableHeader>
-                <TableRow className="border-b border-[#FFFFFF14]">
-                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider">Titular</TableHead>
-                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider">IBAN</TableHead>
-                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider">Método</TableHead>
-                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider">Términos</TableHead>
-                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider">Datos adicionales</TableHead>
-                  <TableHead className="text-right py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider">Acciones</TableHead>
+                <TableRow className="border-b border-border">
+                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">Titular</TableHead>
+                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">IBAN</TableHead>
+                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">Método</TableHead>
+                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">Términos</TableHead>
+                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">Datos adicionales</TableHead>
+                  <TableHead className="text-right py-4 px-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow className="border-b border-[#FFFFFF14]">
+                  <TableRow className="border-b border-border">
                     <TableCell className="py-6 px-2" colSpan={6}>
                       <div className="flex justify-center py-2"><Spinner /></div>
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow className="border-b border-[#FFFFFF14]">
+                  <TableRow className="border-b border-border">
                     <TableCell className="py-6 px-2" colSpan={6}>
                       No hay instrucciones de pago
                     </TableCell>
                   </TableRow>
                 ) : (
                   filtered.map((p) => (
-                    <TableRow key={p.id} className="border-b border-[#FFFFFF14] hover:bg-[#FFFFFF14]/30 transition-colors">
+                    <TableRow key={p.id} className="border-b border-border hover:bg-accent/30 transition-colors">
                       <TableCell className="py-4 px-2">{p.account_holder}</TableCell>
                       <TableCell className="py-4 px-2">{p.iban}</TableCell>
                       <TableCell className="py-4 px-2">{p.payment_method}</TableCell>

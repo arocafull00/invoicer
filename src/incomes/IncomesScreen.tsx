@@ -73,8 +73,8 @@ export default function IncomesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Ingresos</h1>
-          <p className="text-[#A1A1AA] mt-1">Añade ingresos extra asociados a clientes</p>
+          <h1 className="text-3xl font-bold text-foreground">Ingresos</h1>
+          <p className="text-muted-foreground mt-1">Añade ingresos extra asociados a clientes</p>
         </div>
         <Dialog open={openCreate} onOpenChange={(o: boolean) => { setOpenCreate(o); if (!o) setForm({}); }}>
           <DialogTrigger asChild>
@@ -102,7 +102,7 @@ export default function IncomesPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por concepto, cliente, fecha, importe o forma de pago"
-              className="pl-9 bg-card border-[#FFFFFF14] text-white placeholder:text-[#A1A1AA]"
+              className="pl-9 bg-card border-border text-foreground placeholder:text-muted-foreground"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -111,23 +111,23 @@ export default function IncomesPage() {
           <div className="overflow-x-auto">
             <Table className="w-full">
               <TableHeader>
-                <TableRow className="border-b border-[#FFFFFF14]">
-                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider">Fecha</TableHead>
-                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider">Concepto</TableHead>
-                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider">Cliente</TableHead>
-                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider">Forma de pago</TableHead>
-                  <TableHead className="text-right py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider">Importe</TableHead>
-                  <TableHead className="text-right py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider">Acciones</TableHead>
+                <TableRow className="border-b border-border">
+                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">Fecha</TableHead>
+                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">Concepto</TableHead>
+                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">Cliente</TableHead>
+                  <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">Forma de pago</TableHead>
+                  <TableHead className="text-right py-4 px-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">Importe</TableHead>
+                  <TableHead className="text-right py-4 px-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow className="border-b border-[#FFFFFF14]"><TableCell className="py-6 px-2" colSpan={6}><div className="flex justify-center py-2"><Spinner /></div></TableCell></TableRow>
+                  <TableRow className="border-b border-border"><TableCell className="py-6 px-2" colSpan={6}><div className="flex justify-center py-2"><Spinner /></div></TableCell></TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow className="border-b border-[#FFFFFF14]"><TableCell className="py-6 px-2" colSpan={6}>No hay ingresos</TableCell></TableRow>
+                  <TableRow className="border-b border-border"><TableCell className="py-6 px-2" colSpan={6}>No hay ingresos</TableCell></TableRow>
                 ) : (
                   filtered.map((i) => (
-                    <TableRow key={i.id} className="border-b border-[#FFFFFF14] hover:bg-[#FFFFFF14]/30 transition-colors">
+                    <TableRow key={i.id} className="border-b border-border hover:bg-accent/30 transition-colors">
                       <TableCell className="py-4 px-2">{i.date}</TableCell>
                       <TableCell className="py-4 px-2">{i.concept}</TableCell>
                       <TableCell className="py-4 px-2">{i.client?.name || '-'}</TableCell>

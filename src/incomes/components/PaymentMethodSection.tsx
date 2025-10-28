@@ -58,7 +58,7 @@ export const PaymentMethodSection: React.FC<PaymentMethodSectionProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-white">Método de pago</CardTitle>
+        <CardTitle className="text-card-foreground">Método de pago</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex gap-3">

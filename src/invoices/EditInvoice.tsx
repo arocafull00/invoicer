@@ -61,6 +61,7 @@ export const EditInvoice: React.FC = () => {
         description: item.description,
         quantity: item.quantity,
         rate: item.rate,
+        includeVat: item.includeVat ?? !invoice.vat_exempt,
       }));
     } else if (invoice.description) {
       // Legacy format - single line item from description
@@ -69,6 +70,7 @@ export const EditInvoice: React.FC = () => {
         description: desc || invoice.description,
         quantity: 1,
         rate: invoice.total,
+        includeVat: !invoice.vat_exempt,
       }];
     }
     
@@ -81,7 +83,7 @@ export const EditInvoice: React.FC = () => {
       selectedPaymentId: invoice.payment_instructions.id,
       logoPreview: form.logoPreview ?? null,
       lineItems,
-      currentLineItem: { description: "", quantity: 1, rate: 0 },
+      currentLineItem: { description: "", quantity: 1, rate: 0, includeVat: false },
       includeVat: !invoice.vat_exempt,
       vatRate: invoice.vat_rate || 21,
     });
@@ -139,6 +141,9 @@ export const EditInvoice: React.FC = () => {
       const vatAmount = getVatAmount();
       const total = getTotalAmount();
 
+      // Check if any line item has VAT applied
+      const hasVatItems = form.lineItems.some(item => item.includeVat);
+
       const payload = {
         number: form.invoiceNumber,
         start_date: form.issueDate,
@@ -148,11 +153,11 @@ export const EditInvoice: React.FC = () => {
         description: lineItemsWithIds.map(item => item.description).join(", "), // Keep for backward compatibility
         line_items: lineItemsWithIds,
         subtotal,
-        vat_rate: form.includeVat ? form.vatRate : 0,
+        vat_rate: hasVatItems ? form.vatRate : 0,
         vat_amount: vatAmount,
         total,
         payment_instructions: selectedPayment,
-        vat_exempt: !form.includeVat,
+        vat_exempt: !hasVatItems,
         status: invoice.status,
       } as const;
 
@@ -224,13 +229,11 @@ export const EditInvoice: React.FC = () => {
       <LineItemsSection
         lineItems={form.lineItems}
         currentLineItem={form.currentLineItem}
-        includeVat={form.includeVat}
         vatRate={form.vatRate}
         onUpdateLineItem={updateLineItem}
         onRemoveLineItem={removeLineItem}
         onSetCurrentLineItem={setCurrentLineItem}
         onAddLineItem={addLineItem}
-        onVatChange={(checked) => setForm({ includeVat: checked })}
         getLineItemTotal={getLineItemTotal}
         getSubtotal={getSubtotal}
         getVatAmount={getVatAmount}

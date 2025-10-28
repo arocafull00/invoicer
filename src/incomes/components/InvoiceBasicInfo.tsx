@@ -32,7 +32,7 @@ export const InvoiceBasicInfo: React.FC<InvoiceBasicInfoProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
             <div className="space-y-2">
-              <Label className="text-white">Número de factura</Label>
+              <Label className="text-card-foreground">Número de factura</Label>
               <Input
                 value={invoiceNumber}
                 onChange={(e) => onInvoiceNumberChange?.(e.target.value)}
@@ -42,7 +42,7 @@ export const InvoiceBasicInfo: React.FC<InvoiceBasicInfoProps> = ({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-white">Fecha de emisión</Label>
+                <Label className="text-card-foreground">Fecha de emisión</Label>
                 <Input
                   type="date"
                   value={issueDate}
@@ -51,7 +51,7 @@ export const InvoiceBasicInfo: React.FC<InvoiceBasicInfoProps> = ({
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-white">Fecha de vencimiento</Label>
+                <Label className="text-card-foreground">Fecha de vencimiento</Label>
                 <Input
                   type="date"
                   value={dueDate}
@@ -62,7 +62,7 @@ export const InvoiceBasicInfo: React.FC<InvoiceBasicInfoProps> = ({
             </div>
           </div>
           <div className="flex items-center justify-center">
-            <label className="w-full h-40 rounded-xl border-2 border-dashed border-[#654DD4] bg-[#FFFFFF14]/50 flex items-center justify-center cursor-pointer">
+            <label className="w-full h-40 rounded-xl border-2 border-dashed border-primary bg-accent/50 flex items-center justify-center cursor-pointer">
               <input
                 type="file"
                 accept="image/*"
@@ -76,7 +76,7 @@ export const InvoiceBasicInfo: React.FC<InvoiceBasicInfoProps> = ({
                   className="max-h-36 object-contain"
                 />
               ) : (
-                <span className="text-[#A1A1AA]">Añadir logo</span>
+                <span className="text-muted-foreground">Añadir logo</span>
               )}
             </label>
           </div>

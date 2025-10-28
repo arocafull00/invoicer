@@ -9,7 +9,7 @@ export const AppInitializer: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0D0D0D] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
          <Spinner />
       </div>
     );

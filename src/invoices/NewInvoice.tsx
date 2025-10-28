@@ -148,13 +148,11 @@ export default function NewInvoice() {
       <LineItemsSection
         lineItems={form.lineItems}
         currentLineItem={form.currentLineItem}
-        includeVat={form.includeVat}
         vatRate={form.vatRate}
         onUpdateLineItem={updateLineItem}
         onRemoveLineItem={removeLineItem}
         onSetCurrentLineItem={setCurrentLineItem}
         onAddLineItem={addLineItem}
-        onVatChange={(checked) => setForm({ includeVat: checked })}
         getLineItemTotal={getLineItemTotal}
         getSubtotal={getSubtotal}
         getVatAmount={getVatAmount}
