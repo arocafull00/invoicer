@@ -99,7 +99,7 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-white">Conceptos</CardTitle>
+        <CardTitle className="text-card-foreground">Conceptos</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
@@ -109,12 +109,12 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
               {lineItems.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-start gap-3 p-4 rounded-lg bg-[#FFFFFF14]/30 border border-border"
+                  className="flex items-start gap-3 p-4 rounded-lg bg-accent/30 border border-border"
                 >
                   <div className="flex-1 space-y-3">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                       <div className="space-y-2">
-                        <Label className="text-[#A1A1AA] text-xs">Descripción</Label>
+                        <Label className="text-muted-foreground text-xs">Descripción</Label>
                         <Input
                           type="text"
                           value={item.description}
@@ -126,7 +126,7 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[#A1A1AA] text-xs">Cantidad</Label>
+                        <Label className="text-muted-foreground text-xs">Cantidad</Label>
                         <Input
                           type="number"
                           min="0"
@@ -139,7 +139,7 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[#A1A1AA] text-xs">Tarifa (€)</Label>
+                        <Label className="text-muted-foreground text-xs">Tarifa (€)</Label>
                         <Input
                           type="number"
                           min="0"
@@ -152,9 +152,9 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[#A1A1AA] text-xs">Total</Label>
-                        <div className="h-10 flex items-center px-3 rounded-md bg-[#FFFFFF14]/30 border border-border">
-                          <span className="text-white font-semibold">
+                        <Label className="text-muted-foreground text-xs">Total</Label>
+                        <div className="h-10 flex items-center px-3 rounded-md bg-accent/30 border border-border">
+                          <span className="text-card-foreground font-semibold">
                             €{getLineItemTotal(item).toFixed(2)}
                           </span>
                         </div>
@@ -372,24 +372,24 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
           <div className="flex flex-col md:flex-row md:justify-end">
             <div className="w-full md:w-80 space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#A1A1AA]">Subtotal</span>
-                <span className="text-white font-medium">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-card-foreground font-medium">
                   € {getSubtotal().toFixed(2)}
                 </span>
               </div>
               {getVatAmount() > 0 && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-[#A1A1AA]">IVA ({vatRate}%)</span>
-                  <span className="text-white font-medium">
+                  <span className="text-muted-foreground">IVA ({vatRate}%)</span>
+                  <span className="text-card-foreground font-medium">
                     € {getVatAmount().toFixed(2)}
                   </span>
                 </div>
               )}
               <div className="flex items-center justify-between border-t border-border pt-3">
-                <span className="text-white font-semibold text-base">
+                <span className="text-card-foreground font-semibold text-base">
                   Total
                 </span>
-                <span className="text-white font-bold text-xl">
+                <span className="text-card-foreground font-bold text-xl">
                   € {getTotalAmount().toFixed(2)}
                 </span>
               </div>

@@ -198,8 +198,8 @@ export const PaymentMethodSection: React.FC<PaymentMethodSectionProps> = ({
           </Dialog>
         </div>
         {selectedPayment && (
-          <div className="text-sm text-[#A1A1AA] leading-6">
-            <div className="font-semibold text-white">
+          <div className="text-sm text-muted-foreground leading-6">
+            <div className="font-semibold text-card-foreground">
               {selectedPayment.account_holder} — {selectedPayment.payment_method}
             </div>
             <div>IBAN: {selectedPayment.iban}</div>

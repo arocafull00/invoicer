@@ -576,8 +576,8 @@ export default function ImportPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Importar datos</h1>
-          <p className="text-[#A1A1AA] mt-1">
+          <h1 className="text-3xl font-bold text-foreground">Importar datos</h1>
+          <p className="text-muted-foreground mt-1">
             Sube un archivo CSV o Excel y mapea los campos
           </p>
         </div>
@@ -590,12 +590,12 @@ export default function ImportPage() {
             <div className="space-y-4">
               <div className="flex justify-center gap-4 items-center">
                 <div className="space-y-2">
-                  <label className="text-sm text-[#A1A1AA]">Objetivo</label>
+                  <label className="text-sm text-muted-foreground">Objetivo</label>
                   <Select
                     value={target}
                     onValueChange={(v: Target) => setTarget(v)}
                   >
-                    <SelectTrigger className="bg-card border-[#FFFFFF14] text-white">
+                    <SelectTrigger className="bg-card border-border text-foreground">
                       <SelectValue placeholder="Selecciona tipo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -606,17 +606,17 @@ export default function ImportPage() {
                   </Select>
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm text-[#A1A1AA]">
+                  <label className="text-sm text-muted-foreground">
                     Archivo CSV o Excel
                   </label>
                   <Input
                     type="file"
                     accept=".csv,.xlsx,.xls"
                     onChange={handleFileChange}
-                    className="bg-card border-[#FFFFFF14] text-white file:text-white"
+                    className="bg-card border-border text-foreground file:text-foreground"
                   />
                   {fileName && (
-                    <p className="text-xs text-[#A1A1AA]">{fileName}</p>
+                    <p className="text-xs text-muted-foreground">{fileName}</p>
                   )}
                 </div>
               </div>
@@ -636,11 +636,11 @@ export default function ImportPage() {
               <div className="overflow-x-auto">
                 <Table className="w-full">
                   <TableHeader>
-                    <TableRow className="border-b border-[#FFFFFF14]">
-                      <TableHead className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA]">
+                    <TableRow className="border-b border-border">
+                      <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground">
                         Propiedad
                       </TableHead>
-                      <TableHead className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA]">
+                      <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground">
                         Nombre del campo (header)
                       </TableHead>
                     </TableRow>
@@ -649,17 +649,17 @@ export default function ImportPage() {
                     {selectedFields.map((f) => (
                       <TableRow
                         key={f.key}
-                        className="border-b border-[#FFFFFF14]"
+                        className="border-b border-border"
                       >
                         <TableCell className="py-3 px-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-white">{f.label}</span>
+                            <span className="text-foreground">{f.label}</span>
                             {f.required ? (
                               <span className="text-xs text-primary">
                                 (requerido)
                               </span>
                             ) : (
-                              <span className="text-xs text-[#A1A1AA]">
+                              <span className="text-xs text-muted-foreground">
                                 (opcional)
                               </span>
                             )}
@@ -670,7 +670,7 @@ export default function ImportPage() {
                             value={mapping[f.key] || ""}
                             onValueChange={(v) => setMappingFor(f.key, v)}
                           >
-                            <SelectTrigger className="bg-card border-[#FFFFFF14] text-white">
+                            <SelectTrigger className="bg-card border-border text-foreground">
                               <SelectValue placeholder="Selecciona columna" />
                             </SelectTrigger>
                             <SelectContent>
@@ -712,23 +712,23 @@ export default function ImportPage() {
               <div className="overflow-x-auto">
                 <Table className="w-full">
                   <TableHeader>
-                    <TableRow className="border-b border-[#FFFFFF14]">
+                    <TableRow className="border-b border-border">
                       {FIELD_DEFS[target].map((f) => (
                         <TableHead
                           key={`h-${f.key}`}
-                          className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA]"
+                          className="text-left py-4 px-2 text-sm font-medium text-muted-foreground"
                         >
                           {f.label}
                         </TableHead>
                       ))}
-                      <TableHead className="text-right py-4 px-2 text-sm font-medium text-[#A1A1AA]">
+                      <TableHead className="text-right py-4 px-2 text-sm font-medium text-muted-foreground">
                         Acciones
                       </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {previewRows.length === 0 ? (
-                      <TableRow className="border-b border-[#FFFFFF14]">
+                      <TableRow className="border-b border-border">
                         <TableCell
                           className="py-6 px-2"
                           colSpan={FIELD_DEFS[target].length + 1}
@@ -740,7 +740,7 @@ export default function ImportPage() {
                       previewList.slice(0, 50).map((item, idx) => (
                         <TableRow
                           key={`r-${idx}`}
-                          className="border-b border-[#FFFFFF14]"
+                          className="border-b border-border"
                         >
                           {FIELD_DEFS[target].map((f) => (
                             <TableCell

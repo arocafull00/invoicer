@@ -15,7 +15,7 @@ const queryClient = new QueryClient({
 
 export const AppProviders: React.FC = () => {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
         <AppInitializer />
         <Toaster position="top-right" richColors />

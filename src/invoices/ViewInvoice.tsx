@@ -62,7 +62,7 @@ export const ViewInvoice: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={() => navigate("/invoices")}
-              className="text-[#A1A1AA] hover:text-white hover:bg-[#FFFFFF14]"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Volver
@@ -103,41 +103,41 @@ export const ViewInvoice: React.FC = () => {
       {/* Bento Grid */}
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
         {/* Consultor */}
-        <Card className="bg-[#0D0D0D] border-[#FFFFFF14] p-6 md:col-span-3 group hover:border-[#FFFFFF22] transition-colors">
+        <Card className="bg-card border-border p-6 md:col-span-3 group hover:border-border/80 transition-colors">
           <div className="flex items-center gap-2 mb-4">
-            <div className="p-2 rounded-md bg-[#7F5AF0]/10 text-[#7F5AF0]">
+            <div className="p-2 rounded-md bg-primary/10 text-primary">
               <User className="w-4 h-4" />
             </div>
-            <h2 className="text-lg font-semibold text-[#7F5AF0]">Consultor</h2>
+            <h2 className="text-lg font-semibold text-primary">Consultor</h2>
           </div>
           <div className="space-y-2">
-            <p className="font-medium text-white">{invoice.consultant.name}</p>
-            <p className="text-[#A1A1AA] text-sm">{invoice.consultant.email}</p>
-            <p className="text-[#A1A1AA] text-sm">{invoice.consultant.address}</p>
-            <p className="text-[#A1A1AA] text-sm">
+            <p className="font-medium text-foreground">{invoice.consultant.name}</p>
+            <p className="text-muted-foreground text-sm">{invoice.consultant.email}</p>
+            <p className="text-muted-foreground text-sm">{invoice.consultant.address}</p>
+            <p className="text-muted-foreground text-sm">
               {invoice.consultant.city}, {invoice.consultant.country}
             </p>
-            <p className="text-[#A1A1AA] text-sm">NIF: {invoice.consultant.nif}</p>
+            <p className="text-muted-foreground text-sm">NIF: {invoice.consultant.nif}</p>
           </div>
         </Card>
 
         {/* Cliente */}
-        <Card className="bg-[#0D0D0D] border-[#FFFFFF14] p-6 md:col-span-3 group hover:border-[#FFFFFF22] transition-colors">
+        <Card className="bg-card border-border p-6 md:col-span-3 group hover:border-border/80 transition-colors">
           <div className="flex items-center gap-2 mb-4">
-            <div className="p-2 rounded-md bg-[#7F5AF0]/10 text-[#7F5AF0]">
+            <div className="p-2 rounded-md bg-primary/10 text-primary">
               <Building2 className="w-4 h-4" />
             </div>
-            <h2 className="text-lg font-semibold text-[#7F5AF0]">Cliente</h2>
+            <h2 className="text-lg font-semibold text-primary">Cliente</h2>
           </div>
           <div className="space-y-2">
-            <p className="font-medium text-white">{invoice.client.name}</p>
-            <p className="text-[#A1A1AA] text-sm">{invoice.client.email}</p>
-            <p className="text-[#A1A1AA] text-sm">{invoice.client.address}</p>
-            <p className="text-[#A1A1AA] text-sm">
+            <p className="font-medium text-foreground">{invoice.client.name}</p>
+            <p className="text-muted-foreground text-sm">{invoice.client.email}</p>
+            <p className="text-muted-foreground text-sm">{invoice.client.address}</p>
+            <p className="text-muted-foreground text-sm">
               {invoice.client.city}, {invoice.client.country}
             </p>
             {invoice.client.company_number && (
-              <p className="text-[#A1A1AA] text-sm">
+              <p className="text-muted-foreground text-sm">
                 Número de empresa: {invoice.client.company_number}
               </p>
             )}
@@ -145,78 +145,78 @@ export const ViewInvoice: React.FC = () => {
         </Card>
 
         {/* Período */}
-        <Card className="bg-[#0D0D0D] border-[#FFFFFF14] p-6 md:col-span-2 group hover:border-[#FFFFFF22] transition-colors">
+        <Card className="bg-card border-border p-6 md:col-span-2 group hover:border-border/80 transition-colors">
           <div className="flex items-center gap-2 mb-2">
-            <div className="p-2 rounded-md bg-[#7F5AF0]/10 text-[#7F5AF0]">
+            <div className="p-2 rounded-md bg-primary/10 text-primary">
               <CalendarDays className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-medium text-[#A1A1AA]">Período de trabajo</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">Período de trabajo</h3>
           </div>
-          <p className="text-white">
+          <p className="text-foreground">
             {formatDate(invoice.start_date)} - {formatDate(invoice.end_date)}
           </p>
         </Card>
 
         {/* Total */}
-        <Card className="bg-[#0D0D0D] border-[#FFFFFF14] p-6 md:col-span-2 group hover:border-[#FFFFFF22] transition-colors">
+        <Card className="bg-card border-border p-6 md:col-span-2 group hover:border-border/80 transition-colors">
           <div className="flex items-center gap-2 mb-2">
-            <div className="p-2 rounded-md bg-[#7F5AF0]/10 text-[#7F5AF0]">
+            <div className="p-2 rounded-md bg-primary/10 text-primary">
               <Banknote className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-medium text-[#A1A1AA]">Total</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">Total</h3>
           </div>
-          <p className="text-white text-2xl font-bold">{formatCurrency(invoice.total)}</p>
+          <p className="text-foreground text-2xl font-bold">{formatCurrency(invoice.total)}</p>
         </Card>
 
         {/* Descripción */}
-        <Card className="bg-[#0D0D0D] border-[#FFFFFF14] p-6 md:col-span-2 group hover:border-[#FFFFFF22] transition-colors">
+        <Card className="bg-card border-border p-6 md:col-span-2 group hover:border-border/80 transition-colors">
           <div className="flex items-center gap-2 mb-2">
-            <div className="p-2 rounded-md bg-[#7F5AF0]/10 text-[#7F5AF0]">
+            <div className="p-2 rounded-md bg-primary/10 text-primary">
               <FileText className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-medium text-[#A1A1AA]">Descripción</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">Descripción</h3>
           </div>
-          <p className="text-white">{invoice.description}</p>
+          <p className="text-foreground">{invoice.description}</p>
         </Card>
       </div>
 
       {/* Instrucciones de pago */}
-      <Card className="max-w-4xl mx-auto bg-[#0D0D0D] border-[#FFFFFF14] p-6">
+      <Card className="max-w-4xl mx-auto bg-card border-border p-6">
         <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 rounded-md bg-[#7F5AF0]/10 text-[#7F5AF0]">
+          <div className="p-2 rounded-md bg-primary/10 text-primary">
             <CreditCard className="w-4 h-4" />
           </div>
-          <h2 className="text-lg font-semibold text-[#7F5AF0]">Instrucciones de Pago</h2>
+          <h2 className="text-lg font-semibold text-primary">Instrucciones de Pago</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <p className="text-[#A1A1AA] text-sm mb-1">Titular de la cuenta</p>
-            <p className="text-white">
+            <p className="text-muted-foreground text-sm mb-1">Titular de la cuenta</p>
+            <p className="text-foreground">
               {invoice.payment_instructions.account_holder}
             </p>
           </div>
           <div>
-            <p className="text-[#A1A1AA] text-sm mb-1">IBAN</p>
-            <p className="text-white font-mono">
+            <p className="text-muted-foreground text-sm mb-1">IBAN</p>
+            <p className="text-foreground font-mono">
               {invoice.payment_instructions.iban}
             </p>
           </div>
           <div>
-            <p className="text-[#A1A1AA] text-sm mb-1">Método de pago</p>
-            <p className="text-white">
+            <p className="text-muted-foreground text-sm mb-1">Método de pago</p>
+            <p className="text-foreground">
               {invoice.payment_instructions.payment_method}
             </p>
           </div>
         </div>
         <div className="mt-4">
-          <p className="text-[#A1A1AA] text-sm mb-1">Términos de pago</p>
-          <p className="text-white">
+          <p className="text-muted-foreground text-sm mb-1">Términos de pago</p>
+          <p className="text-foreground">
             {invoice.payment_instructions.payment_terms}
           </p>
         </div>
         <div className="mt-4">
-          <p className="text-[#A1A1AA] text-sm mb-1">Datos adicionales</p>
-          <p className="text-[#A1A1AA] text-sm">
+          <p className="text-muted-foreground text-sm mb-1">Datos adicionales</p>
+          <p className="text-muted-foreground text-sm">
             {invoice.payment_instructions.additional_data}
           </p>
         </div>

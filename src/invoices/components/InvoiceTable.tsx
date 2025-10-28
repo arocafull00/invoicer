@@ -143,7 +143,7 @@ export function InvoiceTable() {
           </div>
         ),
         cell: ({ row }) => (
-          <span className="font-medium text-white">{row.original.number}</span>
+          <span className="font-medium text-foreground">{row.original.number}</span>
         ),
       },
       {
@@ -164,7 +164,7 @@ export function InvoiceTable() {
           </div>
         ),
         cell: ({ row }) => (
-          <span className="text-[#A1A1AA]">
+          <span className="text-muted-foreground">
             {formatDate(row.original.created_date)}
           </span>
         ),
@@ -176,10 +176,10 @@ export function InvoiceTable() {
         header: () => <div>CONSULTOR</div>,
         cell: ({ row }) => (
           <div>
-            <p className="font-medium text-white">
+            <p className="font-medium text-foreground">
               {row.original.consultant?.name}
             </p>
-            <p className="text-sm text-[#A1A1AA]">
+            <p className="text-sm text-muted-foreground">
               {row.original.consultant?.email}
             </p>
           </div>
@@ -191,8 +191,8 @@ export function InvoiceTable() {
         header: () => <div>CLIENTE</div>,
         cell: ({ row }) => (
           <div>
-            <p className="font-medium text-white">{row.original.client.name}</p>
-            <p className="text-sm text-[#A1A1AA]">
+            <p className="font-medium text-foreground">{row.original.client.name}</p>
+            <p className="text-sm text-muted-foreground">
               {row.original.client.city}, {row.original.client.country}
             </p>
           </div>
@@ -202,7 +202,7 @@ export function InvoiceTable() {
         id: "period",
         header: () => <div>PERÍODO</div>,
         cell: ({ row }) => (
-          <span className="text-[#A1A1AA]">
+          <span className="text-muted-foreground">
             {formatDate(row.original.start_date)} -{" "}
             {formatDate(row.original.end_date)}
           </span>
@@ -226,7 +226,7 @@ export function InvoiceTable() {
           </div>
         ),
         cell: ({ row }) => (
-          <span className="font-semibold text-white">
+          <span className="font-semibold text-foreground">
             {formatCurrency(row.original.total)}
           </span>
         ),
@@ -243,7 +243,7 @@ export function InvoiceTable() {
                 handleStatusChange(row.original, v as Invoice["status"]) }
               disabled={updatingId === row.original.id}
             >
-              <SelectTrigger className="bg-card border-[#FFFFFF14] text-white">
+              <SelectTrigger className="bg-card border-border text-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -264,7 +264,7 @@ export function InvoiceTable() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-[#A1A1AA] hover:text-white hover:bg-[#FFFFFF14] p-2"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent p-2"
               onClick={() => handleView(row.original)}
               title="Ver"
             >
@@ -273,7 +273,7 @@ export function InvoiceTable() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-[#A1A1AA] hover:text-white hover:bg-[#FFFFFF14] p-2"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent p-2"
               onClick={() => handleEdit(row.original)}
               title="Editar"
             >
@@ -282,7 +282,7 @@ export function InvoiceTable() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-[#A1A1AA] hover:text-white hover:bg-[#FFFFFF14] p-2"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent p-2"
               onClick={() => handleDownloadPDF(row.original)}
               disabled={loadingPdf === row.original.id}
               title="Descargar"
@@ -296,7 +296,7 @@ export function InvoiceTable() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-[#EF4444] hover:text-white hover:bg-[#EF4444]/20 p-2"
+              className="text-[#EF4444] hover:text-foreground hover:bg-[#EF4444]/20 p-2"
               onClick={() => handleDelete(row.original)}
               disabled={deletingId === row.original.id}
               title="Eliminar"
@@ -341,7 +341,7 @@ export function InvoiceTable() {
             <div className="flex-1 max-w-md">
               <Input
                 placeholder="Buscar en todas las columnas..."
-                className="bg-card border-[#FFFFFF14] text-white placeholder:text-[#A1A1AA]"
+                className="bg-card border-border text-foreground placeholder:text-muted-foreground"
                 value={globalFilter}
                 onChange={(e) => setGlobalFilter(e.target.value)}
               />
@@ -358,7 +358,7 @@ export function InvoiceTable() {
                     ?.setFilterValue(v === "all" ? undefined : v)
                 }
               >
-                <SelectTrigger className="bg-card border-[#FFFFFF14] text-white">
+                <SelectTrigger className="bg-card border-border text-foreground">
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
                 <SelectContent>
@@ -382,7 +382,7 @@ export function InvoiceTable() {
                     ?.setFilterValue(v === "all" ? undefined : v)
                 }
               >
-                <SelectTrigger className="bg-card border-[#FFFFFF14] text-white">
+                <SelectTrigger className="bg-card border-border text-foreground">
                   <SelectValue placeholder="Consultor" />
                 </SelectTrigger>
                 <SelectContent>
@@ -409,7 +409,7 @@ export function InvoiceTable() {
                     ?.setFilterValue(v === "all" ? undefined : v)
                 }
               >
-                <SelectTrigger className="bg-card border-[#FFFFFF14] text-white">
+                <SelectTrigger className="bg-card border-border text-foreground">
                   <SelectValue placeholder="Cliente" />
                 </SelectTrigger>
                 <SelectContent>
@@ -430,12 +430,12 @@ export function InvoiceTable() {
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
                   key={headerGroup.id}
-                  className="border-b border-[#FFFFFF14]"
+                  className="border-b border-border"
                 >
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className="text-left py-4 px-2 text-sm font-medium text-[#A1A1AA] uppercase tracking-wider"
+                      className="text-left py-4 px-2 text-sm font-medium text-muted-foreground uppercase tracking-wider"
                     >
                       {header.isPlaceholder
                         ? null
@@ -452,7 +452,7 @@ export function InvoiceTable() {
               {table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="border-b border-[#FFFFFF14] hover:bg-[#FFFFFF14]/30 transition-colors"
+                  className="border-b border-border hover:bg-accent/30 transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="py-4 px-2">
@@ -469,13 +469,13 @@ export function InvoiceTable() {
         </div>
         <div className="mt-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-[#A1A1AA]">Filas por página</span>
+            <span className="text-sm text-muted-foreground">Filas por página</span>
             <div className="w-24">
               <Select
                 value={String(pageSize)}
                 onValueChange={(v: string) => setPageSize(Number(v))}
               >
-                <SelectTrigger className="bg-card border-[#FFFFFF14] text-white h-8">
+                <SelectTrigger className="bg-card border-border text-foreground h-8">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -488,7 +488,7 @@ export function InvoiceTable() {
               </Select>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-[#A1A1AA]">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>
               Página {table.getState().pagination.pageIndex + 1} de{" "}
               {table.getPageCount() || 1}
