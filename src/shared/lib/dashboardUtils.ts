@@ -84,3 +84,139 @@ export const getRecentInvoices = (invoices: Invoice[], limit: number = 5): Invoi
     .sort((a, b) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime())
     .slice(0, limit);
 };
+
+export interface QuarterlyPeriod {
+  startDate: Date;
+  endDate: Date;
+  paymentMonth: string;
+  months: Array<{ name: string; month: number; year: number }>;
+}
+
+export const getNextQuarterlyPeriod = (): QuarterlyPeriod => {
+  const now = new Date();
+  const currentMonth = now.getMonth(); // 0-11 (Jan = 0, Dec = 11)
+  const currentYear = now.getFullYear();
+
+  let startMonth: number;
+  let startYear: number;
+  let paymentMonth: string;
+
+  if (currentMonth >= 0 && currentMonth <= 2) {
+    startMonth = 0; // January
+    startYear = currentYear;
+    paymentMonth = 'Abril';
+  } else if (currentMonth >= 3 && currentMonth <= 5) {
+    startMonth = 3; // April
+    startYear = currentYear;
+    paymentMonth = 'Julio';
+  } else if (currentMonth >= 6 && currentMonth <= 8) {
+    startMonth = 6; // July
+    startYear = currentYear;
+    paymentMonth = 'Octubre';
+  } else {
+    startMonth = 9; // October
+    startYear = currentYear;
+    paymentMonth = 'Enero';
+  }
+
+  const startDate = new Date(startYear, startMonth, 1);
+  const endMonth = startMonth + 2;
+  const endDate = new Date(startYear, endMonth + 1, 0);
+  endDate.setHours(23, 59, 59, 999);
+
+  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  
+  const months = [
+    { name: monthNames[startMonth], month: startMonth, year: startYear },
+    { name: monthNames[startMonth + 1], month: startMonth + 1, year: startYear },
+    { name: monthNames[startMonth + 2], month: startMonth + 2, year: startYear },
+  ];
+
+  return {
+    startDate,
+    endDate,
+    paymentMonth,
+    months,
+  };
+};
+
+export interface MonthlyTaxBreakdown {
+  month: string;
+  irpf: number;
+  iva: number;
+}
+
+export interface QuarterlyTaxesResult {
+  monthlyBreakdown: MonthlyTaxBreakdown[];
+  totalIrpf: number;
+  totalIva: number;
+  totalTaxes: number;
+  totalInvoiced: number;
+}
+
+export const calculateQuarterlyTaxes = (
+  invoices: Invoice[],
+  period: QuarterlyPeriod
+): QuarterlyTaxesResult => {
+  const periodInvoices = invoices.filter((invoice) => {
+    const invoiceDate = new Date(invoice.created_date);
+    return invoiceDate >= period.startDate && invoiceDate <= period.endDate;
+  });
+console.log(periodInvoices)
+  const monthlyData: Map<string, { irpf: number; iva: number }> = new Map();
+  
+  period.months.forEach(({ name }) => {
+    monthlyData.set(name, { irpf: 0, iva: 0 });
+  });
+
+  // Calculate taxes per invoice
+  periodInvoices.forEach((invoice) => {
+    const invoiceDate = new Date(invoice.start_date);
+    const invoiceMonth = invoiceDate.getMonth();
+    const invoiceYear = invoiceDate.getFullYear();
+    
+    // Find which month in the period this invoice belongs to
+    const monthInfo = period.months.find(
+      (m) => m.month === invoiceMonth && m.year === invoiceYear
+    );
+
+    if (monthInfo) {
+      const current = monthlyData.get(monthInfo.name) || { irpf: 0, iva: 0 };
+      
+      // IRPF: 20% of subtotal
+      const irpf = invoice.subtotal * 0.20;
+      
+      // IVA: vat_amount from invoice
+      const iva = invoice.vat_amount || 0;
+      
+      monthlyData.set(monthInfo.name, {
+        irpf: current.irpf + irpf,
+        iva: current.iva + iva,
+      });
+    }
+  });
+
+  // Convert to array format
+  const monthlyBreakdown: MonthlyTaxBreakdown[] = period.months.map(({ name }) => {
+    const data = monthlyData.get(name) || { irpf: 0, iva: 0 };
+    return {
+      month: name,
+      irpf: data.irpf,
+      iva: data.iva,
+    };
+  });
+
+  // Calculate totals
+  const totalIrpf = monthlyBreakdown.reduce((sum, m) => sum + m.irpf, 0);
+  const totalIva = monthlyBreakdown.reduce((sum, m) => sum + m.iva, 0);
+  const totalTaxes = totalIrpf + totalIva;
+  const totalInvoiced = periodInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
+
+  return {
+    monthlyBreakdown,
+    totalIrpf,
+    totalIva,
+    totalTaxes,
+    totalInvoiced,
+  };
+};

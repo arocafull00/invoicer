@@ -1,27 +1,15 @@
-import React from 'react';
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { useInvoiceStore } from '@/shared/lib/stores';
-import { getRecentInvoices, formatCurrency } from '@/shared/lib/dashboardUtils';
-import type { Invoice } from '@/shared/types';
-
-const getInvoiceStatus = (invoice: Invoice) => {
-  // Por ahora, asignamos estados de ejemplo basados en la fecha
-  const daysSinceCreated = Math.floor(
-    (Date.now() - new Date(invoice.created_date).getTime()) / (1000 * 60 * 60 * 24)
-  );
-  
-  if (daysSinceCreated > 30) return 'Pagada';
-  if (daysSinceCreated > 14) return 'Pendiente';
-  return 'Enviada';
-};
+import { useInvoiceStore } from "@/shared/lib/stores";
+import { getRecentInvoices, formatCurrency } from "@/shared/lib/dashboardUtils";
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
+  return new Date(dateString).toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
 };
 
@@ -33,8 +21,14 @@ export const RecentInvoices: React.FC = () => {
     return (
       <Card className="p-6  ">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-foreground">Facturas Recientes</h2>
-          <Button variant="ghost" asChild className="text-primary hover:bg-primary/10">
+          <h2 className="text-xl font-semibold text-foreground">
+            Facturas Recientes
+          </h2>
+          <Button
+            variant="ghost"
+            asChild
+            className="text-primary hover:bg-primary/10"
+          >
             <Link to="/invoices">Ver todas</Link>
           </Button>
         </div>
@@ -51,38 +45,56 @@ export const RecentInvoices: React.FC = () => {
   return (
     <Card className="p-6  ">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-foreground">Facturas Recientes</h2>
-        <Button variant="ghost" asChild className="text-primary hover:bg-primary/10">
+        <h2 className="text-xl font-semibold text-foreground">
+          Facturas Recientes
+        </h2>
+        <Button
+          variant="ghost"
+          asChild
+          className="text-primary hover:bg-primary/10"
+        >
           <Link to="/invoices">Ver todas</Link>
         </Button>
       </div>
       <div className="space-y-4">
-        {recentInvoices.map((invoice) => {
-          const status = getInvoiceStatus(invoice);
-          return (
-            <div key={invoice.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
-              <div className="flex-1">
-                <p className="font-medium text-foreground">{invoice.number}</p>
-                <p className="text-sm text-muted-foreground">{invoice.client.name}</p>
+        {recentInvoices.map(
+          ({ id, number, client, total, start_date, status }) => {
+            return (
+              <div
+                key={id}
+                className="flex items-center justify-between py-3 border-b border-border last:border-0"
+              >
+                <div className="flex-1">
+                  <p className="font-medium text-foreground">{number}</p>
+                  <p className="text-sm text-muted-foreground">{client.name}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-foreground">
+                    {formatCurrency(total)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {formatDate(start_date)}
+                  </p>
+                </div>
+                <div className="ml-4">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      status === "paid"
+                        ? "bg-green-500/20 text-green-400"
+                        : status === "pending"
+                        ? "bg-yellow-500/20 text-yellow-400"
+                        : status === "overdue"
+                        ? "bg-red-500/20 text-red-400"
+                        : "bg-blue-500/20 text-blue-400"
+                    }`}
+                  >
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </span>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="font-semibold text-foreground">{formatCurrency(invoice.total)}</p>
-                <p className="text-sm text-muted-foreground">{formatDate(invoice.created_date)}</p>
-              </div>
-              <div className="ml-4">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  status === 'Pagada' 
-                    ? 'bg-green-500/20 text-green-400' 
-                    : status === 'Pendiente'
-                    ? 'bg-yellow-500/20 text-yellow-400'
-                    : 'bg-blue-500/20 text-blue-400'
-                }`}>
-                  {status}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+            );
+          }
+        )}
       </div>
     </Card>
   );
