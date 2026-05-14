@@ -102,13 +102,13 @@ export const ViewInvoice: React.FC = () => {
 
       {/* Bento Grid */}
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
-        {/* Consultor */}
+        {/* Prestador del servicio */}
         <Card className="bg-card border-border p-6 md:col-span-3 group hover:border-border/80 transition-colors">
           <div className="flex items-center gap-2 mb-4">
             <div className="p-2 rounded-md bg-primary/10 text-primary">
               <User className="w-4 h-4" />
             </div>
-            <h2 className="text-lg font-semibold text-primary">Consultor</h2>
+            <h2 className="text-lg font-semibold text-primary">Prestador del servicio</h2>
           </div>
           <div className="space-y-2">
             <p className="font-medium text-foreground">{invoice.consultant.name}</p>

@@ -54,6 +54,12 @@ export const useAppData = () => {
   };
 
   useEffect(() => {
+    if (!user) {
+      setIsInitialized(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
     if (user && !isInitialized) {
       loadAppData();
     }

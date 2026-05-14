@@ -47,10 +47,10 @@ export const ConsultantSection: React.FC<ConsultantSectionProps> = ({
   const handleCreate = async () => {
     try {
       await onCreateConsultant();
-      toast.success("Consultor creado");
+      toast.success("Prestador del servicio creado");
     } catch (e) {
       console.error(e);
-      toast.error("No se pudo crear el consultor");
+      toast.error("No se pudo crear el prestador del servicio");
     }
   };
 
@@ -67,7 +67,7 @@ export const ConsultantSection: React.FC<ConsultantSectionProps> = ({
               onValueChange={onSelectConsultant}
             >
               <SelectTrigger className="bg-input border-border text-card-foreground">
-                <SelectValue placeholder="Seleccionar consultor" />
+                <SelectValue placeholder="Seleccionar prestador del servicio" />
               </SelectTrigger>
               <SelectContent className="bg-popover border-border">
                 {consultants.map((c) => (
@@ -89,7 +89,7 @@ export const ConsultantSection: React.FC<ConsultantSectionProps> = ({
             <DialogContent className="bg-popover border-border">
               <DialogHeader>
                 <DialogTitle className="text-card-foreground">
-                  Crear consultor
+                  Crear prestador del servicio
                 </DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

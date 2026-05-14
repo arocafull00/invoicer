@@ -20,7 +20,7 @@ export const exportToCSV = (invoices: Invoice[]): void => {
     csvRows.push(['', '', '', '', '', '']);
     
     // Sección Consultant
-    csvRows.push(['Consultant', '', '', 'Start time - Included', 'End time - Included', '']);
+    csvRows.push(['Prestador del servicio', '', '', 'Start time - Included', 'End time - Included', '']);
     csvRows.push([invoice.consultant.name, '', '', formatDate(invoice.start_date), formatDate(invoice.end_date), '']);
     csvRows.push([invoice.consultant.address, '', '', '', '', '']);
     csvRows.push([invoice.consultant.city + ', ' + invoice.consultant.country, '', '', '', '', '']);

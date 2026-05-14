@@ -173,7 +173,7 @@ export function InvoiceTable() {
       {
         id: "consultantName",
         accessorFn: (row) => row.consultant.name,
-        header: () => <div>CONSULTOR</div>,
+        header: () => <div>PRESTADOR DEL SERVICIO</div>,
         cell: ({ row }) => (
           <div>
             <p className="font-medium text-foreground">
@@ -337,16 +337,16 @@ export function InvoiceTable() {
       <div className="p-6">
         {/* Global search and column filters */}
         <div className="flex flex-col gap-3 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 max-w-md">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12 lg:items-end">
+            <div className="min-w-0 sm:col-span-2 lg:col-span-3">
               <Input
                 placeholder="Buscar en todas las columnas..."
-                className="bg-card border-border text-foreground placeholder:text-muted-foreground"
+                className="bg-card border-border text-foreground placeholder:text-muted-foreground w-full min-w-0"
                 value={globalFilter}
                 onChange={(e) => setGlobalFilter(e.target.value)}
               />
             </div>
-            <div className="w-56">
+            <div className="min-w-0 lg:col-span-3">
               <Select
                 value={
                   (table.getColumn("status")?.getFilterValue() as string) ??
@@ -358,7 +358,7 @@ export function InvoiceTable() {
                     ?.setFilterValue(v === "all" ? undefined : v)
                 }
               >
-                <SelectTrigger className="bg-card border-border text-foreground">
+                <SelectTrigger className="bg-card border-border text-foreground w-full min-w-0 max-w-full [&_[data-slot=select-value]]:min-w-0">
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
                 <SelectContent>
@@ -369,7 +369,7 @@ export function InvoiceTable() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-56">
+            <div className="min-w-0 lg:col-span-3">
               <Select
                 value={
                   (table
@@ -382,11 +382,11 @@ export function InvoiceTable() {
                     ?.setFilterValue(v === "all" ? undefined : v)
                 }
               >
-                <SelectTrigger className="bg-card border-border text-foreground">
-                  <SelectValue placeholder="Consultor" />
+                <SelectTrigger className="bg-card border-border text-foreground w-full min-w-0 max-w-full [&_[data-slot=select-value]]:min-w-0">
+                  <SelectValue placeholder="Prestador del servicio" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos los consultores</SelectItem>
+                  <SelectItem value="all">Todos los prestadores del servicio</SelectItem>
                   {Array.from(
                     new Set(invoices.map((i) => i.consultant?.name ?? ""))
                   ).map((name) => (
@@ -397,7 +397,7 @@ export function InvoiceTable() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-56">
+            <div className="min-w-0 lg:col-span-3">
               <Select
                 value={
                   (table.getColumn("clientName")?.getFilterValue() as string) ??
@@ -409,7 +409,7 @@ export function InvoiceTable() {
                     ?.setFilterValue(v === "all" ? undefined : v)
                 }
               >
-                <SelectTrigger className="bg-card border-border text-foreground">
+                <SelectTrigger className="bg-card border-border text-foreground w-full min-w-0 max-w-full [&_[data-slot=select-value]]:min-w-0">
                   <SelectValue placeholder="Cliente" />
                 </SelectTrigger>
                 <SelectContent>

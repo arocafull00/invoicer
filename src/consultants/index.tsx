@@ -1,46 +1,16 @@
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { useConsultants, useCreateConsultant, useUpdateConsultant, useDeleteConsultant } from '@/shared/api/hooks';
 import type { Consultant } from '@/shared/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { Spinner } from '@/shared/components/Spinner';
-
-function ConsultantForm({ value, onChange }: { value: Partial<Consultant>; onChange: (v: Partial<Consultant>) => void }) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Nombre</Label>
-        <Input id="name" value={value.name || ''} onChange={(e) => onChange({ ...value, name: e.target.value })} />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" value={value.email || ''} onChange={(e) => onChange({ ...value, email: e.target.value })} />
-      </div>
-      <div className="space-y-2 md:col-span-2">
-        <Label htmlFor="address">Dirección</Label>
-        <Input id="address" value={value.address || ''} onChange={(e) => onChange({ ...value, address: e.target.value })} />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="city">Ciudad</Label>
-        <Input id="city" value={value.city || ''} onChange={(e) => onChange({ ...value, city: e.target.value })} />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="country">País</Label>
-        <Input id="country" value={value.country || ''} onChange={(e) => onChange({ ...value, country: e.target.value })} />
-      </div>
-      <div className="space-y-2 md:col-span-2">
-        <Label htmlFor="nif">NIF</Label>
-        <Input id="nif" value={value.nif || ''} onChange={(e) => onChange({ ...value, nif: e.target.value })} />
-      </div>
-    </div>
-  );
-}
+import { ConsultantFormFields, canSubmitConsultantFields } from '@/consultants/ConsultantFormFields';
 
 export default function ConsultantsPage() {
   const { data: consultants = [], isLoading } = useConsultants();
@@ -61,10 +31,8 @@ export default function ConsultantsPage() {
     return consultants.filter((c) => !term || [c.name, c.email, c.city, c.country, c.nif].some((f) => normalized(String(f || '')).includes(term)));
   }, [consultants, search]);
 
-  const canSubmit = (v: Partial<Consultant>) => !!(v.name && v.email && v.address && v.city && v.country && v.nif);
-
   async function handleCreate() {
-    if (!canSubmit(form)) return;
+    if (!canSubmitConsultantFields(form)) return;
     setPending(true);
     try {
       await createMutation.mutateAsync({
@@ -77,50 +45,58 @@ export default function ConsultantsPage() {
       });
       setOpenCreate(false);
       setForm({});
+    } catch {
+      toast.error('No se pudo crear el prestador del servicio');
     } finally {
       setPending(false);
     }
   }
 
   async function handleUpdate(id: string) {
-    if (!canSubmit(form)) return;
+    if (!canSubmitConsultantFields(form)) return;
     setPending(true);
     try {
       await updateMutation.mutateAsync({ id, consultant: { name: form.name!, email: form.email!, address: form.address!, city: form.city!, country: form.country!, nif: form.nif! } });
       setOpenEditId(null);
       setForm({});
+    } catch {
+      toast.error('No se pudo actualizar el prestador del servicio');
     } finally {
       setPending(false);
     }
   }
 
   async function handleDelete(id: string) {
-    await deleteMutation.mutateAsync(id);
-    setConfirmDeleteId(null);
+    try {
+      await deleteMutation.mutateAsync(id);
+      setConfirmDeleteId(null);
+    } catch {
+      toast.error('No se pudo eliminar el prestador del servicio');
+    }
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Consultores</h1>
-          <p className="text-muted-foreground mt-1">Gestiona tus consultores</p>
+          <h1 className="text-3xl font-bold text-foreground">Prestadores del servicio</h1>
+          <p className="text-muted-foreground mt-1">Gestiona tus prestadores del servicio</p>
         </div>
         <Dialog open={openCreate} onOpenChange={(o: boolean) => { setOpenCreate(o); if (!o) setForm({}); }}>
           <DialogTrigger asChild>
             <Button onClick={() => setForm({})}>
               <Plus className="w-4 h-4" />
-              Añadir consultor
+              Añadir prestador del servicio
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Nuevo consultor</DialogTitle>
+              <DialogTitle>Nuevo prestador del servicio</DialogTitle>
             </DialogHeader>
-            <ConsultantForm value={form} onChange={setForm} />
+            <ConsultantFormFields value={form} onChange={setForm} />
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancelar</Button>
-              <Button onClick={handleCreate} disabled={!canSubmit(form) || pending}>{pending ? 'Guardando...' : 'Guardar'}</Button>
+              <Button onClick={handleCreate} disabled={!canSubmitConsultantFields(form) || pending}>{pending ? 'Guardando...' : 'Guardar'}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -154,7 +130,7 @@ export default function ConsultantsPage() {
                 {isLoading ? (
                   <TableRow className="border-b border-border"><TableCell className="py-6 px-2" colSpan={6}><div className="flex justify-center py-2"><Spinner /></div></TableCell></TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow className="border-b border-border"><TableCell className="py-6 px-2" colSpan={6}>No hay consultores</TableCell></TableRow>
+                  <TableRow className="border-b border-border"><TableCell className="py-6 px-2" colSpan={6}>No hay prestadores del servicio</TableCell></TableRow>
                 ) : (
                   filtered.map((c) => (
                     <TableRow key={c.id} className="border-b border-border hover:bg-accent/30 transition-colors">
@@ -174,12 +150,12 @@ export default function ConsultantsPage() {
                             </DialogTrigger>
                             <DialogContent>
                               <DialogHeader>
-                                <DialogTitle>Editar consultor</DialogTitle>
+                                <DialogTitle>Editar prestador del servicio</DialogTitle>
                               </DialogHeader>
-                              <ConsultantForm value={form} onChange={setForm} />
+                              <ConsultantFormFields value={form} onChange={setForm} />
                               <DialogFooter>
                                 <Button variant="outline" onClick={() => setOpenEditId(null)}>Cancelar</Button>
-                                <Button onClick={() => handleUpdate(c.id)} disabled={!canSubmit(form) || pending}>{pending ? 'Guardando...' : 'Guardar'}</Button>
+                                <Button onClick={() => handleUpdate(c.id)} disabled={!canSubmitConsultantFields(form) || pending}>{pending ? 'Guardando...' : 'Guardar'}</Button>
                               </DialogFooter>
                             </DialogContent>
                           </Dialog>
@@ -201,7 +177,7 @@ export default function ConsultantsPage() {
       <AlertDialog open={!!confirmDeleteId} onOpenChange={(o: boolean) => !o && setConfirmDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar consultor</AlertDialogTitle>
+            <AlertDialogTitle>Eliminar prestador del servicio</AlertDialogTitle>
             <AlertDialogDescription>Esta acción no se puede deshacer</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

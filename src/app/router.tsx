@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { RequireAuth } from '@/login/components/RequireAuth';
+import { RequireConsultant, RedirectWhenConsultantsExist } from '@/onboarding/RequireConsultant';
 import { AppLayout } from '@/shared/components/AppLayout';
 import { LoginPage } from '@/login';
 import { DashboardPage } from '@/dashboard/DashboardScreen';
@@ -16,63 +18,144 @@ import ExpensesPage from '@/expenses/ExpensesScreen';
 import { TermsOfServicePage } from '@/legal/Terms';
 import { PrivacyPolicyPage } from '@/legal/Privacy';
 import ImportPage from '@/imports/ImportScreen';
+import ConsultantOnboardingScreen from '@/onboarding/ConsultantOnboardingScreen';
+
+function ProtectedApp({ children }: { children: ReactNode }) {
+  return (
+    <RequireAuth>
+      <RequireConsultant>
+        <AppLayout>{children}</AppLayout>
+      </RequireConsultant>
+    </RequireAuth>
+  );
+}
+
+function ConsultantOnboardingShell({ children }: { children: ReactNode }) {
+  return (
+    <RequireAuth>
+      <AppLayout>
+        <RedirectWhenConsultantsExist>{children}</RedirectWhenConsultantsExist>
+      </AppLayout>
+    </RequireAuth>
+  );
+}
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <RequireAuth><AppLayout><DashboardPage /></AppLayout></RequireAuth>,
+    element: (
+      <ProtectedApp>
+        <DashboardPage />
+      </ProtectedApp>
+    ),
   },
   {
     path: '/dashboard',
-    element: <RequireAuth><AppLayout><DashboardPage /></AppLayout></RequireAuth>,
+    element: (
+      <ProtectedApp>
+        <DashboardPage />
+      </ProtectedApp>
+    ),
   },
   {
     path: '/login',
     element: <LoginPage />,
   },
   {
+    path: '/onboarding/consultant',
+    element: (
+      <ConsultantOnboardingShell>
+        <ConsultantOnboardingScreen />
+      </ConsultantOnboardingShell>
+    ),
+  },
+  {
     path: '/invoices',
-    element: <RequireAuth><AppLayout><Invoices /></AppLayout></RequireAuth>,
+    element: (
+      <ProtectedApp>
+        <Invoices />
+      </ProtectedApp>
+    ),
   },
   {
     path: '/invoices/new',
-    element: <RequireAuth><AppLayout><NewInvoice /></AppLayout></RequireAuth>,
+    element: (
+      <ProtectedApp>
+        <NewInvoice />
+      </ProtectedApp>
+    ),
   },
   {
     path: '/invoices/edit/:id',
-    element: <RequireAuth><AppLayout><EditInvoice /></AppLayout></RequireAuth>,
+    element: (
+      <ProtectedApp>
+        <EditInvoice />
+      </ProtectedApp>
+    ),
   },
   {
     path: '/invoices/view/:id',
-    element: <RequireAuth><AppLayout><ViewInvoice /></AppLayout></RequireAuth>,
+    element: (
+      <ProtectedApp>
+        <ViewInvoice />
+      </ProtectedApp>
+    ),
   },
   {
     path: '/settings',
-    element: <RequireAuth><AppLayout><SettingsPage /></AppLayout></RequireAuth>,
+    element: (
+      <ProtectedApp>
+        <SettingsPage />
+      </ProtectedApp>
+    ),
   },
   {
     path: '/consultants',
-    element: <RequireAuth><AppLayout><ConsultantsPage /></AppLayout></RequireAuth>,
+    element: (
+      <ProtectedApp>
+        <ConsultantsPage />
+      </ProtectedApp>
+    ),
   },
   {
     path: '/clients',
-    element: <RequireAuth><AppLayout><ClientsPage /></AppLayout></RequireAuth>,
+    element: (
+      <ProtectedApp>
+        <ClientsPage />
+      </ProtectedApp>
+    ),
   },
   {
     path: '/payments',
-    element: <RequireAuth><AppLayout><PaymentsPage /></AppLayout></RequireAuth>,
+    element: (
+      <ProtectedApp>
+        <PaymentsPage />
+      </ProtectedApp>
+    ),
   },
   {
     path: '/incomes',
-    element: <RequireAuth><AppLayout><IncomesPage /></AppLayout></RequireAuth>,
+    element: (
+      <ProtectedApp>
+        <IncomesPage />
+      </ProtectedApp>
+    ),
   },
   {
     path: '/expenses',
-    element: <RequireAuth><AppLayout><ExpensesPage /></AppLayout></RequireAuth>,
+    element: (
+      <ProtectedApp>
+        <ExpensesPage />
+      </ProtectedApp>
+    ),
   },
   {
     path: '/import',
-    element: <RequireAuth><AppLayout><ImportPage /></AppLayout></RequireAuth>,
+    element: (
+      <ProtectedApp>
+        <ImportPage />
+      </ProtectedApp>
+    ),
   },
   {
     path: '/terms',
@@ -82,9 +165,8 @@ export const router = createBrowserRouter([
     path: '/privacy',
     element: <PrivacyPolicyPage />,
   },
-  // Optional catch-all to handle unknown routes within the SPA
   {
     path: '*',
     element: <LoginPage />,
   },
-]); 
+]);

@@ -39,6 +39,7 @@ import type {
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 type Target = "invoices" | "incomes" | "expenses";
 
@@ -66,12 +67,6 @@ const FIELD_DEFS: Record<Target, FieldDef[]> = {
     { key: "start_date", label: "Fecha inicio", required: true, type: "date" },
     { key: "end_date", label: "Fecha fin", required: true, type: "date" },
     {
-      key: "consultant_name",
-      label: "Consultor (nombre)",
-      required: true,
-      type: "string",
-    },
-    {
       key: "client_name",
       label: "Cliente (nombre)",
       required: true,
@@ -90,18 +85,6 @@ const FIELD_DEFS: Record<Target, FieldDef[]> = {
       type: "string",
     },
     { key: "total", label: "Total", required: true, type: "number" },
-    {
-      key: "vat_exempt",
-      label: "Exento IVA (true/false)",
-      required: false,
-      type: "boolean",
-    },
-    {
-      key: "status",
-      label: "Estado (paid/pending/overdue)",
-      required: false,
-      type: "string",
-    },
   ],
   incomes: [
     { key: "date", label: "Fecha", required: true, type: "date" },
@@ -190,6 +173,33 @@ interface ParsedFileData {
   rows: Record<string, unknown>[];
 }
 
+function previewFieldsForTarget(t: Target): FieldDef[] {
+  if (t === "invoices") {
+    return [
+      {
+        key: "consultant_name",
+        label: "Prestador del servicio",
+      },
+      ...FIELD_DEFS.invoices,
+      { key: "vat_exempt", label: "Exento IVA" },
+      { key: "status", label: "Estado" },
+    ];
+  }
+  return FIELD_DEFS[t];
+}
+
+function formatInvoicePreviewCell(key: string, data: InvoicePreview): string {
+  if (key === "vat_exempt") return data.vat_exempt ? "Sí" : "No";
+  if (key === "status") {
+    const s = data.status as Invoice["status"];
+    if (s === "paid") return "Pagado";
+    if (s === "overdue") return "Vencido";
+    return "Pendiente";
+  }
+  const v = (data as Record<string, unknown>)[key];
+  return String(v ?? "");
+}
+
 function normalizeHeader(header: unknown): string {
   const s = String(header ?? "").trim();
   return s;
@@ -199,14 +209,6 @@ function toNumber(value: unknown): number | null {
   if (value === undefined || value === null || value === "") return null;
   const n = Number(String(value).replace(/,/g, "."));
   return Number.isFinite(n) ? n : null;
-}
-
-function toBoolean(value: unknown): boolean | null {
-  if (value === undefined || value === null || value === "") return null;
-  const s = String(value).trim().toLowerCase();
-  if (["true", "1", "yes", "sí", "si"].includes(s)) return true;
-  if (["false", "0", "no"].includes(s)) return false;
-  return null;
 }
 
 function isPresent(value: unknown): boolean {
@@ -221,11 +223,6 @@ function getStringField(row: Record<string, unknown>, key: string): string {
 
 function getNumberField(row: Record<string, unknown>, key: string): number {
   return toNumber(row[key]) ?? 0;
-}
-
-function getBooleanField(row: Record<string, unknown>, key: string): boolean {
-  const b = toBoolean(row[key]);
-  return b ?? false;
 }
 
 function pad2(n: number): string {
@@ -286,6 +283,10 @@ export default function ImportPage() {
   const [fileName, setFileName] = useState<string>("");
   const [data, setData] = useState<ParsedFileData>({ headers: [], rows: [] });
   const [mapping, setMapping] = useState<Record<string, string>>({});
+  const [invoiceConsultantId, setInvoiceConsultantId] = useState<string>("");
+  const [invoiceVatExempt, setInvoiceVatExempt] = useState<boolean>(false);
+  const [invoiceStatus, setInvoiceStatus] =
+    useState<Invoice["status"]>("pending");
   const [saving, setSaving] = useState<boolean>(false);
   const [removedIndices, setRemovedIndices] = useState<Set<number>>(new Set());
 
@@ -314,9 +315,12 @@ export default function ImportPage() {
 
   const canContinueFromUpload =
     data.headers.length > 0 && data.rows.length > 0 && !!target;
-  const canContinueFromMapping = selectedFields.every(
+  const mappingColumnsOk = selectedFields.every(
     (f) => !f.required || mapping[f.key]
   );
+  const invoicesConsultantOk =
+    target !== "invoices" || invoiceConsultantId.length > 0;
+  const canContinueFromMapping = mappingColumnsOk && invoicesConsultantOk;
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -422,7 +426,10 @@ export default function ImportPage() {
         });
         return;
       }
-      // invoices
+      const selectedConsultant = consultants.find(
+        (c) => c.id === invoiceConsultantId
+      );
+      if (!selectedConsultant) return;
       list.push({
         idx,
         data: {
@@ -430,21 +437,28 @@ export default function ImportPage() {
           created_date: parseDateToISO(row[m.created_date]),
           start_date: parseDateToISO(row[m.start_date]),
           end_date: parseDateToISO(row[m.end_date]),
-          consultant_name: getStringField(row, m.consultant_name),
+          consultant_name: selectedConsultant.name,
           client_name: getStringField(row, m.client_name),
           payment_account_holder: getStringField(row, m.payment_account_holder),
           description: getStringField(row, m.description),
           total: getNumberField(row, m.total),
-          vat_exempt: m.vat_exempt ? getBooleanField(row, m.vat_exempt) : false,
-          status:
-            (getStringField(row, m.status || "status") as
-              | Invoice["status"]
-              | string) || "pending",
+          vat_exempt: invoiceVatExempt,
+          status: invoiceStatus,
         },
       });
     });
     return list;
-  }, [mapping, canContinueFromMapping, data.rows, target, removedIndices]);
+  }, [
+    mapping,
+    canContinueFromMapping,
+    data.rows,
+    target,
+    removedIndices,
+    invoiceConsultantId,
+    consultants,
+    invoiceVatExempt,
+    invoiceStatus,
+  ]);
 
   const previewRows = useMemo(
     () => previewList.map((x) => x.data),
@@ -461,13 +475,6 @@ export default function ImportPage() {
 
   function resolveClientByName(name: string) {
     return clients.find(
-      (c) =>
-        (c.name || "").trim().toLowerCase() ===
-        (name || "").trim().toLowerCase()
-    );
-  }
-  function resolveConsultantByName(name: string) {
-    return consultants.find(
       (c) =>
         (c.name || "").trim().toLowerCase() ===
         (name || "").trim().toLowerCase()
@@ -530,8 +537,12 @@ export default function ImportPage() {
         }
         await queryClient.invalidateQueries({ queryKey: ["expenses"] });
       } else {
+        const consultant = consultants.find((c) => c.id === invoiceConsultantId);
+        if (!consultant) {
+          toast.error("Prestador de servicio no encontrado");
+          return;
+        }
         for (const r of previewRows as Array<InvoicePreview>) {
-          const consultant = resolveConsultantByName(r.consultant_name);
           let client = resolveClientByName(r.client_name);
           if (!client && r.client_name) {
             client = await createClient.mutateAsync({ name: r.client_name });
@@ -539,7 +550,7 @@ export default function ImportPage() {
           const pi = resolvePaymentInstructionByAccountHolder(
             r.payment_account_holder
           );
-          if (!consultant || !client || !pi) continue;
+          if (!client || !pi) continue;
           const payload: Omit<Invoice, "id" | "user_id"> = {
             number: r.number,
             created_date: r.created_date,
@@ -550,8 +561,8 @@ export default function ImportPage() {
             payment_instructions: pi,
             description: r.description,
             total: Number(r.total) || 0,
-            vat_exempt: !!r.vat_exempt,
-            status: (r.status as Invoice["status"]) || "pending",
+            vat_exempt: invoiceVatExempt,
+            status: invoiceStatus,
           } as unknown as Omit<Invoice, "id" | "user_id">;
           await createInvoice.mutateAsync(payload);
         }
@@ -561,6 +572,9 @@ export default function ImportPage() {
       setFileName("");
       setData({ headers: [], rows: [] });
       setMapping({});
+      setInvoiceConsultantId("");
+      setInvoiceVatExempt(false);
+      setInvoiceStatus("pending");
     } catch (error) {
       toast.error("Error al guardar los datos", {
         description:
@@ -593,7 +607,14 @@ export default function ImportPage() {
                   <label className="text-sm text-muted-foreground">Objetivo</label>
                   <Select
                     value={target}
-                    onValueChange={(v: Target) => setTarget(v)}
+                    onValueChange={(v: Target) => {
+                      setTarget(v);
+                      if (v !== "invoices") {
+                        setInvoiceConsultantId("");
+                        setInvoiceVatExempt(false);
+                        setInvoiceStatus("pending");
+                      }
+                    }}
                   >
                     <SelectTrigger className="bg-card border-border text-foreground">
                       <SelectValue placeholder="Selecciona tipo" />
@@ -633,6 +654,82 @@ export default function ImportPage() {
 
           {step === 2 && (
             <div className="space-y-6">
+              {target === "invoices" && (
+                <div className="space-y-4 max-w-xl">
+                  <div className="space-y-2">
+                    <label className="text-sm text-muted-foreground">
+                      Prestador del servicio
+                    </label>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <div className="min-w-0 flex-1">
+                      <Select
+                        value={invoiceConsultantId || undefined}
+                        onValueChange={(v) => setInvoiceConsultantId(v)}
+                      >
+                        <SelectTrigger className="bg-card border-border text-foreground">
+                          <SelectValue placeholder="Selecciona prestador" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {consultants.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button variant="outline" asChild className="w-full shrink-0 sm:w-auto">
+                      <Link to="/consultants">Crear prestador</Link>
+                    </Button>
+                    </div>
+                  {consultants.length === 0 ? (
+                    <p className="text-xs text-destructive">
+                      No hay prestadores. Créalos en Prestadores del servicio
+                      antes de importar.
+                    </p>
+                  ) : null}
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">
+                        Exento IVA
+                      </label>
+                      <Select
+                        value={invoiceVatExempt ? "yes" : "no"}
+                        onValueChange={(v) => setInvoiceVatExempt(v === "yes")}
+                      >
+                        <SelectTrigger className="bg-card border-border text-foreground">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="no">No</SelectItem>
+                          <SelectItem value="yes">Sí</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">
+                        Estado
+                      </label>
+                      <Select
+                        value={invoiceStatus}
+                        onValueChange={(v) =>
+                          setInvoiceStatus(v as Invoice["status"])
+                        }
+                      >
+                        <SelectTrigger className="bg-card border-border text-foreground">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pendiente</SelectItem>
+                          <SelectItem value="paid">Pagado</SelectItem>
+                          <SelectItem value="overdue">Vencido</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="overflow-x-auto">
                 <Table className="w-full">
                   <TableHeader>
@@ -713,7 +810,7 @@ export default function ImportPage() {
                 <Table className="w-full">
                   <TableHeader>
                     <TableRow className="border-b border-border">
-                      {FIELD_DEFS[target].map((f) => (
+                      {previewFieldsForTarget(target).map((f) => (
                         <TableHead
                           key={`h-${f.key}`}
                           className="text-left py-4 px-2 text-sm font-medium text-muted-foreground"
@@ -731,7 +828,7 @@ export default function ImportPage() {
                       <TableRow className="border-b border-border">
                         <TableCell
                           className="py-6 px-2"
-                          colSpan={FIELD_DEFS[target].length + 1}
+                          colSpan={previewFieldsForTarget(target).length + 1}
                         >
                           No hay filas para previsualizar. Revisa el mapeo.
                         </TableCell>
@@ -742,15 +839,21 @@ export default function ImportPage() {
                           key={`r-${idx}`}
                           className="border-b border-border"
                         >
-                          {FIELD_DEFS[target].map((f) => (
+                          {previewFieldsForTarget(target).map((f) => (
                             <TableCell
                               key={`c-${idx}-${f.key}`}
                               className="py-3 px-2"
                             >
-                              {String(
-                                (item.data as Record<string, unknown>)[f.key] ??
-                                  ""
-                              )}
+                              {target === "invoices"
+                                ? formatInvoicePreviewCell(
+                                    f.key,
+                                    item.data as InvoicePreview
+                                  )
+                                : String(
+                                    (
+                                      item.data as Record<string, unknown>
+                                    )[f.key] ?? ""
+                                  )}
                             </TableCell>
                           ))}
                           <TableCell className="py-3 px-2 text-right">

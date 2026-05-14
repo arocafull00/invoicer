@@ -339,7 +339,7 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
         !newConsultant.country ||
         !newConsultant.nif
       ) {
-        throw new Error("Completa todos los campos del consultor");
+        throw new Error("Completa todos los campos del prestador del servicio");
       }
       const created = await createConsultant({
         name: newConsultant.name,

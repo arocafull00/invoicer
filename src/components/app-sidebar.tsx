@@ -30,7 +30,7 @@ const navItems: NavItem[] = [
   { title: 'Facturas', to: '/invoices', icon: FileText },
   { title: 'Ingresos', to: '/incomes', icon: Banknote },
   { title: 'Gastos', to: '/expenses', icon: Receipt },
-  { title: 'Consultores', to: '/consultants', icon: UserCog },
+  { title: 'Prestadores del servicio', to: '/consultants', icon: UserCog },
   { title: 'Metodos de pago', to: '/payments', icon: CreditCard },
   { title: 'Clientes', to: '/clients', icon: Users },
   { title: 'Importar', to: '/import', icon: Import },

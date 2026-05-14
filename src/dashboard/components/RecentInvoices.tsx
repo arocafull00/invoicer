@@ -35,7 +35,7 @@ export const RecentInvoices: React.FC = () => {
         <div className="text-center py-8 text-muted-foreground">
           <p>No hay facturas recientes</p>
           <Button asChild className="mt-4">
-            <Link to="/invoices/wizard">Crear primera factura</Link>
+            <Link to="/invoices/new">Crear primera factura</Link>
           </Button>
         </div>
       </Card>

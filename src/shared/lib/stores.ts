@@ -59,6 +59,8 @@ interface InvoiceStoreState {
   setWizardDraft: (draft: WizardDraft) => void;
   addInvoice: (invoice: Invoice) => void;
   addConsultant: (consultant: Consultant) => void;
+  patchConsultant: (id: string, patch: Partial<Consultant>) => void;
+  removeConsultant: (id: string) => void;
   addClient: (client: Client) => void;
   addPaymentInstruction: (paymentInstruction: PaymentInstruction) => void;
   addLineItemTemplate: (template: LineItemTemplate) => void;
@@ -82,6 +84,14 @@ export const useInvoiceStore = create<InvoiceStoreState>((set) => ({
   setWizardDraft: (draft) => set({ wizardDraft: draft }),
   addInvoice: (invoice) => set((state) => ({ invoices: [...state.invoices, invoice] })),
   addConsultant: (consultant) => set((state) => ({ consultants: [...state.consultants, consultant] })),
+  patchConsultant: (id, patch) =>
+    set((state) => ({
+      consultants: state.consultants.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    })),
+  removeConsultant: (id) =>
+    set((state) => ({
+      consultants: state.consultants.filter((c) => c.id !== id),
+    })),
   addClient: (client) => set((state) => ({ clients: [...state.clients, client] })),
   addPaymentInstruction: (paymentInstruction) => set((state) => ({ payment_instructions: [...state.payment_instructions, paymentInstruction] })),
   addLineItemTemplate: (template) => set((state) => ({ line_item_templates: [...state.line_item_templates, template] })),
