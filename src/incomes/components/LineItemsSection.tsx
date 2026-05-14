@@ -1,11 +1,16 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, TrendingUp } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Calendar, Plus, Trash2, TrendingUp } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +19,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useLineItemTemplates } from "@/shared/api/hooks/useLineItemTemplates";
+import { getWeekdayCountFromInvoiceIssueDate } from "@/shared/lib/helpers";
 import type { LineItemTemplate } from "@/shared/types";
 
 type LineItemWithoutId = Omit<
@@ -23,6 +29,7 @@ type LineItemWithoutId = Omit<
 
 interface LineItemsSectionProps {
   lineItems: LineItemWithoutId[];
+  issueDate: string;
   currentLineItem: LineItemWithoutId;
   vatRate: number;
   onUpdateLineItem: (index: number, data: Partial<LineItemWithoutId>) => void;
@@ -37,6 +44,7 @@ interface LineItemsSectionProps {
 
 export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
   lineItems,
+  issueDate,
   vatRate,
   onUpdateLineItem,
   onSetCurrentLineItem,
@@ -63,6 +71,12 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
   } = useLineItemTemplates();
 
   const mostUsedTemplates = getMostUsedTemplates(5);
+
+  const weekdayHours = useMemo(() => {
+    const days = getWeekdayCountFromInvoiceIssueDate(issueDate);
+    if (days === null) return null;
+    return days * 8;
+  }, [issueDate]);
 
   const handleSelectTemplate = (template: LineItemTemplate) => {
     // Set the values from the template
@@ -127,16 +141,45 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
                       </div>
                       <div className="space-y-2">
                         <Label className="text-muted-foreground text-xs">Cantidad</Label>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={item.quantity}
-                          onChange={(e) =>
-                            onUpdateLineItem(index, { quantity: Number(e.target.value) })
-                          }
-                          className="bg-input border-border text-card-foreground"
-                        />
+                        <div className="flex gap-2">
+                          <Input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={item.quantity}
+                            onChange={(e) =>
+                              onUpdateLineItem(index, { quantity: Number(e.target.value) })
+                            }
+                            className="min-w-0 flex-1 bg-input border-border text-card-foreground"
+                          />
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="inline-flex shrink-0">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  disabled={weekdayHours === null}
+                                  onClick={() => {
+                                    if (weekdayHours === null) return;
+                                    onUpdateLineItem(index, {
+                                      quantity: weekdayHours,
+                                    });
+                                  }}
+                                  className="h-10 w-10 text-muted-foreground hover:text-card-foreground"
+                                  aria-label="Rellenar horas según días laborables del mes"
+                                >
+                                  <Calendar className="h-4 w-4" />
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent sideOffset={6} className="max-w-xs">
+                              Asigna la cantidad como horas: días de lunes a
+                              viernes del mes de la fecha de emisión (sin festivos)
+                              × 8 h por día.
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-muted-foreground text-xs">Tarifa (€)</Label>

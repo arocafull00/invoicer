@@ -25,7 +25,3 @@ export const deleteLineItemTemplate = async (id: string): Promise<void> => {
 export const updateTemplateUsage = async (id: string): Promise<void> => {
   return await apiClient.updateTemplateUsage(id);
 };
-
-export const createDefaultTemplatesForUser = async (): Promise<void> => {
-  return await apiClient.createDefaultTemplatesForUser();
-};

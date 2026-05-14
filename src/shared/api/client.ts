@@ -698,14 +698,6 @@ export class SupabaseApiClient {
       console.error("Failed to update template usage:", error.message);
     }
   }
-
-  async createDefaultTemplatesForUser(): Promise<void> {
-    const userId = await this.getCurrentUserId();
-    const { error } = await supabase.rpc('create_default_templates_for_user', { user_uuid: userId });
-    if (error) {
-      console.error("Failed to create default templates:", error.message);
-    }
-  }
 }
 
 export const apiClient = new SupabaseApiClient();

@@ -6,7 +6,7 @@ import {
   getClients, 
   getPaymentInstructions 
 } from '@/shared/api/services';
-import { getLineItemTemplates, createDefaultTemplatesForUser } from '@/shared/api/services/lineItemTemplates';
+import { getLineItemTemplates } from '@/shared/api/services/lineItemTemplates';
 
 export const useAppData = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -37,14 +37,7 @@ export const useAppData = () => {
 
       await loadSettings();
 
-      // Load line item templates
-      let templates = await getLineItemTemplates();
-      
-      // If no templates exist, create default ones
-      if (templates.length === 0) {
-        await createDefaultTemplatesForUser();
-        templates = await getLineItemTemplates();
-      }
+      const templates = await getLineItemTemplates();
 
       setInvoices(invoices);
       setConsultants(consultants);

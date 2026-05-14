@@ -114,27 +114,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- =====================================================
--- INSERTAR PLANTILLAS COMUNES PREDETERMINADAS
--- =====================================================
-
--- Esta función se ejecutará para cada usuario cuando cree su primera factura
-CREATE OR REPLACE FUNCTION create_default_templates_for_user(user_uuid UUID)
-RETURNS VOID AS $$
-BEGIN
-    INSERT INTO line_item_templates (description, default_quantity, default_rate, category, user_id) VALUES
-    ('Desarrollo web', 1, 50.00, 'Desarrollo', user_uuid),
-    ('Consultoría técnica', 1, 75.00, 'Consultoría', user_uuid),
-    ('Diseño gráfico', 1, 40.00, 'Diseño', user_uuid),
-    ('Análisis de sistemas', 1, 60.00, 'Análisis', user_uuid),
-    ('Formación técnica', 1, 45.00, 'Formación', user_uuid),
-    ('Soporte técnico', 1, 35.00, 'Soporte', user_uuid),
-    ('Gestión de proyecto', 1, 55.00, 'Gestión', user_uuid),
-    ('Auditoría de código', 1, 65.00, 'Auditoría', user_uuid)
-    ON CONFLICT (user_id, description) DO NOTHING;
-END;
-$$ LANGUAGE plpgsql;
-
--- =====================================================
 -- EJECUTAR CREACIÓN DE PLANTILLAS DESDE DATOS EXISTENTES
 -- =====================================================
 
@@ -152,5 +131,4 @@ BEGIN
     RAISE NOTICE '🔄 Trigger configurado para updated_at';
     RAISE NOTICE '📝 Funciones de utilidad creadas';
     RAISE NOTICE '🎯 % plantillas creadas desde conceptos existentes', template_count;
-    RAISE NOTICE '💡 Plantillas predeterminadas disponibles para nuevos usuarios';
 END $$;

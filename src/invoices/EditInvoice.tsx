@@ -228,6 +228,7 @@ export const EditInvoice: React.FC = () => {
 
       <LineItemsSection
         lineItems={form.lineItems}
+        issueDate={form.issueDate}
         currentLineItem={form.currentLineItem}
         vatRate={form.vatRate}
         onUpdateLineItem={updateLineItem}

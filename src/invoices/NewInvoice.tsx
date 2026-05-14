@@ -147,6 +147,7 @@ export default function NewInvoice() {
 
       <LineItemsSection
         lineItems={form.lineItems}
+        issueDate={form.issueDate}
         currentLineItem={form.currentLineItem}
         vatRate={form.vatRate}
         onUpdateLineItem={updateLineItem}

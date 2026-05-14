@@ -6,7 +6,6 @@ import {
   updateLineItemTemplate as updateTemplateApi,
   deleteLineItemTemplate,
   updateTemplateUsage,
-  createDefaultTemplatesForUser
 } from '../services/lineItemTemplates';
 import type { LineItemTemplate } from '@/shared/types';
 
@@ -30,13 +29,6 @@ export const useLineItemTemplates = () => {
     try {
       const templates = await getLineItemTemplates();
       setLineItemTemplates(templates);
-      
-      // If no templates exist, create default ones
-      if (templates.length === 0) {
-        await createDefaultTemplatesForUser();
-        const newTemplates = await getLineItemTemplates();
-        setLineItemTemplates(newTemplates);
-      }
     } catch (error) {
       console.error('Error loading line item templates:', error);
     }
