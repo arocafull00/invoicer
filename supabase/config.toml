@@ -1,0 +1,2 @@
+[functions.parse-ingresos-csv]
+verify_jwt = false

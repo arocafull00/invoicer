@@ -79,6 +79,8 @@ export interface Invoice {
   vat_exempt: boolean;
   status: "paid" | "pending" | "overdue";
   deleted?: boolean;
+  irpf_rate?: number | null;
+  irpf_amount?: number | null;
 }
 
 export interface WizardDraft {

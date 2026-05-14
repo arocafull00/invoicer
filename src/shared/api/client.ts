@@ -3,6 +3,13 @@ import { useAuthStore } from "../lib/stores";
 import type { Client, Consultant, Invoice, PaymentInstruction, Income, Expense, ExpenseType, LineItemTemplate } from "../types";
 
 export class SupabaseApiClient {
+  private getInvoiceSaveErrorMessage(message: string): string {
+    if (message.includes("invoices_number_key")) {
+      return "No se puede repetir numero de factura";
+    }
+    return message;
+  }
+
   private async getCurrentUserId(): Promise<string> {
     const { user } = useAuthStore.getState();
     if (!user?.id) throw new Error("User not authenticated");
@@ -369,6 +376,8 @@ export class SupabaseApiClient {
       vat_exempt: invoice.vat_exempt,
       user_id: userId,
       status: invoice.status,
+      irpf_rate: invoice.irpf_rate ?? null,
+      irpf_amount: invoice.irpf_amount ?? null,
     } as const;
 
     // Start a transaction to create invoice and line items
@@ -385,7 +394,13 @@ export class SupabaseApiClient {
       )
       .single();
 
-    if (invoiceError) throw new Error(`Failed to create invoice: ${invoiceError.message}`);
+    if (invoiceError) {
+      throw new Error(
+        this.getInvoiceSaveErrorMessage(
+          `Failed to create invoice: ${invoiceError.message}`
+        )
+      );
+    }
 
     // Create line items if they exist
     if (invoice.line_items && invoice.line_items.length > 0) {
@@ -457,6 +472,9 @@ export class SupabaseApiClient {
       updatePayload.vat_exempt = invoice.vat_exempt;
     if (invoice.status !== undefined) updatePayload.status = invoice.status;
     if (invoice.deleted !== undefined) updatePayload.deleted = invoice.deleted;
+    if (invoice.irpf_rate !== undefined) updatePayload.irpf_rate = invoice.irpf_rate;
+    if (invoice.irpf_amount !== undefined)
+      updatePayload.irpf_amount = invoice.irpf_amount;
 
     // Update the invoice
     const { error: invoiceError } = await supabase
@@ -474,7 +492,13 @@ export class SupabaseApiClient {
       )
       .single();
 
-    if (invoiceError) throw new Error(`Failed to update invoice: ${invoiceError.message}`);
+    if (invoiceError) {
+      throw new Error(
+        this.getInvoiceSaveErrorMessage(
+          `Failed to update invoice: ${invoiceError.message}`
+        )
+      );
+    }
 
     // Update line items if they are provided
     if (invoice.line_items !== undefined) {

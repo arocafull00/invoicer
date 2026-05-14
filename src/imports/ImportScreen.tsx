@@ -28,20 +28,31 @@ import {
   useCreateIncome,
   useCreateInvoice,
   useCreateClient,
+  useUpdateClient,
 } from "@/shared/api/hooks";
 import type {
+  Client,
   Expense,
   ExpenseType,
   Income,
   Invoice,
+  LineItem,
   PaymentInstruction,
 } from "@/shared/types";
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
-
-type Target = "invoices" | "incomes" | "expenses";
+import { supabase } from "@/shared/lib/supabase";
+import {
+  parseIngresosCsvResponseSchema,
+  type FacturaImportRow,
+  type IngresoImportRow,
+} from "@/imports/ingresosAiResponseSchema";
+import { ImportIncomePreviewRow } from "@/imports/ImportIncomePreviewRow";
+import { ImportInvoicePreviewRow } from "@/imports/ImportInvoicePreviewRow";
+import { ImportSetupSelect } from "@/imports/ImportSetupSelect";
+import { useImportStore, type ImportTarget } from "@/imports/store";
+import { useShallow } from "zustand/react/shallow";
 
 type FieldDef = {
   key: string;
@@ -50,7 +61,7 @@ type FieldDef = {
   type?: "string" | "number" | "boolean" | "date";
 };
 
-const FIELD_DEFS: Record<Target, FieldDef[]> = {
+const FIELD_DEFS: Record<ImportTarget, FieldDef[]> = {
   invoices: [
     {
       key: "number",
@@ -168,12 +179,7 @@ type InvoicePreview = {
   status: Invoice["status"] | string;
 };
 
-interface ParsedFileData {
-  headers: string[];
-  rows: Record<string, unknown>[];
-}
-
-function previewFieldsForTarget(t: Target): FieldDef[] {
+function previewFieldsForTarget(t: ImportTarget): FieldDef[] {
   if (t === "invoices") {
     return [
       {
@@ -277,18 +283,149 @@ function parseDateToISO(value: unknown): string {
   return "";
 }
 
+const ISO_AI_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function incomeImportRowReady(item: IngresoImportRow): boolean {
+  if (!ISO_AI_DATE.test(item.date)) return false;
+  if (!item.client_name.trim()) return false;
+  if (!item.concept.trim()) return false;
+  if (!Number.isFinite(item.amount)) return false;
+  return true;
+}
+
+function facturaImportRowReady(item: FacturaImportRow): boolean {
+  if (!ISO_AI_DATE.test(item.invoice_date)) return false;
+  if (!ISO_AI_DATE.test(item.service_date)) return false;
+  if (!item.number.trim()) return false;
+  if (!item.client_name.trim()) return false;
+  if (!item.concept.trim()) return false;
+  if (!Number.isFinite(item.base_amount)) return false;
+  return true;
+}
+
 export default function ImportPage() {
-  const [step, setStep] = useState<number>(1);
-  const [target, setTarget] = useState<Target>("incomes");
-  const [fileName, setFileName] = useState<string>("");
-  const [data, setData] = useState<ParsedFileData>({ headers: [], rows: [] });
-  const [mapping, setMapping] = useState<Record<string, string>>({});
-  const [invoiceConsultantId, setInvoiceConsultantId] = useState<string>("");
-  const [invoiceVatExempt, setInvoiceVatExempt] = useState<boolean>(false);
-  const [invoiceStatus, setInvoiceStatus] =
-    useState<Invoice["status"]>("pending");
+  const {
+    step,
+    target,
+    fileName,
+    data,
+    mapping,
+    invoiceConsultantId,
+    invoiceVatExempt,
+    invoiceStatus,
+    removedIndices,
+    incomesCsvParsedMode,
+    pendingCsvText,
+    parsedIngresos,
+    parsedFacturas,
+    ingresosRemoved,
+    facturasRemoved,
+    aiInvoicePaymentId,
+    parseIngresosBulkError,
+    setImportState,
+    addRemovedIndex,
+    addIngresoRemoved,
+    addFacturaRemoved,
+    resetIncomesCsvParseState,
+    resetImportState,
+  } = useImportStore(useShallow((state) => ({
+    step: state.step,
+    target: state.target,
+    fileName: state.fileName,
+    data: state.data,
+    mapping: state.mapping,
+    invoiceConsultantId: state.invoiceConsultantId,
+    invoiceVatExempt: state.invoiceVatExempt,
+    invoiceStatus: state.invoiceStatus,
+    removedIndices: state.removedIndices,
+    incomesCsvParsedMode: state.incomesCsvParsedMode,
+    pendingCsvText: state.pendingCsvText,
+    parsedIngresos: state.parsedIngresos,
+    parsedFacturas: state.parsedFacturas,
+    ingresosRemoved: state.ingresosRemoved,
+    facturasRemoved: state.facturasRemoved,
+    aiInvoicePaymentId: state.aiInvoicePaymentId,
+    parseIngresosBulkError: state.parseIngresosBulkError,
+    setImportState: state.setImportState,
+    addRemovedIndex: state.addRemovedIndex,
+    addIngresoRemoved: state.addIngresoRemoved,
+    addFacturaRemoved: state.addFacturaRemoved,
+    resetIncomesCsvParseState: state.resetIncomesCsvParseState,
+    resetImportState: state.resetImportState,
+  })));
   const [saving, setSaving] = useState<boolean>(false);
-  const [removedIndices, setRemovedIndices] = useState<Set<number>>(new Set());
+  const [parseIngresosLoading, setParseIngresosLoading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+
+  const setStep = (value: number) => setImportState({ step: value });
+  const setTarget = (value: ImportTarget) => setImportState({ target: value });
+  const setFileName = (value: string) => setImportState({ fileName: value });
+  const setData = (value: { headers: string[]; rows: Record<string, unknown>[] }) =>
+    setImportState({ data: value });
+  const setPendingCsvText = (value: string) =>
+    setImportState({ pendingCsvText: value });
+  const setIncomesCsvParsedMode = (value: boolean) =>
+    setImportState({ incomesCsvParsedMode: value });
+  const setParsedIngresos = (
+    value:
+      | IngresoImportRow[]
+      | ((prev: IngresoImportRow[]) => IngresoImportRow[]),
+  ) =>
+    setImportState((state) => ({
+      parsedIngresos:
+        typeof value === "function" ? value(state.parsedIngresos) : value,
+    }));
+  const setParsedFacturas = (
+    value:
+      | FacturaImportRow[]
+      | ((prev: FacturaImportRow[]) => FacturaImportRow[]),
+  ) =>
+    setImportState((state) => ({
+      parsedFacturas:
+        typeof value === "function" ? value(state.parsedFacturas) : value,
+    }));
+  const setRemovedIndices = (
+    value: Set<number> | ((prev: Set<number>) => Set<number>),
+  ) =>
+    setImportState((state) => {
+      const prevSet = new Set(state.removedIndices);
+      const nextSet = typeof value === "function" ? value(prevSet) : value;
+      return { removedIndices: Array.from(nextSet) };
+    });
+  const setIngresosRemoved = (
+    value: Set<number> | ((prev: Set<number>) => Set<number>),
+  ) =>
+    setImportState((state) => {
+      const prevSet = new Set(state.ingresosRemoved);
+      const nextSet = typeof value === "function" ? value(prevSet) : value;
+      return { ingresosRemoved: Array.from(nextSet) };
+    });
+  const setFacturasRemoved = (
+    value: Set<number> | ((prev: Set<number>) => Set<number>),
+  ) =>
+    setImportState((state) => {
+      const prevSet = new Set(state.facturasRemoved);
+      const nextSet = typeof value === "function" ? value(prevSet) : value;
+      return { facturasRemoved: Array.from(nextSet) };
+    });
+  const setInvoiceConsultantId = (value: string) =>
+    setImportState({ invoiceConsultantId: value });
+  const setInvoiceVatExempt = (value: boolean) =>
+    setImportState({ invoiceVatExempt: value });
+  const setInvoiceStatus = (value: Invoice["status"]) =>
+    setImportState({ invoiceStatus: value });
+  const setAiInvoicePaymentId = (value: string) =>
+    setImportState({ aiInvoicePaymentId: value });
+  const setParseIngresosBulkError = (value: string | null) =>
+    setImportState({ parseIngresosBulkError: value });
+  const setMapping = (
+    value:
+      | Record<string, string>
+      | ((prev: Record<string, string>) => Record<string, string>),
+  ) =>
+    setImportState((state) => ({
+      mapping: typeof value === "function" ? value(state.mapping) : value,
+    }));
 
   const queryClient = useQueryClient();
   const { data: clients = [] } = useClients();
@@ -299,36 +436,164 @@ export default function ImportPage() {
   const createExpense = useCreateExpense();
   const createInvoice = useCreateInvoice();
   const createClient = useCreateClient();
+  const updateClient = useUpdateClient();
+
+  const isIncomesCsv =
+    target === "incomes" && fileName.toLowerCase().endsWith(".csv");
 
   const steps: Array<{
     id: number;
     name: string;
     title: string;
     component: React.ComponentType;
-  }> = [
-    { id: 1, name: "Subir archivo", title: "Upload", component: () => null },
-    { id: 2, name: "Mapear campos", title: "Mapping", component: () => null },
-    { id: 3, name: "Previsualizar", title: "Preview", component: () => null },
-  ];
+  }> = useMemo(() => {
+    if (isIncomesCsv) {
+      return [
+        {
+          id: 1,
+          name: "Subir archivo",
+          title: "Upload",
+          component: () => null,
+        },
+        { id: 2, name: "Ingresos", title: "Incomes", component: () => null },
+        { id: 3, name: "Facturas", title: "Invoices", component: () => null },
+      ];
+    }
+    return [
+      { id: 1, name: "Subir archivo", title: "Upload", component: () => null },
+      { id: 2, name: "Mapear campos", title: "Mapping", component: () => null },
+      {
+        id: 3,
+        name: "Previsualizar",
+        title: "Preview",
+        component: () => null,
+      },
+    ];
+  }, [isIncomesCsv]);
 
   const selectedFields = FIELD_DEFS[target];
 
   const canContinueFromUpload =
-    data.headers.length > 0 && data.rows.length > 0 && !!target;
+    data.headers.length > 0 &&
+    data.rows.length > 0 &&
+    !!target &&
+    (!isIncomesCsv || pendingCsvText.length > 0);
   const mappingColumnsOk = selectedFields.every(
     (f) => !f.required || mapping[f.key]
   );
-  const invoicesConsultantOk =
-    target !== "invoices" || invoiceConsultantId.length > 0;
-  const canContinueFromMapping = mappingColumnsOk && invoicesConsultantOk;
+  const canContinueFromMapping = mappingColumnsOk;
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const ingresosPreviewList = useMemo(() => {
+    if (!incomesCsvParsedMode) {
+      return [] as { idx: number; item: IngresoImportRow }[];
+    }
+    return parsedIngresos
+      .map((item, idx) => ({ idx, item }))
+      .filter((x) => !ingresosRemoved.includes(x.idx));
+  }, [incomesCsvParsedMode, parsedIngresos, ingresosRemoved]);
+
+  const facturasPreviewList = useMemo(() => {
+    if (!incomesCsvParsedMode) {
+      return [] as { idx: number; item: FacturaImportRow }[];
+    }
+    return parsedFacturas
+      .map((item, idx) => ({ idx, item }))
+      .filter((x) => !facturasRemoved.includes(x.idx));
+  }, [incomesCsvParsedMode, parsedFacturas, facturasRemoved]);
+
+  const hasParsedFacturaRows = facturasPreviewList.length > 0;
+
+  const mapStepComplete = canContinueFromMapping;
+  const incomesIngresosStepReady = !isIncomesCsv || incomesCsvParsedMode;
+  const canContinueStep2 = isIncomesCsv
+    ? incomesIngresosStepReady
+    : mapStepComplete;
+
+  const incomesCsvRowsReady = useMemo(() => {
+    const igOk = ingresosPreviewList.every(({ item }) =>
+      incomeImportRowReady(item),
+    );
+    const fcOk = facturasPreviewList.every(({ item }) =>
+      facturaImportRowReady(item),
+    );
+    const anyRow =
+      ingresosPreviewList.length > 0 || facturasPreviewList.length > 0;
+    return anyRow && igOk && fcOk;
+  }, [
+    ingresosPreviewList,
+    facturasPreviewList,
+  ]);
+
+  const consultantSelectOptions = useMemo(
+    () =>
+      consultants.map((consultant) => ({
+        value: consultant.id,
+        label: consultant.name,
+      })),
+    [consultants],
+  );
+
+  const paymentInstructionSelectOptions = useMemo(
+    () =>
+      paymentInstructions.map((instruction) => ({
+        value: instruction.id,
+        label: instruction.account_holder,
+      })),
+    [paymentInstructions],
+  );
+
+  function patchParsedIngreso(idx: number, patch: Record<string, unknown>) {
+    setParsedIngresos((prev) =>
+      prev.map((it, i) => {
+        if (i !== idx) return it;
+        const next = { ...it, ...patch } as IngresoImportRow;
+        const rawFe = next.field_errors;
+        if (!rawFe || typeof rawFe !== "object") return next;
+        const fe = { ...rawFe };
+        for (const k of Object.keys(patch)) {
+          delete fe[k];
+        }
+        if (Object.keys(fe).length === 0) {
+          const { field_errors: _, ...rest } = next as IngresoImportRow & {
+            field_errors?: Record<string, string>;
+          };
+          return rest as IngresoImportRow;
+        }
+        return { ...next, field_errors: fe };
+      }),
+    );
+  }
+
+  function patchParsedFactura(idx: number, patch: Record<string, unknown>) {
+    setParsedFacturas((prev) =>
+      prev.map((it, i) => {
+        if (i !== idx) return it;
+        const next = { ...it, ...patch } as FacturaImportRow;
+        const rawFe = next.field_errors;
+        if (!rawFe || typeof rawFe !== "object") return next;
+        const fe = { ...rawFe };
+        for (const k of Object.keys(patch)) {
+          delete fe[k];
+        }
+        if (Object.keys(fe).length === 0) {
+          const { field_errors: _, ...rest } = next as FacturaImportRow & {
+            field_errors?: Record<string, string>;
+          };
+          return rest as FacturaImportRow;
+        }
+        return { ...next, field_errors: fe };
+      }),
+    );
+  }
+
+  async function loadFile(file: File) {
     setFileName(file.name);
     const ext = file.name.split(".").pop()?.toLowerCase();
+    resetIncomesCsvParseState();
+    setAiInvoicePaymentId("");
     if (ext === "csv") {
       const text = await file.text();
+      setPendingCsvText(text);
       const result = Papa.parse(text, { header: true, skipEmptyLines: true });
       const headers: string[] = (result.meta.fields || []).map((h: string) =>
         normalizeHeader(h)
@@ -337,35 +602,93 @@ export default function ImportPage() {
         result.data as Papa.ParseResult<Record<string, unknown>>["data"]
       ).map((row: Record<string, unknown>) => row);
       setData({ headers, rows });
-    } else {
-      const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: "array" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const rowsArray = XLSX.utils.sheet_to_json<
-        (string | number | boolean | null)[]
-      >(sheet, { header: 1, raw: true }) as unknown as unknown[][];
-      const [headerRow, ...restRows] = rowsArray;
-      const headers = (headerRow || []).map((h: unknown) => normalizeHeader(h));
-      const rows = restRows
-        .filter(
-          (r: unknown[]) =>
-            r &&
-            r.some(
-              (cell) =>
-                cell !== undefined &&
-                cell !== null &&
-                String(cell).trim() !== ""
-            )
-        )
-        .map((r: unknown[]) =>
-          Object.fromEntries(
-            headers.map((h: string, idx: number) => [h, r[idx] as unknown])
-          )
-        );
-      setData({ headers, rows });
+      if (target === "incomes") {
+        setStep(1);
+        return;
+      }
+      setStep(2);
+      return;
     }
+    setPendingCsvText("");
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: "array" });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const rowsArray = XLSX.utils.sheet_to_json<
+      (string | number | boolean | null)[]
+    >(sheet, { header: 1, raw: true }) as unknown as unknown[][];
+    const [headerRow, ...restRows] = rowsArray;
+    const headers = (headerRow || []).map((h: unknown) => normalizeHeader(h));
+    const rows = restRows
+      .filter(
+        (r: unknown[]) =>
+          r &&
+          r.some(
+            (cell) =>
+              cell !== undefined &&
+              cell !== null &&
+              String(cell).trim() !== ""
+          )
+      )
+      .map((r: unknown[]) =>
+        Object.fromEntries(
+          headers.map((h: string, idx: number) => [h, r[idx] as unknown])
+        )
+      );
+    setData({ headers, rows });
     setStep(2);
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await loadFile(file);
+    e.target.value = "";
+  }
+
+  async function handleParseIngresosCsv() {
+    if (!pendingCsvText.trim()) return;
+    setParseIngresosLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "parse-ingresos-csv",
+        { body: { csv: pendingCsvText } },
+      );
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      if (!data || typeof data !== "object") {
+        toast.error("Respuesta inválida del servidor");
+        return;
+      }
+      const parsed = parseIngresosCsvResponseSchema.safeParse(data);
+      if (!parsed.success) {
+        toast.error("Respuesta inválida del servidor");
+        return;
+      }
+      if (
+        parsed.data.ingresos.length === 0 &&
+        parsed.data.facturas.length === 0
+      ) {
+        toast.error(parsed.data.error ?? "No se detectaron filas válidas");
+        setParseIngresosBulkError(parsed.data.error ?? null);
+        return;
+      }
+      setParseIngresosBulkError(parsed.data.error ?? null);
+      if (parsed.data.error) {
+        toast.warning(parsed.data.error);
+      }
+      setParsedIngresos(parsed.data.ingresos);
+      setParsedFacturas(parsed.data.facturas);
+      setIncomesCsvParsedMode(true);
+      setIngresosRemoved(new Set());
+      setFacturasRemoved(new Set());
+      setRemovedIndices(new Set());
+      setStep(2);
+    } finally {
+      setParseIngresosLoading(false);
+    }
   }
 
   function setMappingFor(key: string, header: string) {
@@ -373,6 +696,12 @@ export default function ImportPage() {
   }
 
   const previewList = useMemo(() => {
+    if (incomesCsvParsedMode) {
+      return [] as {
+        idx: number;
+        data: IncomePreview | ExpensePreview | InvoicePreview;
+      }[];
+    }
     if (!canContinueFromMapping)
       return [] as {
         idx: number;
@@ -385,7 +714,7 @@ export default function ImportPage() {
       data: IncomePreview | ExpensePreview | InvoicePreview;
     }[] = [];
     data.rows.forEach((row: Record<string, unknown>, idx: number) => {
-      if (removedIndices.has(idx)) return;
+      if (removedIndices.includes(idx)) return;
       if (
         !selectedHeaders.every((h) =>
           isPresent((row as Record<string, unknown>)[h as string])
@@ -458,6 +787,7 @@ export default function ImportPage() {
     consultants,
     invoiceVatExempt,
     invoiceStatus,
+    incomesCsvParsedMode,
   ]);
 
   const previewRows = useMemo(
@@ -466,11 +796,62 @@ export default function ImportPage() {
   );
 
   function handleRemoveRow(idx: number) {
-    setRemovedIndices((prev) => {
-      const next = new Set(prev);
-      next.add(idx);
-      return next;
-    });
+    addRemovedIndex(idx);
+  }
+
+  function handleRemoveParsedIngreso(idx: number) {
+    addIngresoRemoved(idx);
+  }
+
+  function handleRemoveParsedFactura(idx: number) {
+    addFacturaRemoved(idx);
+  }
+
+  function handleBackFromIngresosStep() {
+    setStep(1);
+    resetIncomesCsvParseState();
+    setAiInvoicePaymentId("");
+    setInvoiceConsultantId("");
+  }
+
+  function showMissingConsultantAlert() {
+    toast.error("Selecciona un prestador o créalo antes de continuar");
+  }
+
+  function showMissingPaymentInstructionAlert() {
+    toast.error("Selecciona una instrucción de pago o créala antes de continuar");
+  }
+
+  function handleContinueStep2() {
+    if (!canContinueStep2) return;
+    if (target === "invoices" && !invoiceConsultantId) {
+      showMissingConsultantAlert();
+      return;
+    }
+    setStep(3);
+  }
+
+  async function ensureClientWithOptionalNif(
+    name: string,
+    nif: string | null
+  ) {
+    let client = resolveClientByName(name);
+    if (!client && name) {
+      client = await createClient.mutateAsync({
+        name,
+        company_number: nif || undefined,
+      });
+      return client;
+    }
+    if (!client) return undefined;
+    if (nif && (client.company_number || "") !== nif) {
+      const updated = await updateClient.mutateAsync({
+        id: client.id,
+        client: { company_number: nif },
+      });
+      return updated;
+    }
+    return client;
   }
 
   function resolveClientByName(name: string) {
@@ -498,9 +879,94 @@ export default function ImportPage() {
   }
 
   async function handleSave() {
+    if (target === "invoices" && !invoiceConsultantId) {
+      showMissingConsultantAlert();
+      return;
+    }
+    if (
+      target === "incomes" &&
+      incomesCsvParsedMode &&
+      hasParsedFacturaRows &&
+      !invoiceConsultantId
+    ) {
+      showMissingConsultantAlert();
+      return;
+    }
+    if (
+      target === "incomes" &&
+      incomesCsvParsedMode &&
+      hasParsedFacturaRows &&
+      !aiInvoicePaymentId
+    ) {
+      showMissingPaymentInstructionAlert();
+      return;
+    }
+
     setSaving(true);
     try {
-      if (target === "incomes") {
+      if (target === "incomes" && incomesCsvParsedMode) {
+        const consultant = consultants.find((c) => c.id === invoiceConsultantId);
+        const pi = paymentInstructions.find((p) => p.id === aiInvoicePaymentId);
+        for (const { item } of ingresosPreviewList) {
+          if (!incomeImportRowReady(item)) continue;
+          let client = resolveClientByName(item.client_name);
+          if (!client && item.client_name) {
+            client = await createClient.mutateAsync({
+              name: item.client_name,
+            });
+          }
+          if (!client) continue;
+          const payload: Omit<Income, "id" | "user_id"> = {
+            date: item.date,
+            concept: item.concept,
+            amount: item.amount,
+            payment_method: item.payment_method,
+            client: client as Client,
+          };
+          await createIncome.mutateAsync(payload);
+        }
+        for (const { item } of facturasPreviewList) {
+          if (!facturaImportRowReady(item)) continue;
+          if (!consultant || !pi) continue;
+          const client = await ensureClientWithOptionalNif(
+            item.client_name,
+            item.client_nif
+          );
+          if (!client) continue;
+          const base = item.base_amount;
+          const lineItem: LineItem = {
+            id: "line-1",
+            description: item.concept,
+            quantity: 1,
+            rate: base,
+            total: base,
+            includeVat: false,
+          };
+          const payload: Omit<Invoice, "id" | "user_id"> = {
+            number: item.number,
+            created_date: item.invoice_date,
+            start_date: item.service_date,
+            end_date: item.service_date,
+            consultant,
+            client: client as Client,
+            payment_instructions: pi,
+            description: item.concept,
+            line_items: [lineItem],
+            subtotal: base,
+            vat_rate: 0,
+            vat_amount: 0,
+            total: base,
+            vat_exempt: true,
+            status: invoiceStatus,
+            irpf_rate: item.irpf_percent,
+            irpf_amount: item.irpf_amount,
+          };
+          await createInvoice.mutateAsync(payload);
+        }
+        await queryClient.invalidateQueries({ queryKey: ["incomes"] });
+        await queryClient.invalidateQueries({ queryKey: ["invoices"] });
+        await queryClient.invalidateQueries({ queryKey: ["clients"] });
+      } else if (target === "incomes") {
         for (const r of previewRows as Array<IncomePreview>) {
           let client = resolveClientByName(r.client_name);
           if (!client && r.client_name) {
@@ -568,20 +1034,14 @@ export default function ImportPage() {
         }
         await queryClient.invalidateQueries({ queryKey: ["invoices"] });
       }
-      setStep(1);
-      setFileName("");
-      setData({ headers: [], rows: [] });
-      setMapping({});
-      setInvoiceConsultantId("");
-      setInvoiceVatExempt(false);
-      setInvoiceStatus("pending");
+      toast.success("Datos guardados correctamente");
+      resetImportState();
     } catch (error) {
       toast.error("Error al guardar los datos", {
         description:
           error instanceof Error ? error.message : "Error desconocido",
       });
     } finally {
-      toast.success("Datos guardados correctamente");
       setSaving(false);
     }
   }
@@ -592,7 +1052,8 @@ export default function ImportPage() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Importar datos</h1>
           <p className="text-muted-foreground mt-1">
-            Sube un archivo CSV o Excel y mapea los campos
+            Importa ingresos desde CSV fijo, facturas, gastos u otros Excel con
+            mapeo manual
           </p>
         </div>
       </div>
@@ -602,13 +1063,17 @@ export default function ImportPage() {
           <Stepper steps={steps} currentStep={step} />
           {step === 1 && (
             <div className="space-y-4">
-              <div className="flex justify-center gap-4 items-center">
-                <div className="space-y-2">
+              <div className="flex flex-col gap-4 lg:flex-row lg:justify-center lg:items-start">
+                <div className="space-y-2 shrink-0">
                   <label className="text-sm text-muted-foreground">Objetivo</label>
                   <Select
                     value={target}
-                    onValueChange={(v: Target) => {
+                    onValueChange={(v: ImportTarget) => {
                       setTarget(v);
+                      resetIncomesCsvParseState();
+                      setPendingCsvText("");
+                      setAiInvoicePaymentId("");
+                      setStep(1);
                       if (v !== "invoices") {
                         setInvoiceConsultantId("");
                         setInvoiceVatExempt(false);
@@ -626,7 +1091,25 @@ export default function ImportPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2 md:col-span-2">
+                <div
+                  className={`space-y-2 flex-1 max-w-xl min-w-0 rounded-lg border-2 border-dashed p-6 transition-colors ${
+                    dragOver
+                      ? "border-primary bg-[#7F5AF0]/10"
+                      : "border-border"
+                  }`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOver(true);
+                  }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOver(false);
+                    const f = e.dataTransfer.files[0];
+                    if (!f) return;
+                    void loadFile(f);
+                  }}
+                >
                   <label className="text-sm text-muted-foreground">
                     Archivo CSV o Excel
                   </label>
@@ -636,18 +1119,32 @@ export default function ImportPage() {
                     onChange={handleFileChange}
                     className="bg-card border-border text-foreground file:text-foreground"
                   />
-                  {fileName && (
+                  {fileName ? (
                     <p className="text-xs text-muted-foreground">{fileName}</p>
-                  )}
+                  ) : null}
+                  <p className="text-xs text-muted-foreground">
+                    Arrastra un archivo aquí o elige uno con el selector
+                  </p>
                 </div>
               </div>
-              <div className="flex justify-end">
-                <Button
-                  disabled={!canContinueFromUpload}
-                  onClick={() => setStep(2)}
-                >
-                  Siguiente
-                </Button>
+              <div className="flex flex-wrap justify-end gap-2">
+                {isIncomesCsv ? (
+                  <Button
+                    type="button"
+                    disabled={!canContinueFromUpload || parseIngresosLoading}
+                    onClick={() => void handleParseIngresosCsv()}
+                  >
+                    {parseIngresosLoading ? "Procesando…" : "Siguiente"}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    disabled={!canContinueFromUpload}
+                    onClick={() => setStep(2)}
+                  >
+                    Siguiente
+                  </Button>
+                )}
               </div>
             </div>
           )}
@@ -655,41 +1152,18 @@ export default function ImportPage() {
           {step === 2 && (
             <div className="space-y-6">
               {target === "invoices" && (
-                <div className="space-y-4 max-w-xl">
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">
-                      Prestador del servicio
-                    </label>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                      <div className="min-w-0 flex-1">
-                      <Select
-                        value={invoiceConsultantId || undefined}
-                        onValueChange={(v) => setInvoiceConsultantId(v)}
-                      >
-                        <SelectTrigger className="bg-card border-border text-foreground">
-                          <SelectValue placeholder="Selecciona prestador" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {consultants.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button variant="outline" asChild className="w-full shrink-0 sm:w-auto">
-                      <Link to="/consultants">Crear prestador</Link>
-                    </Button>
-                    </div>
-                  {consultants.length === 0 ? (
-                    <p className="text-xs text-destructive">
-                      No hay prestadores. Créalos en Prestadores del servicio
-                      antes de importar.
-                    </p>
-                  ) : null}
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 lg:grid-cols-[1.2fr,1fr]">
+                  <ImportSetupSelect
+                    label="Prestador del servicio"
+                    placeholder="Selecciona prestador"
+                    value={invoiceConsultantId}
+                    onChange={setInvoiceConsultantId}
+                    options={consultantSelectOptions}
+                    actionLabel="Crear prestador"
+                    actionTo="/consultants"
+                    emptyMessage="No hay prestadores. Créalos antes de importar."
+                  />
+                  <div className="space-y-4 rounded-xl border border-border/60 bg-card/20 p-4">
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">
                         Exento IVA
@@ -730,6 +1204,7 @@ export default function ImportPage() {
                   </div>
                 </div>
               )}
+              {!(isIncomesCsv && incomesCsvParsedMode) ? (
               <div className="overflow-x-auto">
                 <Table className="w-full">
                   <TableHeader>
@@ -790,13 +1265,75 @@ export default function ImportPage() {
                   </TableBody>
                 </Table>
               </div>
+              ) : (
+              <div className="overflow-x-auto">
+                <Table className="w-full">
+                  <TableHeader>
+                    <TableRow className="border-b border-border">
+                      <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground">
+                        Tipo
+                      </TableHead>
+                      <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground">
+                        Fecha
+                      </TableHead>
+                      <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground">
+                        Cliente
+                      </TableHead>
+                      <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground">
+                        Concepto
+                      </TableHead>
+                      <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground">
+                        Importe
+                      </TableHead>
+                      <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground">
+                        Método de pago
+                      </TableHead>
+                      <TableHead className="text-right py-4 px-2 text-sm font-medium text-muted-foreground">
+                        Acciones
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ingresosPreviewList.length === 0 ? (
+                      <TableRow className="border-b border-border">
+                        <TableCell
+                          className="py-6 px-2"
+                          colSpan={7}
+                        >
+                          No hay ingresos en el archivo
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      ingresosPreviewList.slice(0, 50).map(({ idx, item }) => (
+                        <ImportIncomePreviewRow
+                          key={`in-${idx}`}
+                          idx={idx}
+                          item={item}
+                          onPatch={patchParsedIngreso}
+                          onRemove={handleRemoveParsedIngreso}
+                        />
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              )}
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(1)}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (isIncomesCsv && incomesCsvParsedMode) {
+                      handleBackFromIngresosStep();
+                      return;
+                    }
+                    setStep(1);
+                  }}
+                >
                   Atrás
                 </Button>
                 <Button
-                  disabled={!canContinueFromMapping}
-                  onClick={() => setStep(3)}
+                  disabled={!canContinueStep2}
+                  onClick={handleContinueStep2}
                 >
                   Siguiente
                 </Button>
@@ -806,7 +1343,108 @@ export default function ImportPage() {
 
           {step === 3 && (
             <div className="space-y-6">
+              {incomesCsvParsedMode &&
+              isIncomesCsv &&
+              parseIngresosBulkError ? (
+                <p className="text-sm text-destructive">
+                  {parseIngresosBulkError}
+                </p>
+              ) : null}
               <div className="overflow-x-auto">
+                {incomesCsvParsedMode && isIncomesCsv ? (
+                <>
+                  {hasParsedFacturaRows ? (
+                    <div className="mb-6 grid gap-4 lg:grid-cols-[1fr,1fr,0.8fr]">
+                      <ImportSetupSelect
+                        label="Prestador del servicio (facturas)"
+                        placeholder="Selecciona prestador"
+                        value={invoiceConsultantId}
+                        onChange={setInvoiceConsultantId}
+                        options={consultantSelectOptions}
+                        actionLabel="Crear prestador"
+                        actionTo="/consultants"
+                        emptyMessage="No hay prestadores. Créalos antes de importar facturas."
+                      />
+                      <ImportSetupSelect
+                        label="Instrucción de pago (facturas)"
+                        placeholder="Selecciona cuenta"
+                        value={aiInvoicePaymentId}
+                        onChange={setAiInvoicePaymentId}
+                        options={paymentInstructionSelectOptions}
+                        actionLabel="Añadir instrucción"
+                        actionTo="/payments"
+                        emptyMessage="No hay instrucciones de pago. Créalas antes de importar facturas."
+                      />
+                      <div className="space-y-2 rounded-xl border border-border/60 bg-card/20 p-4">
+                        <label className="text-sm text-muted-foreground">
+                          Estado facturas importadas
+                        </label>
+                        <Select
+                          value={invoiceStatus}
+                          onValueChange={(v) =>
+                            setInvoiceStatus(v as Invoice["status"])
+                          }
+                        >
+                          <SelectTrigger className="bg-card border-border text-foreground">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pendiente</SelectItem>
+                            <SelectItem value="paid">Pagado</SelectItem>
+                            <SelectItem value="overdue">Vencido</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  ) : null}
+                  <Table className="w-full">
+                    <TableHeader>
+                      <TableRow className="border-b border-border">
+                        <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground">
+                          Tipo
+                        </TableHead>
+                        <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground">
+                          Fechas
+                        </TableHead>
+                        <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground">
+                          Cliente
+                        </TableHead>
+                        <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground">
+                          Concepto
+                        </TableHead>
+                        <TableHead className="text-left py-4 px-2 text-sm font-medium text-muted-foreground">
+                          Detalle / fiscal
+                        </TableHead>
+                        <TableHead className="text-right py-4 px-2 text-sm font-medium text-muted-foreground">
+                          Acciones
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {facturasPreviewList.length === 0 ? (
+                        <TableRow className="border-b border-border">
+                          <TableCell
+                            className="py-6 px-2"
+                            colSpan={6}
+                          >
+                            No hay facturas en el archivo
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        facturasPreviewList.slice(0, 50).map(({ idx, item }) => (
+                          <ImportInvoicePreviewRow
+                            key={`fc-${idx}`}
+                            idx={idx}
+                            item={item}
+                            onPatch={patchParsedFactura}
+                            onRemove={handleRemoveParsedFactura}
+                          />
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </>
+                ) : (
                 <Table className="w-full">
                   <TableHeader>
                     <TableRow className="border-b border-border">
@@ -870,18 +1508,34 @@ export default function ImportPage() {
                     )}
                   </TableBody>
                 </Table>
+                )}
               </div>
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setStep(2)}>
                   Atrás
                 </Button>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" onClick={() => setStep(1)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setStep(1);
+                      if (isIncomesCsv && incomesCsvParsedMode) {
+                        resetIncomesCsvParseState();
+                        setAiInvoicePaymentId("");
+                        setInvoiceConsultantId("");
+                      }
+                    }}
+                  >
                     Cancelar
                   </Button>
                   <Button
                     onClick={handleSave}
-                    disabled={saving || previewRows.length === 0}
+                    disabled={
+                      saving ||
+                      (incomesCsvParsedMode && isIncomesCsv
+                        ? !incomesCsvRowsReady
+                        : previewRows.length === 0)
+                    }
                   >
                     {saving ? "Guardando..." : "Guardar"}
                   </Button>

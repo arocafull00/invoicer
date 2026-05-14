@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   usePaymentInstructions,
+  useCreatePaymentInstruction,
   useUpdatePaymentInstruction,
   useDeletePaymentInstruction,
 } from "@/shared/api/hooks";
@@ -34,17 +36,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { PaymentInstructionForm } from "@/payments/components/PaymentInstructionForm";
 import { Spinner } from "@/shared/components/Spinner";
 
 export default function PaymentsPage() {
   const { data: paymentInstructions = [], isLoading } =
     usePaymentInstructions();
+  const createMutation = useCreatePaymentInstruction();
   const updateMutation = useUpdatePaymentInstruction();
   const deleteMutation = useDeletePaymentInstruction();
 
   const [search, setSearch] = useState("");
+  const [openCreate, setOpenCreate] = useState(false);
   const [openEditId, setOpenEditId] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [form, setForm] = useState<Partial<PaymentInstruction>>({});
@@ -72,6 +76,26 @@ export default function PaymentsPage() {
 
   const canSubmit = (v: Partial<PaymentInstruction>) =>
     !!(v.account_holder && v.iban && v.payment_method && v.payment_terms);
+
+  async function handleCreate() {
+    if (!canSubmit(form)) return;
+    setPending(true);
+    try {
+      await createMutation.mutateAsync({
+        account_holder: form.account_holder!,
+        iban: form.iban!,
+        payment_method: form.payment_method!,
+        payment_terms: form.payment_terms!,
+        additional_data: form.additional_data || "",
+      });
+      setOpenCreate(false);
+      setForm({});
+    } catch {
+      toast.error("No se pudo crear la instrucción de pago");
+    } finally {
+      setPending(false);
+    }
+  }
 
   async function handleUpdate(id: string) {
     if (!canSubmit(form)) return;
@@ -101,11 +125,44 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Pagos</h1>
-        <p className="text-muted-foreground mt-1">
-          Gestiona tus instrucciones de pago
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Pagos</h1>
+          <p className="text-muted-foreground mt-1">
+            Gestiona tus instrucciones de pago
+          </p>
+        </div>
+        <Dialog
+          open={openCreate}
+          onOpenChange={(o: boolean) => {
+            setOpenCreate(o);
+            if (!o) setForm({});
+          }}
+        >
+          <DialogTrigger asChild>
+            <Button onClick={() => setForm({})}>
+              <Plus className="w-4 h-4" />
+              Añadir método de pago
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Nueva instrucción de pago</DialogTitle>
+            </DialogHeader>
+            <PaymentInstructionForm value={form} onChange={setForm} />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpenCreate(false)}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleCreate}
+                disabled={!canSubmit(form) || pending}
+              >
+                {pending ? "Guardando..." : "Guardar"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Card className=" ">
