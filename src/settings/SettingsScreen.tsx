@@ -133,6 +133,27 @@ export const SettingsPage: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="invoice-palette" className="text-card-foreground">
+                Paleta del PDF
+              </Label>
+              <Select
+                defaultValue={settings?.pdf_color_palette ?? "violet"}
+                onValueChange={(v: "violet" | "blue" | "emerald" | "rose") =>
+                  update({ pdf_color_palette: v })
+                }
+              >
+                <SelectTrigger id="invoice-palette" className="bg-input border-border text-foreground">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="violet" className="text-popover-foreground">Violeta</SelectItem>
+                  <SelectItem value="blue" className="text-popover-foreground">Azul</SelectItem>
+                  <SelectItem value="emerald" className="text-popover-foreground">Esmeralda</SelectItem>
+                  <SelectItem value="rose" className="text-popover-foreground">Rosa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button className="w-full" disabled>
               Guardado automáticamente
             </Button>

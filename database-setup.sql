@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS payment_instructions (
 -- =====================================================
 CREATE TABLE IF NOT EXISTS invoices (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    number TEXT NOT NULL UNIQUE,
+    number TEXT NOT NULL,
     created_date DATE NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS invoices (
     total DECIMAL(10,2) NOT NULL,
     vat_exempt BOOLEAN DEFAULT true,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    CONSTRAINT invoices_user_id_number_unique UNIQUE (user_id, number),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

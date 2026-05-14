@@ -107,6 +107,7 @@ export interface ApiResponse<T> {
 
 export type SupportedCurrency = 'eur' | 'usd' | 'gbp';
 export type SupportedDateFormat = 'dd/mm/yyyy' | 'mm/dd/yyyy' | 'yyyy-mm-dd';
+export type PdfColorPalette = 'violet' | 'blue' | 'emerald' | 'rose';
 
 export interface UserSettings {
   id?: string;
@@ -114,6 +115,7 @@ export interface UserSettings {
   default_currency: SupportedCurrency;
   date_format: SupportedDateFormat;
   logo_url?: string | null;
+  pdf_color_palette: PdfColorPalette;
 }
 
 export type IncomePaymentMethod = 'cash' | 'transfer' | 'bizum';

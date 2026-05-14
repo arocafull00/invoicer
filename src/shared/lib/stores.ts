@@ -108,7 +108,7 @@ interface SettingsStoreState {
   isLoaded: boolean;
   loading: boolean;
   load: () => Promise<void>;
-  update: (partial: Partial<Pick<UserSettings, 'default_currency' | 'date_format'>>) => Promise<void>;
+  update: (partial: Partial<Pick<UserSettings, 'default_currency' | 'date_format' | 'pdf_color_palette'>>) => Promise<void>;
   setLogoUrl: (url: string | null) => void;
 }
 

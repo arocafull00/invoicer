@@ -71,12 +71,18 @@ export const createInvoicePDF = async (
   if (!isLoaded && !loading) {
     await load();
   }
-  const logoUrl = useSettingsStore.getState().settings?.logo_url ?? null;
+  const settings = useSettingsStore.getState().settings;
+  const logoUrl = settings?.logo_url ?? null;
+  const pdfColorPalette = settings?.pdf_color_palette ?? "violet";
 
   const logoBase64 = logoUrl ? await imageUrlToBase64(logoUrl) : null;
 
   const blob = await pdf(
-    <InvoicePDFDocument invoice={invoice} logoUrl={logoBase64} />
+    <InvoicePDFDocument
+      invoice={invoice}
+      logoUrl={logoBase64}
+      colorPalette={pdfColorPalette}
+    />
   ).toBlob();
 
   const arrayBuffer = await blob.arrayBuffer();

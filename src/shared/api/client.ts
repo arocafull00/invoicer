@@ -4,7 +4,11 @@ import type { Client, Consultant, Invoice, PaymentInstruction, Income, Expense, 
 
 export class SupabaseApiClient {
   private getInvoiceSaveErrorMessage(message: string): string {
-    if (message.includes("invoices_number_key")) {
+    if (
+      message.includes("invoices_number_key") ||
+      message.includes("invoices_number_unique") ||
+      message.includes("invoices_user_id_number_unique")
+    ) {
       return "No se puede repetir numero de factura";
     }
     return message;
