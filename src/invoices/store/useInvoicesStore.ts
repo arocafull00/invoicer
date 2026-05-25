@@ -26,7 +26,6 @@ interface NewInvoiceFormState {
   currentLineItem: Omit<LineItem, 'id' | 'total'>;
   includeVat: boolean;
   vatRate: number;
-  logoPreview: string | null;
   isSaving: boolean;
   // dialogs
   openNewConsultant: boolean;
@@ -46,7 +45,6 @@ interface InvoiceFormStoreState {
   addLineItem: () => void;
   removeLineItem: (index: number) => void;
   updateLineItem: (index: number, updater: Partial<Omit<LineItem, 'id' | 'total'>>) => void;
-  setLogoFromFile: (file: File) => void;
   setDialog: (
     which: "consultant" | "client" | "payment",
     open: boolean
@@ -88,7 +86,6 @@ const initialFormState = (): NewInvoiceFormState => ({
   currentLineItem: { description: "", quantity: 1, rate: 0, includeVat: false },
   includeVat: false,
   vatRate: 21,
-  logoPreview: null,
   isSaving: false,
   openNewConsultant: false,
   openNewClient: false,
@@ -164,14 +161,6 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
           ),
         },
       })),
-    setLogoFromFile: (file) => {
-      const reader = new FileReader();
-      reader.onload = () =>
-        set((state) => ({
-          form: { ...state.form, logoPreview: reader.result as string },
-        }));
-      reader.readAsDataURL(file);
-    },
     setDialog: (which, open) =>
       set((state) => ({
         form: {

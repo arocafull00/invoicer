@@ -3,22 +3,19 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useInvoiceStore } from "@/shared/lib/stores";
 import { useInvoiceFormStore } from "@/invoices/store/useInvoicesStore";
-import { useSettingsStore } from "@/shared/lib/stores";
-import { uploadUserLogo } from "@/shared/api/services/logos";
 import { updateInvoice } from "@/shared/api/services/invoices";
-import { InvoiceHeader } from "@/incomes/components/InvoiceHeader";
-import { InvoiceBasicInfo } from "@/incomes/components/InvoiceBasicInfo";
-import { ConsultantSection } from "@/incomes/components/ConsultantSection";
-import { ClientSection } from "@/incomes/components/ClientSection";
-import { LineItemsSection } from "@/incomes/components/LineItemsSection";
-import { PaymentMethodSection } from "@/incomes/components/PaymentMethodSection";
+import { InvoiceHeader } from "@/invoices/components/InvoiceHeader";
+import { InvoiceBasicInfo } from "@/invoices/components/InvoiceBasicInfo";
+import { ConsultantSection } from "@/invoices/components/ConsultantSection";
+import { ClientSection } from "@/invoices/components/ClientSection";
+import { LineItemsSection } from "@/invoices/components/LineItemsSection";
+import { PaymentMethodSection } from "@/invoices/components/PaymentMethodSection";
 
 export const EditInvoice: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { consultants, clients, payment_instructions, invoices } =
     useInvoiceStore();
-  const { settings, load: loadSettings, setLogoUrl } = useSettingsStore();
   const {
     form,
     setForm,
@@ -26,7 +23,6 @@ export const EditInvoice: React.FC = () => {
     addLineItem,
     removeLineItem,
     updateLineItem,
-    setLogoFromFile,
     isFormValid,
     getSelectedConsultant,
     getSelectedClient,
@@ -81,41 +77,14 @@ export const EditInvoice: React.FC = () => {
       selectedConsultantId: invoice.consultant.id,
       selectedClientId: invoice.client.id,
       selectedPaymentId: invoice.payment_instructions.id,
-      logoPreview: form.logoPreview ?? null,
       lineItems,
       currentLineItem: { description: "", quantity: 1, rate: 0, includeVat: false },
       includeVat: !invoice.vat_exempt,
       vatRate: invoice.vat_rate || 21,
     });
-  }, [invoice, navigate, setForm, form.logoPreview]);
-
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
-
-  useEffect(() => {
-    if (settings?.logo_url && !form.logoPreview) {
-      setForm({ logoPreview: settings.logo_url });
-    }
-  }, [settings?.logo_url, form.logoPreview, setForm]);
+  }, [invoice, navigate, setForm]);
 
   if (!invoice) return null;
-
-  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setLogoFromFile(file);
-    if (!settings?.logo_url) {
-      try {
-        const url = await uploadUserLogo(file);
-        setLogoUrl(url);
-        toast.success("Logo guardado en Configuración");
-      } catch (err) {
-        console.error(err);
-        toast.error("No se pudo subir el logo");
-      }
-    }
-  };
 
   const handleSave = async () => {
     const selectedConsultant = getSelectedConsultant();
@@ -189,11 +158,9 @@ export const EditInvoice: React.FC = () => {
         invoiceNumber={form.invoiceNumber}
         issueDate={form.issueDate}
         dueDate={form.dueDate}
-        logoPreview={form.logoPreview}
         onInvoiceNumberChange={(value) => setForm({ invoiceNumber: value })}
         onIssueDateChange={(value) => setForm({ issueDate: value })}
         onDueDateChange={(value) => setForm({ dueDate: value })}
-        onLogoChange={handleLogoChange}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, BarChart3 } from "lucide-react";
+import { Plus, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export const QuickActions: React.FC = () => {
@@ -22,9 +22,9 @@ export const QuickActions: React.FC = () => {
           </Link>
         </Button>
         <Button variant="outline" asChild className="w-full">
-          <Link to="/incomes">
-            <BarChart3 className="w-4 h-4 mr-2" />
-            Ver ingresos
+          <Link to="/consultants">
+            <FileText className="w-4 h-4 mr-2" />
+            Gestionar consultores
           </Link>
         </Button>
       </div>

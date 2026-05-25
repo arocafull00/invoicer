@@ -1,33 +1,31 @@
 import { useEffect, useState } from 'react';
-import { useInvoiceStore, useAuthStore, useSettingsStore } from '@/shared/lib/stores';
-import { 
-  getInvoices, 
-  getConsultants, 
-  getClients, 
-  getPaymentInstructions 
+import { useInvoiceStore, useSettingsStore } from '@/shared/lib/stores';
+import {
+  getInvoices,
+  getConsultants,
+  getClients,
+  getPaymentInstructions
 } from '@/shared/api/services';
 import { getLineItemTemplates } from '@/shared/api/services/lineItemTemplates';
 
 export const useAppData = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const { user } = useAuthStore();
-  const { 
-    setInvoices, 
-    setConsultants, 
-    setClients, 
+  const {
+    setInvoices,
+    setConsultants,
+    setClients,
     setPaymentInstructions,
     setLineItemTemplates
   } = useInvoiceStore();
   const { load: loadSettings } = useSettingsStore();
 
   const loadAppData = async () => {
-    if (!user || isInitialized) return;
-    
+    if (isInitialized) return;
+
     setIsLoading(true);
-    
+
     try {
-      // Load settings first (no dependency, but we only need to do it once per session)
       const [invoices, consultants, clients, paymentInstructions] = await Promise.all([
         getInvoices(),
         getConsultants(),
@@ -44,7 +42,7 @@ export const useAppData = () => {
       setClients(clients);
       setPaymentInstructions(paymentInstructions);
       setLineItemTemplates(templates);
-      
+
       setIsInitialized(true);
     } catch (error) {
       console.error('Error loading app data:', error);
@@ -54,16 +52,10 @@ export const useAppData = () => {
   };
 
   useEffect(() => {
-    if (!user) {
-      setIsInitialized(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (user && !isInitialized) {
+    if (!isInitialized) {
       loadAppData();
     }
-  }, [user, isInitialized]);
+  }, [isInitialized]);
 
   return { isLoading, isInitialized };
 };

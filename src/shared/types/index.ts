@@ -1,14 +1,5 @@
-import type { Session } from "@supabase/supabase-js";
-
-export interface User {
-  id: string;
-  email?: string;
-  created_at?: string;
-}
-
 export interface Consultant {
   id: string;
-  user_id?: string;
   name: string;
   email: string;
   address: string;
@@ -19,7 +10,6 @@ export interface Consultant {
 
 export interface Client {
   id: string;
-  user_id?: string;
   name: string;
   email?: string | null;
   address?: string;
@@ -30,7 +20,6 @@ export interface Client {
 
 export interface PaymentInstruction {
   id: string;
-  user_id?: string;
   account_holder: string;
   iban: string;
   payment_method: string;
@@ -49,7 +38,6 @@ export interface LineItem {
 
 export interface LineItemTemplate {
   id: string;
-  user_id?: string;
   description: string;
   default_quantity: number;
   default_rate: number;
@@ -62,19 +50,18 @@ export interface LineItemTemplate {
 
 export interface Invoice {
   id: string;
-  user_id?: string;
   number: string;
   created_date: string;
   start_date: string;
   end_date: string;
   consultant: Consultant;
   client: Client;
-  description?: string; // Keep for backward compatibility
+  description?: string;
   line_items: LineItem[];
-  subtotal: number; // Total without VAT
-  vat_rate: number; // VAT percentage (e.g., 21)
-  vat_amount: number; // Calculated VAT amount
-  total: number; // Total including VAT
+  subtotal: number;
+  vat_rate: number;
+  vat_amount: number;
+  total: number;
   payment_instructions: PaymentInstruction;
   vat_exempt: boolean;
   status: "paid" | "pending" | "overdue";
@@ -93,17 +80,11 @@ export interface WizardDraft {
   payment_instructions?: PaymentInstruction;
 }
 
-export interface AuthState {
-  user: User | null;
-  session: Session | null;
-  loading: boolean;
-}
-
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
   message?: string;
-} 
+}
 
 export type SupportedCurrency = 'eur' | 'usd' | 'gbp';
 export type SupportedDateFormat = 'dd/mm/yyyy' | 'mm/dd/yyyy' | 'yyyy-mm-dd';
@@ -111,40 +92,7 @@ export type PdfColorPalette = 'violet' | 'blue' | 'emerald' | 'rose';
 
 export interface UserSettings {
   id?: string;
-  user_id?: string;
   default_currency: SupportedCurrency;
   date_format: SupportedDateFormat;
-  logo_url?: string | null;
   pdf_color_palette: PdfColorPalette;
-}
-
-export type IncomePaymentMethod = 'cash' | 'transfer' | 'bizum';
-
-export interface Income {
-  id: string;
-  user_id?: string;
-  date: string;
-  concept: string;
-  amount: number;
-  payment_method: IncomePaymentMethod;
-  client: Client;
-}
-
-export interface ExpenseType {
-  id: string;
-  user_id?: string;
-  name: string;
-}
-
-export interface Expense {
-  id: string;
-  user_id?: string;
-  date: string;
-  invoice_number: string;
-  provider: string;
-  concept: string;
-  base_amount: number;
-  vat_amount: number;
-  total: number;
-  expense_type: ExpenseType;
 }

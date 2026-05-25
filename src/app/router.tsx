@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react';
-import { createBrowserRouter } from 'react-router-dom';
-import { RequireAuth } from '@/login/components/RequireAuth';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { RequireConsultant, RedirectWhenConsultantsExist } from '@/onboarding/RequireConsultant';
 import { AppLayout } from '@/shared/components/AppLayout';
-import { LoginPage } from '@/login';
 import { DashboardPage } from '@/dashboard/DashboardScreen';
 import Invoices from '@/invoices/InvoicesScreen';
 import NewInvoice from '@/invoices/NewInvoice';
@@ -13,30 +11,23 @@ import { SettingsPage } from '@/settings/SettingsScreen';
 import ConsultantsPage from '@/consultants';
 import ClientsPage from '@/clients';
 import PaymentsPage from '@/payments/PaymentsScreen';
-import IncomesPage from '@/incomes/IncomesScreen';
-import ExpensesPage from '@/expenses/ExpensesScreen';
 import { TermsOfServicePage } from '@/legal/Terms';
 import { PrivacyPolicyPage } from '@/legal/Privacy';
-import ImportPage from '@/imports/ImportScreen';
 import ConsultantOnboardingScreen from '@/onboarding/ConsultantOnboardingScreen';
 
 function ProtectedApp({ children }: { children: ReactNode }) {
   return (
-    <RequireAuth>
-      <RequireConsultant>
-        <AppLayout>{children}</AppLayout>
-      </RequireConsultant>
-    </RequireAuth>
+    <RequireConsultant>
+      <AppLayout>{children}</AppLayout>
+    </RequireConsultant>
   );
 }
 
 function ConsultantOnboardingShell({ children }: { children: ReactNode }) {
   return (
-    <RequireAuth>
-      <AppLayout>
-        <RedirectWhenConsultantsExist>{children}</RedirectWhenConsultantsExist>
-      </AppLayout>
-    </RequireAuth>
+    <AppLayout>
+      <RedirectWhenConsultantsExist>{children}</RedirectWhenConsultantsExist>
+    </AppLayout>
   );
 }
 
@@ -56,10 +47,6 @@ export const router = createBrowserRouter([
         <DashboardPage />
       </ProtectedApp>
     ),
-  },
-  {
-    path: '/login',
-    element: <LoginPage />,
   },
   {
     path: '/onboarding/consultant',
@@ -134,30 +121,6 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/incomes',
-    element: (
-      <ProtectedApp>
-        <IncomesPage />
-      </ProtectedApp>
-    ),
-  },
-  {
-    path: '/expenses',
-    element: (
-      <ProtectedApp>
-        <ExpensesPage />
-      </ProtectedApp>
-    ),
-  },
-  {
-    path: '/import',
-    element: (
-      <ProtectedApp>
-        <ImportPage />
-      </ProtectedApp>
-    ),
-  },
-  {
     path: '/terms',
     element: <TermsOfServicePage />,
   },
@@ -167,6 +130,6 @@ export const router = createBrowserRouter([
   },
   {
     path: '*',
-    element: <LoginPage />,
+    element: <Navigate to="/dashboard" replace />,
   },
 ]);

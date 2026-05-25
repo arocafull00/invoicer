@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -10,28 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { uploadUserLogo } from "@/shared/api/services/logos";
 import { useSettingsStore } from "@/shared/lib/stores";
 import { useTheme } from "next-themes";
+import { APP_LOGO_URL } from "@/shared/lib/appLogo";
 
 export const SettingsPage: React.FC = () => {
-  const { settings, update, setLogoUrl } = useSettingsStore();
-  const [isUploading, setIsUploading] = useState(false);
+  const { settings, update } = useSettingsStore();
   const { theme, setTheme, systemTheme } = useTheme();
-
-  const handleLogoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setIsUploading(true);
-    try {
-      const url = await uploadUserLogo(file);
-      setLogoUrl(url);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -45,28 +30,10 @@ export const SettingsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-6">
           <h2 className="text-xl font-semibold text-card-foreground mb-4">Identidad</h2>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="logo" className="text-card-foreground">Logo</Label>
-              <div className="flex items-center justify-center">
-                <label className="w-full h-40 rounded-xl border-2 border-dashed border-primary bg-accent/50 flex items-center justify-center cursor-pointer">
-                  <input
-                    id="logo"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleLogoChange}
-                  />
-                  {settings?.logo_url ? (
-                    <img src={settings.logo_url} alt="Logo" className="max-h-36 object-contain" />
-                  ) : (
-                    <span className="text-muted-foreground">Añadir logo</span>
-                  )}
-                </label>
-              </div>
-              {isUploading && (
-                <p className="text-sm text-muted-foreground">Subiendo...</p>
-              )}
+          <div className="space-y-2">
+            <Label className="text-card-foreground">Logo</Label>
+            <div className="flex items-center justify-center w-full h-40 rounded-xl border border-border bg-accent/50 p-4">
+              <img src={APP_LOGO_URL} alt="Logo" className="max-h-36 object-contain" />
             </div>
           </div>
         </Card>

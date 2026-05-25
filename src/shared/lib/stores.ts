@@ -1,47 +1,6 @@
 import { create } from 'zustand';
-import { supabase } from './supabase';
-import type { AuthState, WizardDraft, Invoice, Consultant, Client, PaymentInstruction, UserSettings, LineItemTemplate } from '@/shared/types';
+import type { WizardDraft, Invoice, Consultant, Client, PaymentInstruction, UserSettings, LineItemTemplate } from '@/shared/types';
 import { getUserSettings, updateUserSettings } from '@/shared/api/services/userSettings';
-import { getUserLogoUrl } from '@/shared/api/services/logos';
-
-export const useAuthStore = create<AuthState>((set) => {
-  // Inicializar sesión automáticamente
-  const initializeAuth = async () => {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error('Error getting session:', error);
-      }
-      set({ 
-        session, 
-        user: session?.user ?? null, 
-        loading: false 
-      });
-    } catch (error) {
-      console.error('Error in getSession:', error);
-      set({ loading: false });
-    }
-  };
-
-  // Ejecutar inicialización
-  initializeAuth();
-
-  // Escuchar cambios de autenticación
-  supabase.auth.onAuthStateChange((event, session) => {
-    console.log('Auth state changed:', event, session);
-    set({ 
-      session, 
-      user: session?.user ?? null, 
-      loading: false 
-    });
-  });
-
-  return {
-    user: null,
-    session: null,
-    loading: true,
-  };
-});
 
 interface InvoiceStoreState {
   invoices: Invoice[];
@@ -101,7 +60,7 @@ export const useInvoiceStore = create<InvoiceStoreState>((set) => ({
   removeLineItemTemplate: (id) => set((state) => ({
     line_item_templates: state.line_item_templates.filter(t => t.id !== id)
   })),
-})); 
+}));
 
 interface SettingsStoreState {
   settings: UserSettings | null;
@@ -109,7 +68,6 @@ interface SettingsStoreState {
   loading: boolean;
   load: () => Promise<void>;
   update: (partial: Partial<Pick<UserSettings, 'default_currency' | 'date_format' | 'pdf_color_palette'>>) => Promise<void>;
-  setLogoUrl: (url: string | null) => void;
 }
 
 export const useSettingsStore = create<SettingsStoreState>((set, get) => ({
@@ -120,9 +78,8 @@ export const useSettingsStore = create<SettingsStoreState>((set, get) => ({
     if (get().isLoaded || get().loading) return;
     set({ loading: true });
     try {
-      const base = await getUserSettings();
-      const logoUrl = await getUserLogoUrl();
-      set({ settings: { ...base, logo_url: logoUrl ?? null }, isLoaded: true });
+      const settings = await getUserSettings();
+      set({ settings, isLoaded: true });
     } catch (error) {
       console.error('Error loading user settings:', error);
     } finally {
@@ -132,15 +89,9 @@ export const useSettingsStore = create<SettingsStoreState>((set, get) => ({
   update: async (partial) => {
     try {
       const updated = await updateUserSettings(partial);
-      const current = get().settings;
-      set({ settings: { ...updated, logo_url: current?.logo_url ?? null } });
+      set({ settings: updated });
     } catch (error) {
       console.error('Error updating user settings:', error);
     }
-  },
-  setLogoUrl: (url) => {
-    const current = get().settings;
-    if (!current) return;
-    set({ settings: { ...current, logo_url: url } });
   },
 }));

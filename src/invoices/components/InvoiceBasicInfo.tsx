@@ -2,16 +2,15 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { APP_LOGO_URL } from "@/shared/lib/appLogo";
 
 interface InvoiceBasicInfoProps {
   invoiceNumber: string;
   issueDate: string;
   dueDate: string;
-  logoPreview: string | null;
   onInvoiceNumberChange?: (value: string) => void;
   onIssueDateChange: (value: string) => void;
   onDueDateChange: (value: string) => void;
-  onLogoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   readOnlyNumber?: boolean;
 }
 
@@ -19,11 +18,9 @@ export const InvoiceBasicInfo: React.FC<InvoiceBasicInfoProps> = ({
   invoiceNumber,
   issueDate,
   dueDate,
-  logoPreview,
   onInvoiceNumberChange,
   onIssueDateChange,
   onDueDateChange,
-  onLogoChange,
   readOnlyNumber = false,
 }) => {
   return (
@@ -62,23 +59,13 @@ export const InvoiceBasicInfo: React.FC<InvoiceBasicInfoProps> = ({
             </div>
           </div>
           <div className="flex items-center justify-center">
-            <label className="w-full h-40 rounded-xl border-2 border-dashed border-primary bg-accent/50 flex items-center justify-center cursor-pointer">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={onLogoChange}
+            <div className="w-full h-40 rounded-xl border border-border bg-accent/50 flex items-center justify-center p-4">
+              <img
+                src={APP_LOGO_URL}
+                alt="Logo"
+                className="max-h-36 object-contain"
               />
-              {logoPreview ? (
-                <img
-                  src={logoPreview}
-                  alt="Logo"
-                  className="max-h-36 object-contain"
-                />
-              ) : (
-                <span className="text-muted-foreground">Añadir logo</span>
-              )}
-            </label>
+            </div>
           </div>
         </div>
       </CardContent>

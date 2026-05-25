@@ -1,5 +1,3 @@
-import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../lib/stores';
 import type { PdfColorPalette, SupportedCurrency, SupportedDateFormat, UserSettings } from '@/shared/types';
 
 const PDF_COLOR_PALETTE_STORAGE_KEY = 'invoice.pdf.color_palette';
@@ -22,15 +20,8 @@ export function setStoredPdfColorPalette(palette: PdfColorPalette): void {
   window.localStorage.setItem(PDF_COLOR_PALETTE_STORAGE_KEY, palette);
 }
 
-async function getRequiredUserId(): Promise<string> {
-  const { user } = useAuthStore.getState();
-  if (!user?.id) throw new Error('User not authenticated');
-  return user.id;
-}
-
 function mapRowToSettings(row: {
   id: string;
-  user_id: string;
   default_currency: SupportedCurrency;
   date_format: SupportedDateFormat;
   pdf_color_palette?: PdfColorPalette | null;
@@ -42,7 +33,6 @@ function mapRowToSettings(row: {
   setStoredPdfColorPalette(palette);
   return {
     id: row?.id,
-    user_id: row?.user_id,
     default_currency: row?.default_currency ?? 'eur',
     date_format: row?.date_format ?? 'dd/mm/yyyy',
     pdf_color_palette: palette,
@@ -50,35 +40,17 @@ function mapRowToSettings(row: {
 }
 
 export async function getUserSettings(): Promise<UserSettings> {
-  const userId = await getRequiredUserId();
-  const { data, error } = await supabase
-    .from('user_settings')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`Failed to fetch user settings: ${error.message}`);
+  const response = await fetch('/api/settings');
+  if (!response.ok) {
+    throw new Error('Failed to fetch user settings');
   }
-
-  if (!data) {
-    const defaults = { default_currency: 'eur', date_format: 'dd/mm/yyyy' } as const;
-    const { data: inserted, error: insertError } = await supabase
-      .from('user_settings')
-      .insert({ ...defaults, user_id: userId })
-      .select('*')
-      .single();
-
-    if (insertError) {
-      throw new Error(`Failed to initialize user settings: ${insertError.message}`);
-    }
-    return mapRowToSettings(inserted);
-  }
-
+  const data = await response.json();
   return mapRowToSettings(data);
 }
 
-export async function updateUserSettings(partial: Partial<Pick<UserSettings, 'default_currency' | 'date_format' | 'pdf_color_palette'>>): Promise<UserSettings> {
+export async function updateUserSettings(
+  partial: Partial<Pick<UserSettings, 'default_currency' | 'date_format' | 'pdf_color_palette'>>
+): Promise<UserSettings> {
   if (partial.pdf_color_palette) {
     setStoredPdfColorPalette(partial.pdf_color_palette);
   }
@@ -86,22 +58,22 @@ export async function updateUserSettings(partial: Partial<Pick<UserSettings, 'de
   const { pdf_color_palette, ...dbPartial } = partial;
   if (Object.keys(dbPartial).length === 0) {
     const current = await getUserSettings();
-    return { ...current, pdf_color_palette: pdf_color_palette ?? current.pdf_color_palette };
+    return {
+      ...current,
+      pdf_color_palette: pdf_color_palette ?? current.pdf_color_palette,
+    };
   }
 
-  const userId = await getRequiredUserId();
-  const { data, error } = await supabase
-    .from('user_settings')
-    .update(dbPartial)
-    .eq('user_id', userId)
-    .select('*')
-    .single();
+  const response = await fetch('/api/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dbPartial),
+  });
 
-  if (error) {
-    throw new Error(`Failed to update user settings: ${error.message}`);
+  if (!response.ok) {
+    throw new Error('Failed to update user settings');
   }
 
+  const data = await response.json();
   return mapRowToSettings(data);
 }
-
-
