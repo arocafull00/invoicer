@@ -18,7 +18,6 @@
 - "Remove unused imports"
 - "Refactor auth context"
 
-
 ## Examples of Bad Commits
 - "Added some stuff" (not specific)
 - "Arreglar bug" (not in English)
