@@ -1,3 +1,15 @@
+type DbLineItemTemplate = {
+  id: string;
+  description: string;
+  default_quantity: number | string;
+  default_rate: number | string;
+  category?: string | null;
+  usage_count: number | string;
+  last_used_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
 type DbLineItem = {
   id: string;
   description: string;
@@ -29,6 +41,20 @@ type DbInvoiceRow = {
   payment_instructions: Record<string, unknown> | null;
   line_items?: DbLineItem[];
 };
+
+export function mapLineItemTemplate(row: DbLineItemTemplate) {
+  return {
+    id: row.id,
+    description: row.description,
+    default_quantity: Number(row.default_quantity),
+    default_rate: Number(row.default_rate),
+    category: row.category ?? undefined,
+    usage_count: Number(row.usage_count),
+    last_used_at: row.last_used_at ?? undefined,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
 
 export function mapLineItem(row: DbLineItem) {
   return {

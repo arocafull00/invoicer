@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       viteBasicAuth(),
       devServer({
-        entry: './api/app.ts',
+        entry: './server/app.ts',
         export: 'app',
         adapter: nodeAdapter,
         exclude: [/^\/(?!api(?:\/|$)).*$/, ...defaultOptions.exclude],

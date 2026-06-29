@@ -1,6 +1,6 @@
 import type { Hono } from 'hono';
-import type { Sql } from '../lib/db';
-import { ApiError, isUniqueViolation } from '../lib/errors';
+import type { Sql } from '../lib/db.js';
+import { ApiError, isUniqueViolation } from '../lib/errors.js';
 
 type ConsultantBody = {
   name: string;

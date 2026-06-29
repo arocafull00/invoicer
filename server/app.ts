@@ -1,13 +1,13 @@
 import { Hono } from 'hono';
-import { getSql } from './lib/db';
-import { ApiError } from './lib/errors';
-import { basicAuth } from './lib/auth';
-import { registerConsultantRoutes } from './routes/consultants';
-import { registerClientRoutes } from './routes/clients';
-import { registerPaymentInstructionRoutes } from './routes/payment-instructions';
-import { registerInvoiceRoutes } from './routes/invoices';
-import { registerLineItemTemplateRoutes } from './routes/line-item-templates';
-import { registerSettingsRoutes } from './routes/settings';
+import { getSql } from './lib/db.js';
+import { ApiError } from './lib/errors.js';
+import { basicAuth } from './lib/auth.js';
+import { registerConsultantRoutes } from './routes/consultants.js';
+import { registerClientRoutes } from './routes/clients.js';
+import { registerPaymentInstructionRoutes } from './routes/payment-instructions.js';
+import { registerInvoiceRoutes } from './routes/invoices.js';
+import { registerLineItemTemplateRoutes } from './routes/line-item-templates.js';
+import { registerSettingsRoutes } from './routes/settings.js';
 
 export const app = new Hono().basePath('/api');
 

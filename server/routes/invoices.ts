@@ -1,7 +1,7 @@
 import type { Hono } from 'hono';
-import type { Sql } from '../lib/db';
-import { ApiError } from '../lib/errors';
-import { mapInvoice } from '../lib/mappers';
+import type { Sql } from '../lib/db.js';
+import { ApiError } from '../lib/errors.js';
+import { mapInvoice } from '../lib/mappers.js';
 
 type LineItemInput = {
   id?: string;

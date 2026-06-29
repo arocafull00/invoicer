@@ -8,24 +8,14 @@ import {
   Font,
 } from "@react-pdf/renderer";
 import type { Invoice, PdfColorPalette } from "@/shared/types";
-import { formatDate, formatCurrency } from "@/shared/lib/helpers";
+import { formatCurrency } from "@/shared/lib/helpers";
 import { InvoicePDFLineItemRow } from "@/shared/lib/InvoicePDFLineItemRow";
 
 const TEXT = "#18181B";
-const TEXT_MUTED = "#52525B";
+const MUTED = "#71717A";
 const BORDER = "#D4D4D8";
 const WHITE = "#FFFFFF";
-const ROW_BORDER = "#F4F4F5";
-
-const PDF_COLOR_PALETTES: Record<
-  PdfColorPalette,
-  { primary: string; primaryDark: string; surfaceTint: string }
-> = {
-  violet: { primary: "#7F5AF0", primaryDark: "#654DD4", surfaceTint: "#F4F0FF" },
-  blue: { primary: "#2563EB", primaryDark: "#1D4ED8", surfaceTint: "#EFF6FF" },
-  emerald: { primary: "#059669", primaryDark: "#047857", surfaceTint: "#ECFDF5" },
-  rose: { primary: "#E11D48", primaryDark: "#BE123C", surfaceTint: "#FFF1F2" },
-};
+const DARK = "#27272A";
 
 Font.register({
   family: "Montserrat",
@@ -37,299 +27,269 @@ Font.register({
   ],
 });
 
-const createStyles = (colorPalette: PdfColorPalette) => {
-  const palette = PDF_COLOR_PALETTES[colorPalette] ?? PDF_COLOR_PALETTES.violet;
-  return StyleSheet.create({
-    page: {
-      fontFamily: "Montserrat",
-      fontSize: 10,
-      paddingTop: 28,
-      paddingBottom: 32,
-      paddingHorizontal: 40,
-      backgroundColor: WHITE,
-      color: TEXT,
-    },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
-      marginBottom: 22,
-    },
-    logo: {
-      maxWidth: 220,
-      maxHeight: 72,
-      height: 72,
-      width: 72,
-      objectFit: "contain",
-    },
-    headerRight: {
-      alignItems: "flex-end",
-    },
-    headerTitleRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 10,
-      marginBottom: 8,
-    },
-    invoiceWord: {
-      fontSize: 22,
-      fontWeight: 700,
-      color: palette.primary,
-      letterSpacing: 1,
-      textTransform: "uppercase",
-    },
-    invoiceBadge: {
-      backgroundColor: palette.primary,
-      paddingHorizontal: 12,
-      paddingVertical: 5,
-      borderRadius: 8,
-    },
-    invoiceBadgeText: {
-      color: WHITE,
-      fontSize: 11,
-      fontWeight: 700,
-    },
-    dateRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-    },
-    dateIcon: {
-      width: 14,
-      height: 14,
-      borderRadius: 4,
-      backgroundColor: palette.primary,
-    },
-    dateLabel: {
-      fontSize: 10,
-      fontWeight: 600,
-      color: palette.primaryDark,
-      marginRight: 4,
-    },
-    dateValue: {
-      fontSize: 10,
-      color: TEXT,
-      fontWeight: 500,
-    },
-    senderRow: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-      gap: 14,
-      marginBottom: 20,
-    },
-    circleIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: palette.primary,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    circleIconGlyph: {
-      color: WHITE,
-      fontSize: 16,
-      fontWeight: 700,
-    },
-    senderTextBlock: {
-      flex: 1,
-      gap: 3,
-    },
-    senderName: {
-      fontSize: 11,
-      fontWeight: 700,
-      color: TEXT,
-      marginBottom: 2,
-    },
-    senderLine: {
-      fontSize: 10,
-      color: TEXT,
-      lineHeight: 1.35,
-    },
-    senderEmphasis: {
-      fontSize: 10,
-      fontWeight: 700,
-      color: TEXT,
-    },
-    twoColRow: {
-      flexDirection: "row",
-      gap: 14,
-      marginBottom: 16,
-    },
-    card: {
-      flex: 1,
-      borderWidth: 1,
-      borderColor: BORDER,
-      borderRadius: 10,
-      overflow: "hidden",
-    },
-    cardTab: {
-      backgroundColor: palette.primary,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-    },
-    cardTabText: {
-      color: WHITE,
-      fontSize: 9,
-      fontWeight: 700,
-      letterSpacing: 0.6,
-      textTransform: "uppercase",
-    },
-    cardBody: {
-      padding: 12,
-    },
-    billToBody: {
-      flexDirection: "row",
-      gap: 12,
-      alignItems: "flex-start",
-    },
-    kvRow: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      marginBottom: 4,
-    },
-    kvLabel: {
-      fontSize: 10,
-      fontWeight: 700,
-      color: TEXT,
-      marginRight: 4,
-    },
-    kvValue: {
-      fontSize: 10,
-      color: TEXT,
-      flex: 1,
-    },
-    infoBanner: {
-      alignItems: "center",
-      backgroundColor: palette.surfaceTint,
-      borderRadius: 10,
-      paddingVertical: 12,
-      paddingHorizontal: 14,
-      marginBottom: 18,
-    },
-    infoBannerTextWrap: {
-      maxWidth: 470,
-    },
-    infoBannerText: {
-      fontSize: 10,
-      color: TEXT_MUTED,
-      lineHeight: 1.45,
-      textAlign: "center",
-    },
-    tableHeaderWrap: {
-      backgroundColor: palette.primary,
-      borderTopLeftRadius: 8,
-      borderTopRightRadius: 8,
-      paddingVertical: 10,
-      paddingHorizontal: 10,
-      flexDirection: "row",
-    },
-    tableHeaderCell: {
-      fontSize: 8,
-      fontWeight: 700,
-      color: WHITE,
-      textTransform: "uppercase",
-      letterSpacing: 0.4,
-    },
-    tableBody: {
-      borderWidth: 1,
-      borderTopWidth: 0,
-      borderColor: BORDER,
-      borderBottomLeftRadius: 8,
-      borderBottomRightRadius: 8,
-      paddingVertical: 4,
-      paddingHorizontal: 6,
-    },
-    tableRow: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-      paddingVertical: 8,
-      paddingHorizontal: 4,
-      borderBottomWidth: 1,
-      borderBottomColor: ROW_BORDER,
-    },
-    tableCell: {
-      fontSize: 10,
-      color: TEXT,
-    },
-    tableCellAmount: {
-      fontWeight: 700,
-    },
-    colDescription: {
-      width: "38%",
-    },
-    colQuantity: {
-      width: "14%",
-      textAlign: "right",
-    },
-    colRate: {
-      width: "24%",
-      textAlign: "right",
-    },
-    colTotal: {
-      width: "24%",
-      textAlign: "right",
-    },
-    tableAccentLine: {
-      height: 2,
-      backgroundColor: palette.primary,
-      marginTop: 4,
-      borderRadius: 1,
-    },
-    totalsWrap: {
-      marginTop: 14,
-      alignItems: "flex-end",
-    },
-    totalsInner: {
-      width: "52%",
-      alignItems: "stretch",
-    },
-    totalRow: {
-      flexDirection: "row",
-      justifyContent: "flex-end",
-      marginBottom: 6,
-      gap: 16,
-    },
-    totalLabel: {
-      fontSize: 10,
-      color: TEXT_MUTED,
-      textAlign: "right",
-      flexGrow: 1,
-    },
-    totalValue: {
-      fontSize: 10,
-      color: TEXT,
-      width: 110,
-      textAlign: "right",
-      fontWeight: 500,
-    },
-    totalHighlight: {
-      backgroundColor: palette.surfaceTint,
-      borderRadius: 10,
-      paddingVertical: 12,
-      paddingHorizontal: 14,
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginTop: 8,
-    },
-    totalHighlightLabel: {
-      fontSize: 11,
-      fontWeight: 700,
-      color: palette.primaryDark,
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-    },
-    totalHighlightValue: {
-      fontSize: 16,
-      fontWeight: 700,
-      color: palette.primary,
-    },
-    placeholderLogo: {
-      fontSize: 18,
-      fontWeight: 700,
-      color: TEXT,
-      letterSpacing: 0.5,
-    },
+const styles = StyleSheet.create({
+  page: {
+    fontFamily: "Montserrat",
+    fontSize: 9,
+    paddingTop: 36,
+    paddingBottom: 40,
+    paddingHorizontal: 44,
+    backgroundColor: WHITE,
+    color: TEXT,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: DARK,
+    marginBottom: 22,
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    objectFit: "contain",
+  },
+  logoPlaceholder: {
+    flexDirection: "column",
+  },
+  logoSymbol: {
+    fontSize: 44,
+    fontWeight: 700,
+    color: TEXT,
+    lineHeight: 1,
+  },
+  logoName: {
+    fontSize: 7,
+    fontWeight: 700,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    color: TEXT,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 18,
+  },
+  headerDate: {
+    fontSize: 9.5,
+    color: MUTED,
+  },
+  headerSep: {
+    width: 1,
+    height: 52,
+    backgroundColor: DARK,
+  },
+  headerInvoiceBlock: {
+    alignItems: "flex-end",
+  },
+  headerInvoiceLabel: {
+    fontSize: 8,
+    fontWeight: 700,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    color: TEXT,
+    marginBottom: 1,
+  },
+  headerInvoiceNumber: {
+    fontSize: 36,
+    fontWeight: 700,
+    color: TEXT,
+    lineHeight: 1.05,
+  },
+  twoColInfo: {
+    flexDirection: "row",
+    gap: 28,
+    marginBottom: 22,
+  },
+  infoCol: {
+    flex: 1,
+  },
+  sectionLabel: {
+    fontSize: 7.5,
+    fontWeight: 700,
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+    color: TEXT,
+    marginBottom: 4,
+  },
+  sectionRule: {
+    height: 1.5,
+    width: 22,
+    backgroundColor: TEXT,
+    marginBottom: 10,
+  },
+  infoName: {
+    fontSize: 10,
+    fontWeight: 700,
+    color: TEXT,
+    marginBottom: 3,
+  },
+  infoLine: {
+    fontSize: 9,
+    color: TEXT,
+    lineHeight: 1.5,
+  },
+  infoGap: {
+    height: 8,
+  },
+  paymentBox: {
+    borderWidth: 1,
+    borderColor: DARK,
+    marginBottom: 22,
+  },
+  paymentBoxRow: {
+    flexDirection: "row",
+  },
+  paymentLeft: {
+    flex: 1,
+    padding: 12,
+    borderRightWidth: 1,
+    borderRightColor: BORDER,
+  },
+  paymentRight: {
+    flex: 1,
+    padding: 12,
+    justifyContent: "center",
+  },
+  paymentSectionLabel: {
+    fontSize: 7.5,
+    fontWeight: 700,
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+    color: TEXT,
+    marginBottom: 4,
+  },
+  paymentSectionRule: {
+    height: 1.5,
+    width: 22,
+    backgroundColor: TEXT,
+    marginBottom: 10,
+  },
+  paymentRow: {
+    flexDirection: "row",
+    marginBottom: 4,
+    flexWrap: "wrap",
+  },
+  paymentFieldLabel: {
+    fontSize: 9,
+    fontWeight: 700,
+    color: TEXT,
+    marginRight: 4,
+  },
+  paymentFieldValue: {
+    fontSize: 9,
+    color: TEXT,
+    flex: 1,
+  },
+  paymentTerms: {
+    fontSize: 9,
+    color: TEXT,
+    lineHeight: 1.6,
+  },
+  tableHeader: {
+    flexDirection: "row",
+    borderTopWidth: 1.5,
+    borderTopColor: TEXT,
+    borderBottomWidth: 1,
+    borderBottomColor: TEXT,
+    paddingVertical: 7,
+    paddingHorizontal: 4,
+  },
+  tableHeaderCell: {
+    fontSize: 7.5,
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    color: TEXT,
+  },
+  tableBody: {
+    borderBottomWidth: 1,
+    borderBottomColor: DARK,
+  },
+  tableRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: 9,
+    paddingHorizontal: 4,
+    borderBottomWidth: 0.5,
+    borderBottomColor: BORDER,
+  },
+  tableCell: {
+    fontSize: 9.5,
+    color: TEXT,
+  },
+  tableCellAmount: {
+    fontWeight: 500,
+  },
+  colDescription: {
+    width: "40%",
+  },
+  colQuantity: {
+    width: "18%",
+    textAlign: "right",
+  },
+  colRate: {
+    width: "21%",
+    textAlign: "right",
+  },
+  colTotal: {
+    width: "21%",
+    textAlign: "right",
+  },
+  totalsWrap: {
+    marginTop: 16,
+    alignItems: "flex-end",
+  },
+  totalsInner: {
+    width: "44%",
+  },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 5,
+  },
+  totalLabel: {
+    fontSize: 9.5,
+    color: TEXT,
+  },
+  totalValue: {
+    fontSize: 9.5,
+    color: TEXT,
+    textAlign: "right",
+  },
+  totalDivider: {
+    height: 0.75,
+    backgroundColor: DARK,
+    marginVertical: 2,
+  },
+  totalFinalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: 8,
+  },
+  totalFinalLabel: {
+    fontSize: 11,
+    fontWeight: 700,
+    color: TEXT,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  totalFinalValue: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: TEXT,
+    textAlign: "right",
+  },
+});
+
+const formatDateES = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   });
 };
 
@@ -342,9 +302,7 @@ export interface InvoicePDFDocumentProps {
 export function InvoicePDFDocument({
   invoice,
   logoUrl,
-  colorPalette = "violet",
 }: InvoicePDFDocumentProps) {
-  const styles = createStyles(colorPalette);
   const lineItems =
     invoice.line_items && invoice.line_items.length > 0
       ? invoice.line_items
@@ -363,11 +321,12 @@ export function InvoicePDFDocument({
   const vatAmount = invoice.vat_amount || 0;
   const total = invoice.total;
 
-  const bannerPieces = [
+  const paymentTermsText = [
     invoice.payment_instructions.payment_terms?.trim(),
     invoice.payment_instructions.additional_data?.trim(),
-  ].filter(Boolean);
-  const bannerText = bannerPieces.join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   const tableStyles = {
     tableRow: styles.tableRow,
@@ -381,126 +340,115 @@ export function InvoicePDFDocument({
 
   return (
     <Document
-      title={`Invoice ${invoice.number}`}
+      title={`Factura ${invoice.number}`}
       author={invoice.consultant.name}
-      subject={`Invoice for ${invoice.client.name}`}
+      subject={`Factura para ${invoice.client.name}`}
     >
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           {logoUrl ? (
             <Image src={logoUrl} style={styles.logo} cache={false} />
           ) : (
-            <Text style={styles.placeholderLogo}>INVOICE</Text>
+            <View style={styles.logoPlaceholder}>
+              <Text style={styles.logoSymbol}>A</Text>
+              <Text style={styles.logoName}>{invoice.consultant.name}</Text>
+            </View>
           )}
           <View style={styles.headerRight}>
-            <View style={styles.headerTitleRow}>
-              <Text style={styles.invoiceWord}>Invoice</Text>
-              <View style={styles.invoiceBadge}>
-                <Text style={styles.invoiceBadgeText}>
-                  No. {invoice.number}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.dateRow}>
-              <View style={styles.dateIcon} />
-              <Text style={styles.dateLabel}>Date</Text>
-              <Text style={styles.dateValue}>
-                {formatDate(invoice.created_date)}
+            <Text style={styles.headerDate}>
+              {formatDateES(invoice.created_date)}
+            </Text>
+            <View style={styles.headerSep} />
+            <View style={styles.headerInvoiceBlock}>
+              <Text style={styles.headerInvoiceLabel}>Factura</Text>
+              <Text style={styles.headerInvoiceNumber}>
+                Nº {invoice.number}
               </Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.senderRow}>
-          <View style={styles.senderTextBlock}>
-            <Text style={styles.senderName}>{invoice.consultant.name}</Text>
-            <Text style={styles.senderLine}>{invoice.consultant.address}</Text>
-            <Text style={styles.senderLine}>
+        <View style={styles.twoColInfo}>
+          <View style={styles.infoCol}>
+            <Text style={styles.sectionLabel}>Emisor</Text>
+            <View style={styles.sectionRule} />
+            <Text style={styles.infoName}>{invoice.consultant.name}</Text>
+            <Text style={styles.infoLine}>{invoice.consultant.address}</Text>
+            <Text style={styles.infoLine}>
               {invoice.consultant.city}, {invoice.consultant.country}
             </Text>
-            <Text style={styles.senderLine}>
-              <Text style={styles.senderEmphasis}>VAT / Tax ID: </Text>
-              {invoice.consultant.nif}
+            <View style={styles.infoGap} />
+            <Text style={styles.infoLine}>NIF: {invoice.consultant.nif}</Text>
+            <Text style={styles.infoLine}>
+              Email: {invoice.consultant.email}
             </Text>
-            <Text style={styles.senderLine}>
-              <Text style={styles.senderEmphasis}>Email: </Text>
-              {invoice.consultant.email}
+          </View>
+          <View style={styles.infoCol}>
+            <Text style={styles.sectionLabel}>Cliente</Text>
+            <View style={styles.sectionRule} />
+            <Text style={styles.infoName}>{invoice.client.name}</Text>
+            {invoice.client.address ? (
+              <Text style={styles.infoLine}>{invoice.client.address}</Text>
+            ) : null}
+            <Text style={styles.infoLine}>
+              {invoice.client.city}, {invoice.client.country}
             </Text>
+            {invoice.client.company_number ? (
+              <View>
+                <View style={styles.infoGap} />
+                <Text style={styles.infoLine}>
+                  Company Number: {invoice.client.company_number}
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
 
-        <View style={styles.twoColRow}>
-          <View style={styles.card}>
-            <View style={styles.cardTab}>
-              <Text style={styles.cardTabText}>Bill to</Text>
-            </View>
-            <View style={[styles.cardBody, styles.billToBody]}>
-              <View style={styles.senderTextBlock}>
-                <Text style={styles.senderName}>{invoice.client.name}</Text>
-                {invoice.client.address ? (
-                  <Text style={styles.senderLine}>{invoice.client.address}</Text>
-                ) : null}
-                <Text style={styles.senderLine}>
-                  {invoice.client.city}, {invoice.client.country}
+        <View style={styles.paymentBox}>
+          <View style={styles.paymentBoxRow}>
+            <View style={styles.paymentLeft}>
+              <Text style={styles.paymentSectionLabel}>Datos de pago</Text>
+              <View style={styles.paymentSectionRule} />
+              <View style={styles.paymentRow}>
+                <Text style={styles.paymentFieldLabel}>
+                  Titular de la cuenta:
                 </Text>
-                {invoice.client.company_number ? (
-                  <Text style={styles.senderLine}>
-                    <Text style={styles.senderEmphasis}>Company number: </Text>
-                    {invoice.client.company_number}
-                  </Text>
-                ) : null}
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.card}>
-            <View style={styles.cardTab}>
-              <Text style={styles.cardTabText}>Payment details</Text>
-            </View>
-            <View style={styles.cardBody}>
-              <View style={styles.kvRow}>
-                <Text style={styles.kvLabel}>Account holder:</Text>
-                <Text style={styles.kvValue} wrap>
+                <Text style={styles.paymentFieldValue} wrap>
                   {invoice.payment_instructions.account_holder}
                 </Text>
               </View>
-              <View style={styles.kvRow}>
-                <Text style={styles.kvLabel}>IBAN:</Text>
-                <Text style={styles.kvValue} wrap>
+              <View style={styles.paymentRow}>
+                <Text style={styles.paymentFieldLabel}>IBAN:</Text>
+                <Text style={styles.paymentFieldValue} wrap>
                   {invoice.payment_instructions.iban}
                 </Text>
               </View>
-              <View style={styles.kvRow}>
-                <Text style={styles.kvLabel}>Payment method:</Text>
-                <Text style={styles.kvValue} wrap>
+              <View style={styles.paymentRow}>
+                <Text style={styles.paymentFieldLabel}>Método de pago:</Text>
+                <Text style={styles.paymentFieldValue} wrap>
                   {invoice.payment_instructions.payment_method}
                 </Text>
               </View>
             </View>
+            {paymentTermsText ? (
+              <View style={styles.paymentRight}>
+                <Text style={styles.paymentTerms}>{paymentTermsText}</Text>
+              </View>
+            ) : null}
           </View>
         </View>
 
-        {bannerText ? (
-          <View style={styles.infoBanner} wrap={false}>
-            <View style={styles.infoBannerTextWrap}>
-              <Text style={styles.infoBannerText}>{bannerText}</Text>
-            </View>
-          </View>
-        ) : null}
-
-        <View style={styles.tableHeaderWrap} wrap={false}>
+        <View style={styles.tableHeader} wrap={false}>
           <Text style={[styles.tableHeaderCell, styles.colDescription]}>
-            Description
+            Concepto
           </Text>
           <Text style={[styles.tableHeaderCell, styles.colQuantity]}>
-            Hours
+            Unidades
           </Text>
           <Text style={[styles.tableHeaderCell, styles.colRate]}>
-            Rate (EUR)
+            € / Unidad
           </Text>
-          <Text style={[styles.tableHeaderCell, styles.colTotal]}>
-            Amount (EUR)
-          </Text>
+          <Text style={[styles.tableHeaderCell, styles.colTotal]}>Total</Text>
         </View>
         <View style={styles.tableBody}>
           {lineItems.map((item, index) => (
@@ -511,27 +459,27 @@ export function InvoicePDFDocument({
             />
           ))}
         </View>
-        <View style={styles.tableAccentLine} />
 
         <View style={styles.totalsWrap}>
           <View style={styles.totalsInner}>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Subtotal (excl. VAT)</Text>
+              <Text style={styles.totalLabel}>Base imponible</Text>
               <Text style={styles.totalValue}>{formatCurrency(subtotal)}</Text>
             </View>
             {!invoice.vat_exempt && vatAmount > 0 ? (
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>
-                  VAT ({invoice.vat_rate || 21}%)
+                  IVA ({invoice.vat_rate || 21}%)
                 </Text>
                 <Text style={styles.totalValue}>
                   {formatCurrency(vatAmount)}
                 </Text>
               </View>
             ) : null}
-            <View style={styles.totalHighlight}>
-              <Text style={styles.totalHighlightLabel}>Total</Text>
-              <Text style={styles.totalHighlightValue}>
+            <View style={styles.totalDivider} />
+            <View style={styles.totalFinalRow}>
+              <Text style={styles.totalFinalLabel}>Total</Text>
+              <Text style={styles.totalFinalValue}>
                 {formatCurrency(total)}
               </Text>
             </View>

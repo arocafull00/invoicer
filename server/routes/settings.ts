@@ -1,5 +1,5 @@
 import type { Hono } from 'hono';
-import type { Sql } from '../lib/db';
+import type { Sql } from '../lib/db.js';
 
 type SettingsBody = {
   default_currency?: 'eur' | 'usd' | 'gbp';

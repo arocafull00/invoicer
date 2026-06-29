@@ -1,6 +1,7 @@
 import type { Hono } from 'hono';
-import type { Sql } from '../lib/db';
-import { ApiError } from '../lib/errors';
+import type { Sql } from '../lib/db.js';
+import { ApiError } from '../lib/errors.js';
+import { mapLineItemTemplate } from '../lib/mappers.js';
 
 type TemplateBody = {
   description: string;
@@ -14,7 +15,7 @@ export function registerLineItemTemplateRoutes(app: Hono, sql: Sql) {
     const rows = await sql`
       SELECT * FROM line_item_templates ORDER BY usage_count DESC
     `;
-    return c.json(rows);
+    return c.json(rows.map(mapLineItemTemplate));
   });
 
   app.post('/line-item-templates', async (c) => {
@@ -32,7 +33,7 @@ export function registerLineItemTemplateRoutes(app: Hono, sql: Sql) {
       )
       RETURNING *
     `;
-    return c.json(rows[0], 201);
+    return c.json(mapLineItemTemplate(rows[0]), 201);
   });
 
   app.put('/line-item-templates/:id', async (c) => {
@@ -48,7 +49,7 @@ export function registerLineItemTemplateRoutes(app: Hono, sql: Sql) {
       RETURNING *
     `;
     if (!rows[0]) throw new ApiError('Template not found', 404);
-    return c.json(rows[0]);
+    return c.json(mapLineItemTemplate(rows[0]));
   });
 
   app.delete('/line-item-templates/:id', async (c) => {
