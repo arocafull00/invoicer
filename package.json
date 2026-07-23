@@ -15,6 +15,9 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@clerk/backend": "^3.13.0",
+    "@clerk/react": "^6.12.7",
+    "@clerk/ui": "^1.25.8",
     "@hono/vite-dev-server": "^0.26.0",
     "@hookform/resolvers": "^5.2.1",
     "@neondatabase/serverless": "^1.1.0",

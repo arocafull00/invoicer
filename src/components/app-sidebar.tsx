@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { UserButton } from '@clerk/react';
 import { FileText, Home, Settings, UserCog, Users, CreditCard } from 'lucide-react';
 import {
   Sidebar,
@@ -65,7 +66,11 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter />
+      <SidebarFooter>
+        <div className="px-2 py-1.5">
+          <UserButton />
+        </div>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

@@ -1,4 +1,5 @@
 import type { Hono } from 'hono';
+import type { AppEnv } from '../lib/auth.js';
 import type { Sql } from '../lib/db.js';
 import { ApiError } from '../lib/errors.js';
 
@@ -10,24 +11,31 @@ type PaymentInstructionBody = {
   additional_data: string;
 };
 
-export function registerPaymentInstructionRoutes(app: Hono, sql: Sql) {
+export function registerPaymentInstructionRoutes(app: Hono<AppEnv>, sql: Sql) {
   app.get('/payment-instructions', async (c) => {
-    const rows = await sql`SELECT * FROM payment_instructions ORDER BY account_holder ASC`;
+    const userId = c.get('userId');
+    const rows = await sql`
+      SELECT * FROM payment_instructions
+      WHERE user_id = ${userId}
+      ORDER BY account_holder ASC
+    `;
     return c.json(rows);
   });
 
   app.post('/payment-instructions', async (c) => {
+    const userId = c.get('userId');
     const body = await c.req.json<PaymentInstructionBody>();
     const rows = await sql`
       INSERT INTO payment_instructions (
-        account_holder, iban, payment_method, payment_terms, additional_data
+        account_holder, iban, payment_method, payment_terms, additional_data, user_id
       )
       VALUES (
         ${body.account_holder},
         ${body.iban},
         ${body.payment_method},
         ${body.payment_terms},
-        ${body.additional_data}
+        ${body.additional_data},
+        ${userId}
       )
       RETURNING *
     `;
@@ -35,6 +43,7 @@ export function registerPaymentInstructionRoutes(app: Hono, sql: Sql) {
   });
 
   app.put('/payment-instructions/:id', async (c) => {
+    const userId = c.get('userId');
     const id = c.req.param('id');
     const body = await c.req.json<Partial<PaymentInstructionBody>>();
     const rows = await sql`
@@ -44,7 +53,7 @@ export function registerPaymentInstructionRoutes(app: Hono, sql: Sql) {
         payment_method = COALESCE(${body.payment_method ?? null}, payment_method),
         payment_terms = COALESCE(${body.payment_terms ?? null}, payment_terms),
         additional_data = COALESCE(${body.additional_data ?? null}, additional_data)
-      WHERE id = ${id}
+      WHERE id = ${id} AND user_id = ${userId}
       RETURNING *
     `;
     if (!rows[0]) throw new ApiError('Payment instruction not found', 404);
@@ -52,8 +61,13 @@ export function registerPaymentInstructionRoutes(app: Hono, sql: Sql) {
   });
 
   app.delete('/payment-instructions/:id', async (c) => {
+    const userId = c.get('userId');
     const id = c.req.param('id');
-    const rows = await sql`DELETE FROM payment_instructions WHERE id = ${id} RETURNING id`;
+    const rows = await sql`
+      DELETE FROM payment_instructions
+      WHERE id = ${id} AND user_id = ${userId}
+      RETURNING id
+    `;
     if (!rows[0]) throw new ApiError('Payment instruction not found', 404);
     return c.body(null, 204);
   });

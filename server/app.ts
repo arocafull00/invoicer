@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { getSql } from './lib/db.js';
 import { ApiError } from './lib/errors.js';
-import { basicAuth } from './lib/auth.js';
+import { clerkAuth, type AppEnv } from './lib/auth.js';
 import { registerConsultantRoutes } from './routes/consultants.js';
 import { registerClientRoutes } from './routes/clients.js';
 import { registerPaymentInstructionRoutes } from './routes/payment-instructions.js';
@@ -9,9 +9,9 @@ import { registerInvoiceRoutes } from './routes/invoices.js';
 import { registerLineItemTemplateRoutes } from './routes/line-item-templates.js';
 import { registerSettingsRoutes } from './routes/settings.js';
 
-export const app = new Hono().basePath('/api');
+export const app = new Hono<AppEnv>().basePath('/api');
 
-app.use('*', basicAuth());
+app.use('*', clerkAuth());
 
 app.onError((error, c) => {
   if (error instanceof ApiError) {

@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { RequireConsultant, RedirectWhenConsultantsExist } from '@/onboarding/RequireConsultant';
+import { RequireAuth } from '@/login/components/RequireAuth';
+import { LoginPage } from '@/login';
+import { SSOCallback } from '@/login/SSOCallback';
 import { AppLayout } from '@/shared/components/AppLayout';
 import { DashboardPage } from '@/dashboard/DashboardScreen';
 import Invoices from '@/invoices/InvoicesScreen';
@@ -17,21 +20,33 @@ import ConsultantOnboardingScreen from '@/onboarding/ConsultantOnboardingScreen'
 
 function ProtectedApp({ children }: { children: ReactNode }) {
   return (
-    <RequireConsultant>
-      <AppLayout>{children}</AppLayout>
-    </RequireConsultant>
+    <RequireAuth>
+      <RequireConsultant>
+        <AppLayout>{children}</AppLayout>
+      </RequireConsultant>
+    </RequireAuth>
   );
 }
 
 function ConsultantOnboardingShell({ children }: { children: ReactNode }) {
   return (
-    <AppLayout>
-      <RedirectWhenConsultantsExist>{children}</RedirectWhenConsultantsExist>
-    </AppLayout>
+    <RequireAuth>
+      <AppLayout>
+        <RedirectWhenConsultantsExist>{children}</RedirectWhenConsultantsExist>
+      </AppLayout>
+    </RequireAuth>
   );
 }
 
 export const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
+    path: '/sso-callback',
+    element: <SSOCallback />,
+  },
   {
     path: '/',
     element: (

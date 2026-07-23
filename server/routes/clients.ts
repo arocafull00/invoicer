@@ -1,4 +1,5 @@
 import type { Hono } from 'hono';
+import type { AppEnv } from '../lib/auth.js';
 import type { Sql } from '../lib/db.js';
 import { ApiError } from '../lib/errors.js';
 
@@ -11,23 +12,30 @@ type ClientBody = {
   company_number?: string | null;
 };
 
-export function registerClientRoutes(app: Hono, sql: Sql) {
+export function registerClientRoutes(app: Hono<AppEnv>, sql: Sql) {
   app.get('/clients', async (c) => {
-    const rows = await sql`SELECT * FROM clients ORDER BY name ASC`;
+    const userId = c.get('userId');
+    const rows = await sql`
+      SELECT * FROM clients
+      WHERE user_id = ${userId}
+      ORDER BY name ASC
+    `;
     return c.json(rows);
   });
 
   app.post('/clients', async (c) => {
+    const userId = c.get('userId');
     const body = await c.req.json<ClientBody>();
     const rows = await sql`
-      INSERT INTO clients (name, email, address, city, country, company_number)
+      INSERT INTO clients (name, email, address, city, country, company_number, user_id)
       VALUES (
         ${body.name ?? ''},
         ${body.email ?? ''},
         ${body.address ?? ''},
         ${body.city ?? ''},
         ${body.country ?? ''},
-        ${body.company_number ?? null}
+        ${body.company_number ?? null},
+        ${userId}
       )
       RETURNING *
     `;
@@ -35,6 +43,7 @@ export function registerClientRoutes(app: Hono, sql: Sql) {
   });
 
   app.put('/clients/:id', async (c) => {
+    const userId = c.get('userId');
     const id = c.req.param('id');
     const body = await c.req.json<ClientBody>();
     const rows = await sql`
@@ -45,7 +54,7 @@ export function registerClientRoutes(app: Hono, sql: Sql) {
         city = COALESCE(${body.city ?? null}, city),
         country = COALESCE(${body.country ?? null}, country),
         company_number = COALESCE(${body.company_number ?? null}, company_number)
-      WHERE id = ${id}
+      WHERE id = ${id} AND user_id = ${userId}
       RETURNING *
     `;
     if (!rows[0]) throw new ApiError('Client not found', 404);
@@ -53,8 +62,13 @@ export function registerClientRoutes(app: Hono, sql: Sql) {
   });
 
   app.delete('/clients/:id', async (c) => {
+    const userId = c.get('userId');
     const id = c.req.param('id');
-    const rows = await sql`DELETE FROM clients WHERE id = ${id} RETURNING id`;
+    const rows = await sql`
+      DELETE FROM clients
+      WHERE id = ${id} AND user_id = ${userId}
+      RETURNING id
+    `;
     if (!rows[0]) throw new ApiError('Client not found', 404);
     return c.body(null, 204);
   });

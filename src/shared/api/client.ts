@@ -6,10 +6,20 @@ import type {
   PaymentInstruction,
 } from '../types';
 
+type TokenProvider = () => Promise<string | null>;
+
+let tokenProvider: TokenProvider | null = null;
+
+export function setTokenProvider(provider: TokenProvider) {
+  tokenProvider = provider;
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
+  const token = tokenProvider ? await tokenProvider() : null;
+
   const response = await fetch(`/api${path}`, {
     ...options,
     credentials: 'include',
@@ -17,6 +27,7 @@ async function request<T>(
       ...(options.body instanceof FormData
         ? {}
         : { 'Content-Type': 'application/json' }),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });

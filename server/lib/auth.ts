@@ -1,29 +1,38 @@
+import { verifyToken } from '@clerk/backend';
 import type { MiddlewareHandler } from 'hono';
 
-export function basicAuth(): MiddlewareHandler {
+export type AuthVariables = {
+  userId: string;
+};
+
+export type AppEnv = {
+  Variables: AuthVariables;
+};
+
+export function clerkAuth(): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
     const auth = c.req.header('authorization');
-    const validUser = process.env.APP_USER;
-    const validPass = process.env.APP_PASSWORD;
 
-    if (!auth) {
-      return c.text('Auth required', 401, {
-        'WWW-Authenticate': 'Basic realm="Secure Area"',
-      });
-    }
-
-    const [, encoded] = auth.split(' ');
-    if (!encoded) {
+    if (!auth?.startsWith('Bearer ')) {
       return c.text('Unauthorized', 401);
     }
 
-    const decoded = atob(encoded);
-    const [user, pass] = decoded.split(':');
-
-    if (user !== validUser || pass !== validPass) {
+    const token = auth.slice('Bearer '.length).trim();
+    if (!token) {
       return c.text('Unauthorized', 401);
     }
 
-    await next();
+    const secretKey = process.env.CLERK_SECRET_KEY;
+    if (!secretKey) {
+      return c.text('Unauthorized', 401);
+    }
+
+    try {
+      const payload = await verifyToken(token, { secretKey });
+      c.set('userId', payload.sub);
+      await next();
+    } catch {
+      return c.text('Unauthorized', 401);
+    }
   };
 }

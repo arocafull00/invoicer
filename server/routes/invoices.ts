@@ -1,4 +1,5 @@
 import type { Hono } from 'hono';
+import type { AppEnv } from '../lib/auth.js';
 import type { Sql } from '../lib/db.js';
 import { ApiError } from '../lib/errors.js';
 import { mapInvoice } from '../lib/mappers.js';
@@ -34,7 +35,7 @@ type InvoiceInput = {
 
 type InvoiceRow = Parameters<typeof mapInvoice>[0];
 
-async function fetchAllInvoices(sql: Sql) {
+async function fetchAllInvoices(sql: Sql, userId: string) {
   const rows = await sql`
     SELECT
       i.*,
@@ -65,12 +66,13 @@ async function fetchAllInvoices(sql: Sql) {
     LEFT JOIN clients cl ON cl.id = i.client_id
     LEFT JOIN payment_instructions pi ON pi.id = i.payment_instructions_id
     WHERE COALESCE(i.deleted, false) = false
+      AND i.user_id = ${userId}
     ORDER BY i.created_date DESC
   `;
   return rows.map((row) => mapInvoice(row as InvoiceRow));
 }
 
-async function fetchInvoiceById(sql: Sql, id: string) {
+async function fetchInvoiceById(sql: Sql, id: string, userId: string) {
   const rows = await sql`
     SELECT
       i.*,
@@ -100,7 +102,7 @@ async function fetchInvoiceById(sql: Sql, id: string) {
     LEFT JOIN consultants c ON c.id = i.consultant_id
     LEFT JOIN clients cl ON cl.id = i.client_id
     LEFT JOIN payment_instructions pi ON pi.id = i.payment_instructions_id
-    WHERE i.id = ${id}
+    WHERE i.id = ${id} AND i.user_id = ${userId}
   `;
   return rows[0] ? mapInvoice(rows[0] as InvoiceRow) : null;
 }
@@ -130,20 +132,25 @@ async function insertLineItems(
   }
 }
 
-export function registerInvoiceRoutes(app: Hono, sql: Sql) {
+export function registerInvoiceRoutes(app: Hono<AppEnv>, sql: Sql) {
   app.get('/invoices', async (c) => {
-    const invoices = await fetchAllInvoices(sql);
+    const userId = c.get('userId');
+    const invoices = await fetchAllInvoices(sql, userId);
     return c.json(invoices);
   });
 
   app.get('/invoices/next-number', async (c) => {
+    const userId = c.get('userId');
     const rows = await sql`
-      SELECT number FROM invoices WHERE COALESCE(deleted, false) = false
+      SELECT number FROM invoices
+      WHERE COALESCE(deleted, false) = false
+        AND user_id = ${userId}
     `;
     return c.json({ number: String(rows.length + 1) });
   });
 
   app.post('/invoices', async (c) => {
+    const userId = c.get('userId');
     const body = await c.req.json<InvoiceInput>();
     try {
       const inserted = await sql`
@@ -151,7 +158,7 @@ export function registerInvoiceRoutes(app: Hono, sql: Sql) {
           number, created_date, start_date, end_date,
           consultant_id, client_id, payment_instructions_id,
           description, subtotal, vat_rate, vat_amount, total,
-          vat_exempt, status, irpf_rate, irpf_amount
+          vat_exempt, status, irpf_rate, irpf_amount, user_id
         )
         VALUES (
           ${body.number},
@@ -169,7 +176,8 @@ export function registerInvoiceRoutes(app: Hono, sql: Sql) {
           ${body.vat_exempt},
           ${body.status},
           ${body.irpf_rate ?? null},
-          ${body.irpf_amount ?? null}
+          ${body.irpf_amount ?? null},
+          ${userId}
         )
         RETURNING id
       `;
@@ -179,7 +187,7 @@ export function registerInvoiceRoutes(app: Hono, sql: Sql) {
         await insertLineItems(sql, invoiceId, body.line_items);
       }
 
-      const invoice = await fetchInvoiceById(sql, invoiceId);
+      const invoice = await fetchInvoiceById(sql, invoiceId, userId);
       return c.json(invoice, 201);
     } catch (error) {
       if (error instanceof ApiError) throw error;
@@ -192,6 +200,7 @@ export function registerInvoiceRoutes(app: Hono, sql: Sql) {
   });
 
   app.put('/invoices/:id', async (c) => {
+    const userId = c.get('userId');
     const id = c.req.param('id');
     const body = await c.req.json<Partial<InvoiceInput>>();
 
@@ -213,7 +222,7 @@ export function registerInvoiceRoutes(app: Hono, sql: Sql) {
         status = COALESCE(${body.status ?? null}, status),
         irpf_rate = COALESCE(${body.irpf_rate ?? null}, irpf_rate),
         irpf_amount = COALESCE(${body.irpf_amount ?? null}, irpf_amount)
-      WHERE id = ${id}
+      WHERE id = ${id} AND user_id = ${userId}
       RETURNING id
     `;
 
@@ -226,17 +235,21 @@ export function registerInvoiceRoutes(app: Hono, sql: Sql) {
       }
     }
 
-    const invoice = await fetchInvoiceById(sql, id);
+    const invoice = await fetchInvoiceById(sql, id, userId);
     return c.json(invoice);
   });
 
   app.patch('/invoices/:id/soft-delete', async (c) => {
+    const userId = c.get('userId');
     const id = c.req.param('id');
     const rows = await sql`
-      UPDATE invoices SET deleted = true WHERE id = ${id} RETURNING id
+      UPDATE invoices
+      SET deleted = true
+      WHERE id = ${id} AND user_id = ${userId}
+      RETURNING id
     `;
     if (!rows[0]) throw new ApiError('Invoice not found', 404);
-    const invoice = await fetchInvoiceById(sql, id);
+    const invoice = await fetchInvoiceById(sql, id, userId);
     return c.json(invoice);
   });
 }

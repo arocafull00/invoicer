@@ -4,14 +4,12 @@ import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import devServer, { defaultOptions } from '@hono/vite-dev-server'
 import nodeAdapter from '@hono/vite-dev-server/node'
-import { viteBasicAuth } from './vite-basic-auth'
 
 export default defineConfig(({ mode }) => {
   Object.assign(process.env, loadEnv(mode, process.cwd(), ''))
 
   return {
     plugins: [
-      viteBasicAuth(),
       devServer({
         entry: './server/app.ts',
         export: 'app',

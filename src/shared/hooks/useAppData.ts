@@ -8,7 +8,11 @@ import {
 } from '@/shared/api/services';
 import { getLineItemTemplates } from '@/shared/api/services/lineItemTemplates';
 
-export const useAppData = () => {
+type UseAppDataOptions = {
+  enabled?: boolean;
+};
+
+export const useAppData = ({ enabled = true }: UseAppDataOptions = {}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const {
@@ -20,42 +24,51 @@ export const useAppData = () => {
   } = useInvoiceStore();
   const { load: loadSettings } = useSettingsStore();
 
-  const loadAppData = async () => {
+  useEffect(() => {
+    if (!enabled) return;
     if (isInitialized) return;
 
-    setIsLoading(true);
+    let cancelled = false;
 
-    try {
-      const [invoices, consultants, clients, paymentInstructions] = await Promise.all([
-        getInvoices(),
-        getConsultants(),
-        getClients(),
-        getPaymentInstructions()
-      ]);
+    const loadAppData = async () => {
+      setIsLoading(true);
 
-      await loadSettings();
+      try {
+        const [invoices, consultants, clients, paymentInstructions] = await Promise.all([
+          getInvoices(),
+          getConsultants(),
+          getClients(),
+          getPaymentInstructions()
+        ]);
 
-      const templates = await getLineItemTemplates();
+        await loadSettings();
 
-      setInvoices(invoices);
-      setConsultants(consultants);
-      setClients(clients);
-      setPaymentInstructions(paymentInstructions);
-      setLineItemTemplates(templates);
+        const templates = await getLineItemTemplates();
 
-      setIsInitialized(true);
-    } catch (error) {
-      console.error('Error loading app data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        if (cancelled) return;
 
-  useEffect(() => {
-    if (!isInitialized) {
-      loadAppData();
-    }
-  }, [isInitialized]);
+        setInvoices(invoices);
+        setConsultants(consultants);
+        setClients(clients);
+        setPaymentInstructions(paymentInstructions);
+        setLineItemTemplates(templates);
+
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('Error loading app data:', error);
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadAppData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, isInitialized, loadSettings, setInvoices, setConsultants, setClients, setPaymentInstructions, setLineItemTemplates]);
 
   return { isLoading, isInitialized };
 };
