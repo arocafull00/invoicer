@@ -70,16 +70,6 @@ export interface Invoice {
   irpf_amount?: number | null;
 }
 
-export interface WizardDraft {
-  consultant?: Consultant;
-  client?: Client;
-  start_date?: string;
-  end_date?: string;
-  description?: string;
-  total?: number;
-  payment_instructions?: PaymentInstruction;
-}
-
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;

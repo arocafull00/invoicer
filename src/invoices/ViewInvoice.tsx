@@ -14,7 +14,7 @@ import {
   Banknote,
   CreditCard,
 } from "lucide-react";
-import { useInvoiceStore } from "@/shared/lib/stores";
+import { useInvoiceStore, useSettingsStore } from "@/shared/lib/stores";
 import { formatDate, formatCurrency } from "@/shared/lib/helpers";
 import { downloadInvoicePDF } from "@/shared/lib/pdf";
 
@@ -22,6 +22,7 @@ export const ViewInvoice: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { invoices } = useInvoiceStore();
+  useSettingsStore((s) => s.settings);
   const [loadingPdf, setLoadingPdf] = useState(false);
 
   const invoice = invoices.find((inv) => inv.id === id);

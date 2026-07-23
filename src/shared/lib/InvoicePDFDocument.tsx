@@ -8,7 +8,7 @@ import {
   Font,
 } from "@react-pdf/renderer";
 import type { Invoice, PdfColorPalette } from "@/shared/types";
-import { formatCurrency } from "@/shared/lib/helpers";
+import { formatCurrency, formatDate } from "@/shared/lib/helpers";
 import { InvoicePDFLineItemRow } from "@/shared/lib/InvoicePDFLineItemRow";
 
 const TEXT = "#18181B";
@@ -284,15 +284,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const formatDateES = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("es-ES", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-};
-
 export interface InvoicePDFDocumentProps {
   invoice: Invoice;
   logoUrl?: string | null;
@@ -356,7 +347,7 @@ export function InvoicePDFDocument({
           )}
           <View style={styles.headerRight}>
             <Text style={styles.headerDate}>
-              {formatDateES(invoice.created_date)}
+              {formatDate(invoice.created_date)}
             </Text>
             <View style={styles.headerSep} />
             <View style={styles.headerInvoiceBlock}>

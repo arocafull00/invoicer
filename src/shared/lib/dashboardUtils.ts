@@ -67,13 +67,6 @@ export const calculateDashboardStats = (invoices: Invoice[]): DashboardStats => 
   };
 };
 
-export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'EUR',
-  }).format(amount);
-};
-
 export const formatPercentage = (value: number): string => {
   const sign = value >= 0 ? '+' : '';
   return `${sign}${value.toFixed(1)}%`;

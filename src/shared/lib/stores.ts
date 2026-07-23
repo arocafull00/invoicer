@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { toast } from 'sonner';
-import type { WizardDraft, Invoice, Consultant, Client, PaymentInstruction, UserSettings, LineItemTemplate } from '@/shared/types';
+import type { Invoice, Consultant, Client, PaymentInstruction, UserSettings, LineItemTemplate } from '@/shared/types';
 import { getUserSettings, updateUserSettings } from '@/shared/api/services/userSettings';
 
 interface InvoiceStoreState {
@@ -9,15 +9,12 @@ interface InvoiceStoreState {
   clients: Client[];
   payment_instructions: PaymentInstruction[];
   line_item_templates: LineItemTemplate[];
-  wizardDraft: WizardDraft;
-  invoiceNumber: string;
   isDataReady: boolean;
   setInvoices: (invoices: Invoice[]) => void;
   setConsultants: (consultants: Consultant[]) => void;
   setClients: (clients: Client[]) => void;
   setPaymentInstructions: (paymentInstructions: PaymentInstruction[]) => void;
   setLineItemTemplates: (templates: LineItemTemplate[]) => void;
-  setWizardDraft: (draft: WizardDraft) => void;
   setDataReady: (ready: boolean) => void;
   addInvoice: (invoice: Invoice) => void;
   addConsultant: (consultant: Consultant) => void;
@@ -40,15 +37,12 @@ export const useInvoiceStore = create<InvoiceStoreState>((set) => ({
   clients: [],
   payment_instructions: [],
   line_item_templates: [],
-  wizardDraft: {},
-  invoiceNumber: "",
   isDataReady: false,
   setInvoices: (invoices) => set({ invoices }),
   setConsultants: (consultants) => set({ consultants }),
   setClients: (clients) => set({ clients }),
   setPaymentInstructions: (paymentInstructions) => set({ payment_instructions: paymentInstructions }),
   setLineItemTemplates: (templates) => set({ line_item_templates: templates }),
-  setWizardDraft: (draft) => set({ wizardDraft: draft }),
   setDataReady: (ready) => set({ isDataReady: ready }),
   addInvoice: (invoice) => set((state) => ({ invoices: [...state.invoices, invoice] })),
   addConsultant: (consultant) => set((state) => ({ consultants: [...state.consultants, consultant] })),

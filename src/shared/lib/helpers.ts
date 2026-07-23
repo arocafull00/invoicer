@@ -1,47 +1,72 @@
-/**
- * Formatea una fecha en formato "Month DD, YYYY"
- */
-export const formatDate = (dateString: string): string => {
+import type { SupportedCurrency, SupportedDateFormat } from '@/shared/types';
+import { useSettingsStore } from '@/shared/lib/stores';
+
+const CURRENCY_MAP: Record<SupportedCurrency, { code: string; locale: string }> = {
+  eur: { code: 'EUR', locale: 'es-ES' },
+  usd: { code: 'USD', locale: 'en-US' },
+  gbp: { code: 'GBP', locale: 'en-GB' },
+};
+
+function getSettings() {
+  return (
+    useSettingsStore.getState().settings ?? {
+      default_currency: 'eur' as SupportedCurrency,
+      date_format: 'dd/mm/yyyy' as SupportedDateFormat,
+      pdf_color_palette: 'violet' as const,
+    }
+  );
+}
+
+function parseDateParts(dateString: string): { year: number; month: number; day: number } | null {
+  const iso = dateString.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) {
+    return {
+      year: Number(iso[1]),
+      month: Number(iso[2]),
+      day: Number(iso[3]),
+    };
+  }
+
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  if (Number.isNaN(date.getTime())) return null;
+
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: date.getDate(),
+  };
+}
+
+export const formatDate = (
+  dateString: string,
+  dateFormat?: SupportedDateFormat
+): string => {
+  const parts = parseDateParts(dateString);
+  if (!parts) return dateString;
+
+  const format = dateFormat ?? getSettings().date_format;
+  const dd = String(parts.day).padStart(2, '0');
+  const mm = String(parts.month).padStart(2, '0');
+  const yyyy = String(parts.year);
+
+  if (format === 'mm/dd/yyyy') return `${mm}/${dd}/${yyyy}`;
+  if (format === 'yyyy-mm-dd') return `${yyyy}-${mm}-${dd}`;
+  return `${dd}/${mm}/${yyyy}`;
 };
 
-/**
- * Formatea una moneda en formato "X,XXX.XX€"
- */
-export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
+export const formatCurrency = (
+  amount: number,
+  currency?: SupportedCurrency
+): string => {
+  const selected = currency ?? getSettings().default_currency;
+  const { code, locale } = CURRENCY_MAP[selected] ?? CURRENCY_MAP.eur;
+
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: code,
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount) + '€';
-};
-
-/**
- * Genera un número de factura incremental
- */
-export const generateInvoiceNumber = (): string => {
-  // En un entorno real, esto vendría de la base de datos
-  const sequence = Math.floor(Math.random() * 100) + 1;
-  return `INVOICE № ${sequence}`;
-};
-
-/**
- * Valida si un email es válido
- */
-export const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-/**
- * Capitaliza la primera letra de una cadena
- */
-export const capitalize = (str: string): string => {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    maximumFractionDigits: 2,
+  }).format(amount);
 };
 
 export function countWeekdaysInMonth(year: number, month1to12: number): number {

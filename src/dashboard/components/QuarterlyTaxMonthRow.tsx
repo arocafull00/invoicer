@@ -1,5 +1,5 @@
 import React from "react";
-import { formatCurrency } from "@/shared/lib/dashboardUtils";
+import { formatCurrency } from "@/shared/lib/helpers";
 
 interface QuarterlyTaxMonthRowProps {
   month: string;

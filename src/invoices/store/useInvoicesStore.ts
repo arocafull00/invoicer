@@ -16,6 +16,10 @@ import {
 import { useInvoiceStore } from "@/shared/lib/stores";
 import { queryClient } from "@/shared/api/queryClient";
 
+export type FormLineItem = Omit<LineItem, "id" | "total"> & {
+  clientKey: string;
+};
+
 interface NewInvoiceFormState {
   invoiceNumber: string;
   issueDate: string;
@@ -23,16 +27,14 @@ interface NewInvoiceFormState {
   selectedConsultantId: string;
   selectedClientId: string;
   selectedPaymentId: string;
-  lineItems: Omit<LineItem, 'id' | 'total'>[];
-  currentLineItem: Omit<LineItem, 'id' | 'total'>;
+  lineItems: FormLineItem[];
+  currentLineItem: Omit<LineItem, "id" | "total">;
   includeVat: boolean;
   vatRate: number;
   isSaving: boolean;
-  // dialogs
   openNewConsultant: boolean;
   openNewClient: boolean;
   openNewPayment: boolean;
-  // temp entities
   newConsultant: Partial<Consultant>;
   newClient: Partial<Client>;
   newPayment: Partial<PaymentInstruction>;
@@ -42,10 +44,13 @@ interface InvoiceFormStoreState {
   form: NewInvoiceFormState;
   // setters
   setForm: (updater: Partial<NewInvoiceFormState>) => void;
-  setCurrentLineItem: (updater: Partial<Omit<LineItem, 'id' | 'total'>>) => void;
+  setCurrentLineItem: (updater: Partial<Omit<LineItem, "id" | "total">>) => void;
   addLineItem: () => void;
   removeLineItem: (index: number) => void;
-  updateLineItem: (index: number, updater: Partial<Omit<LineItem, 'id' | 'total'>>) => void;
+  updateLineItem: (
+    index: number,
+    updater: Partial<Omit<LineItem, "id" | "total">>
+  ) => void;
   setDialog: (
     which: "consultant" | "client" | "payment",
     open: boolean
@@ -58,7 +63,7 @@ interface InvoiceFormStoreState {
   getSelectedConsultant: () => Consultant | undefined;
   getSelectedClient: () => Client | undefined;
   getSelectedPayment: () => PaymentInstruction;
-  getLineItemTotal: (item: Omit<LineItem, 'id' | 'total'>) => number;
+  getLineItemTotal: (item: Omit<LineItem, "id" | "total">) => number;
   getSubtotal: () => number;
   getVatAmount: () => number;
   getTotalAmount: () => number;
@@ -141,7 +146,10 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
         return {
           form: {
             ...state.form,
-            lineItems: [...state.form.lineItems, { ...currentLineItem }],
+            lineItems: [
+              ...state.form.lineItems,
+              { ...currentLineItem, clientKey: crypto.randomUUID() },
+            ],
             currentLineItem: { description: "", quantity: 1, rate: 0, includeVat: false },
           },
         };

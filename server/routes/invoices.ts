@@ -1,7 +1,7 @@
 import type { Hono } from 'hono';
 import type { AppEnv } from '../lib/auth.js';
 import type { Sql } from '../lib/db.js';
-import { ApiError } from '../lib/errors.js';
+import { ApiError, isUniqueViolation } from '../lib/errors.js';
 import { mapInvoice } from '../lib/mappers.js';
 
 type LineItemInput = {
@@ -232,6 +232,28 @@ async function insertLineItems(
   }
 }
 
+async function allocateNextInvoiceNumber(sql: Sql, userId: string): Promise<string> {
+  const rows = await sql`
+    SELECT COALESCE(
+      MAX(
+        CASE
+          WHEN number ~ '^[0-9]+$' THEN number::int
+          ELSE 0
+        END
+      ),
+      0
+    ) + 1 AS next_number
+    FROM invoices
+    WHERE user_id = ${userId}
+  `;
+  return String(rows[0]?.next_number ?? 1);
+}
+
+function canRetryInvoiceNumber(requestedNumber: string | null): boolean {
+  if (!requestedNumber) return true;
+  return /^\d+$/.test(requestedNumber);
+}
+
 export function registerInvoiceRoutes(app: Hono<AppEnv>, sql: Sql) {
   app.get('/invoices', async (c) => {
     const userId = c.get('userId');
@@ -241,29 +263,14 @@ export function registerInvoiceRoutes(app: Hono<AppEnv>, sql: Sql) {
 
   app.get('/invoices/next-number', async (c) => {
     const userId = c.get('userId');
-    const rows = await sql`
-      SELECT COALESCE(
-        MAX(
-          CASE
-            WHEN number ~ '^[0-9]+$' THEN number::int
-            ELSE 0
-          END
-        ),
-        0
-      ) + 1 AS next_number
-      FROM invoices
-      WHERE user_id = ${userId}
-    `;
-    return c.json({ number: String(rows[0]?.next_number ?? 1) });
+    const number = await allocateNextInvoiceNumber(sql, userId);
+    return c.json({ number });
   });
 
   app.post('/invoices', async (c) => {
     const userId = c.get('userId');
     const body = await c.req.json<InvoiceInput>();
 
-    if (!body.number?.trim()) {
-      throw new ApiError('Invoice number is required', 400);
-    }
     if (!body.consultant?.id || !body.client?.id || !body.payment_instructions?.id) {
       throw new ApiError('Consultant, client and payment method are required', 400);
     }
@@ -283,49 +290,58 @@ export function registerInvoiceRoutes(app: Hono<AppEnv>, sql: Sql) {
       body.description
     );
 
-    try {
-      const inserted = await sql`
-        INSERT INTO invoices (
-          number, created_date, start_date, end_date,
-          consultant_id, client_id, payment_instructions_id,
-          description, subtotal, vat_rate, vat_amount, total,
-          vat_exempt, status, irpf_rate, irpf_amount, user_id
-        )
-        VALUES (
-          ${body.number},
-          ${body.created_date},
-          ${body.start_date},
-          ${body.end_date},
-          ${body.consultant.id},
-          ${body.client.id},
-          ${body.payment_instructions.id},
-          ${amounts.description},
-          ${amounts.subtotal},
-          ${amounts.vat_rate},
-          ${amounts.vat_amount},
-          ${amounts.total},
-          ${amounts.vat_exempt},
-          ${body.status},
-          ${amounts.irpf_rate},
-          ${amounts.irpf_amount},
-          ${userId}
-        )
-        RETURNING id
-      `;
+    const requestedNumber = body.number?.trim() || null;
+    let number = requestedNumber ?? (await allocateNextInvoiceNumber(sql, userId));
 
-      const invoiceId = inserted[0].id as string;
-      await insertLineItems(sql, invoiceId, amounts.lineItems);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const inserted = await sql`
+          INSERT INTO invoices (
+            number, created_date, start_date, end_date,
+            consultant_id, client_id, payment_instructions_id,
+            description, subtotal, vat_rate, vat_amount, total,
+            vat_exempt, status, irpf_rate, irpf_amount, user_id
+          )
+          VALUES (
+            ${number},
+            ${body.created_date},
+            ${body.start_date},
+            ${body.end_date},
+            ${body.consultant.id},
+            ${body.client.id},
+            ${body.payment_instructions.id},
+            ${amounts.description},
+            ${amounts.subtotal},
+            ${amounts.vat_rate},
+            ${amounts.vat_amount},
+            ${amounts.total},
+            ${amounts.vat_exempt},
+            ${body.status},
+            ${amounts.irpf_rate},
+            ${amounts.irpf_amount},
+            ${userId}
+          )
+          RETURNING id
+        `;
 
-      const invoice = await fetchInvoiceById(sql, invoiceId, userId);
-      return c.json(invoice, 201);
-    } catch (error) {
-      if (error instanceof ApiError) throw error;
-      const message = error instanceof Error ? error.message : 'Failed to create invoice';
-      if (message.includes('unique') || message.includes('duplicate key')) {
-        throw new ApiError('No se puede repetir numero de factura', 409);
+        const invoiceId = inserted[0].id as string;
+        await insertLineItems(sql, invoiceId, amounts.lineItems);
+
+        const invoice = await fetchInvoiceById(sql, invoiceId, userId);
+        return c.json(invoice, 201);
+      } catch (error) {
+        if (error instanceof ApiError) throw error;
+        if (!isUniqueViolation(error)) throw error;
+
+        if (attempt >= 2 || !canRetryInvoiceNumber(requestedNumber)) {
+          throw new ApiError('No se puede repetir numero de factura', 409);
+        }
+
+        number = await allocateNextInvoiceNumber(sql, userId);
       }
-      throw error;
     }
+
+    throw new ApiError('No se puede repetir numero de factura', 409);
   });
 
   app.put('/invoices/:id', async (c) => {

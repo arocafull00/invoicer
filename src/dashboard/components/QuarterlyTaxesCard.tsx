@@ -2,16 +2,17 @@ import React, { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useInvoiceStore } from "@/shared/lib/stores";
+import { useInvoiceStore, useSettingsStore } from "@/shared/lib/stores";
 import {
   getQuarterlyPeriod,
   calculateQuarterlyTaxes,
-  formatCurrency,
 } from "@/shared/lib/dashboardUtils";
+import { formatCurrency } from "@/shared/lib/helpers";
 import { QuarterlyTaxMonthRow } from "./QuarterlyTaxMonthRow";
 
 export const QuarterlyTaxesCard: React.FC = () => {
   const { invoices } = useInvoiceStore();
+  useSettingsStore((s) => s.settings);
   const [offset, setOffset] = useState(0);
   const period = getQuarterlyPeriod(offset);
   const taxes = calculateQuarterlyTaxes(invoices, period);

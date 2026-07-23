@@ -17,18 +17,16 @@ import {
   Eye,
   Edit,
   Trash2,
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
   Plus,
   FileText,
 } from "lucide-react";
-import { useInvoiceStore } from "@/shared/lib/stores";
+import { useInvoiceStore, useSettingsStore } from "@/shared/lib/stores";
 import { Spinner } from "@/shared/components/Spinner";
 import { formatDate, formatCurrency } from "@/shared/lib/helpers";
 import { downloadInvoicePDF } from "@/shared/lib/pdf";
 import type { Invoice } from "@/shared/types";
 import { updateInvoice, softDeleteInvoice } from "@/shared/api/services/invoices";
+import { InvoiceTableSortHeader } from "@/invoices/components/InvoiceTableSortHeader";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,6 +60,7 @@ import {
 export function InvoiceTable() {
   const navigate = useNavigate();
   const { invoices, isDataReady } = useInvoiceStore();
+  useSettingsStore((s) => s.settings);
   const [loadingPdf, setLoadingPdf] = useState<string | null>(null);
 
   const handleDownloadPDF = async (invoice: Invoice) => {
@@ -135,19 +134,7 @@ export function InvoiceTable() {
       {
         accessorKey: "number",
         header: ({ column }) => (
-          <div
-            className="cursor-pointer select-none inline-flex items-center gap-1"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            <span>NÚMERO</span>
-            {column.getIsSorted() === "asc" ? (
-              <ArrowUp className="w-3.5 h-3.5" />
-            ) : column.getIsSorted() === "desc" ? (
-              <ArrowDown className="w-3.5 h-3.5" />
-            ) : (
-              <ArrowUpDown className="w-3.5 h-3.5 opacity-60" />
-            )}
-          </div>
+          <InvoiceTableSortHeader label="NÚMERO" column={column} />
         ),
         cell: ({ row }) => (
           <span className="font-medium text-foreground">{row.original.number}</span>
@@ -156,19 +143,7 @@ export function InvoiceTable() {
       {
         accessorKey: "created_date",
         header: ({ column }) => (
-          <div
-            className="cursor-pointer select-none inline-flex items-center gap-1"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            <span>FECHA</span>
-            {column.getIsSorted() === "asc" ? (
-              <ArrowUp className="w-3.5 h-3.5" />
-            ) : column.getIsSorted() === "desc" ? (
-              <ArrowDown className="w-3.5 h-3.5" />
-            ) : (
-              <ArrowUpDown className="w-3.5 h-3.5 opacity-60" />
-            )}
-          </div>
+          <InvoiceTableSortHeader label="FECHA" column={column} />
         ),
         cell: ({ row }) => (
           <span className="text-muted-foreground">
@@ -218,19 +193,7 @@ export function InvoiceTable() {
       {
         accessorKey: "total",
         header: ({ column }) => (
-          <div
-            className="cursor-pointer select-none inline-flex items-center gap-1"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            <span>TOTAL</span>
-            {column.getIsSorted() === "asc" ? (
-              <ArrowUp className="w-3.5 h-3.5" />
-            ) : column.getIsSorted() === "desc" ? (
-              <ArrowDown className="w-3.5 h-3.5" />
-            ) : (
-              <ArrowUpDown className="w-3.5 h-3.5 opacity-60" />
-            )}
-          </div>
+          <InvoiceTableSortHeader label="TOTAL" column={column} />
         ),
         cell: ({ row }) => (
           <span className="font-semibold text-foreground">
@@ -250,7 +213,10 @@ export function InvoiceTable() {
                 handleStatusChange(row.original, v as Invoice["status"]) }
               disabled={updatingId === row.original.id}
             >
-              <SelectTrigger className="bg-card border-border text-foreground">
+              <SelectTrigger
+                className="bg-card border-border text-foreground"
+                aria-label={`Estado de factura ${row.original.number}`}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -274,8 +240,9 @@ export function InvoiceTable() {
               className="text-muted-foreground hover:text-foreground hover:bg-accent p-2"
               onClick={() => handleView(row.original)}
               title="Ver"
+              aria-label={`Ver factura ${row.original.number}`}
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="w-4 h-4" aria-hidden="true" />
             </Button>
             <Button
               variant="ghost"
@@ -283,8 +250,9 @@ export function InvoiceTable() {
               className="text-muted-foreground hover:text-foreground hover:bg-accent p-2"
               onClick={() => handleEdit(row.original)}
               title="Editar"
+              aria-label={`Editar factura ${row.original.number}`}
             >
-              <Edit className="w-4 h-4" />
+              <Edit className="w-4 h-4" aria-hidden="true" />
             </Button>
             <Button
               variant="ghost"
@@ -293,25 +261,27 @@ export function InvoiceTable() {
               onClick={() => handleDownloadPDF(row.original)}
               disabled={loadingPdf === row.original.id}
               title="Descargar"
+              aria-label={`Descargar PDF de factura ${row.original.number}`}
             >
               {loadingPdf === row.original.id ? (
                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Download className="w-4 h-4" />
+                <Download className="w-4 h-4" aria-hidden="true" />
               )}
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="text-[#EF4444] hover:text-foreground hover:bg-[#EF4444]/20 p-2"
+              className="text-destructive hover:text-foreground hover:bg-destructive/20 p-2"
               onClick={() => handleDelete(row.original)}
               disabled={deletingId === row.original.id}
               title="Eliminar"
+              aria-label={`Eliminar factura ${row.original.number}`}
             >
               {deletingId === row.original.id ? (
                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
               )}
             </Button>
           </div>

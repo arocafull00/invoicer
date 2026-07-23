@@ -15,6 +15,7 @@ import {
   getExpenseTypes,
 } from "@/shared/api/services/expenses";
 import { useExpensesStore } from "@/expenses/store/useExpensesStore";
+import { useSettingsStore } from "@/shared/lib/stores";
 import { ExpenseTableRow } from "@/expenses/components/ExpenseTableRow";
 import type { Expense } from "@/shared/types";
 import {
@@ -37,6 +38,7 @@ export function ExpenseTable() {
     removeExpense,
     setLoaded,
   } = useExpensesStore();
+  useSettingsStore((s) => s.settings);
   const [isLoading, setIsLoading] = useState(!isLoaded);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);

@@ -1,11 +1,13 @@
 import React from 'react';
 import { FileText, Euro, TrendingUp, Calendar } from "lucide-react";
-import { useInvoiceStore } from '@/shared/lib/stores';
-import { calculateDashboardStats, formatCurrency, formatPercentage } from '@/shared/lib/dashboardUtils';
+import { useInvoiceStore, useSettingsStore } from '@/shared/lib/stores';
+import { calculateDashboardStats, formatPercentage } from '@/shared/lib/dashboardUtils';
+import { formatCurrency } from '@/shared/lib/helpers';
 import { StatCard } from './StatCard';
 
 export const StatsGrid: React.FC = () => {
   const { invoices } = useInvoiceStore();
+  useSettingsStore((s) => s.settings);
   const stats = calculateDashboardStats(invoices);
 
   const statsData = [

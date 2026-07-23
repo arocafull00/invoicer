@@ -50,25 +50,31 @@ export const EditInvoice: React.FC = () => {
     }
     
     // Handle line items - check if invoice has line_items array or use legacy description
-    let lineItems: Omit<import("@/shared/types").LineItem, 'id' | 'total'>[] = [];
-    
+    let lineItems: Array<
+      Omit<import("@/shared/types").LineItem, "id" | "total"> & {
+        clientKey: string;
+      }
+    > = [];
+
     if (invoice.line_items && invoice.line_items.length > 0) {
-      // New format with multiple line items
-      lineItems = invoice.line_items.map(item => ({
+      lineItems = invoice.line_items.map((item) => ({
         description: item.description,
         quantity: item.quantity,
         rate: item.rate,
         includeVat: item.includeVat ?? !invoice.vat_exempt,
+        clientKey: item.id || crypto.randomUUID(),
       }));
     } else if (invoice.description) {
-      // Legacy format - single line item from description
       const desc = invoice.description.replace(/\s*\(Cant\.[^)]*\)$/u, "");
-      lineItems = [{
-        description: desc || invoice.description,
-        quantity: 1,
-        rate: invoice.total,
-        includeVat: !invoice.vat_exempt,
-      }];
+      lineItems = [
+        {
+          description: desc || invoice.description,
+          quantity: 1,
+          rate: invoice.total,
+          includeVat: !invoice.vat_exempt,
+          clientKey: crypto.randomUUID(),
+        },
+      ];
     }
     
     setForm({

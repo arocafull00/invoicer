@@ -2,24 +2,18 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { useInvoiceStore } from "@/shared/lib/stores";
-import { getRecentInvoices, formatCurrency } from "@/shared/lib/dashboardUtils";
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("es-ES", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
+import { useInvoiceStore, useSettingsStore } from "@/shared/lib/stores";
+import { getRecentInvoices } from "@/shared/lib/dashboardUtils";
+import { formatCurrency, formatDate } from "@/shared/lib/helpers";
 
 export const RecentInvoices: React.FC = () => {
   const { invoices } = useInvoiceStore();
+  useSettingsStore((s) => s.settings);
   const recentInvoices = getRecentInvoices(invoices, 5);
 
   if (recentInvoices.length === 0) {
     return (
-      <Card className="p-6  ">
+      <Card className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-foreground">
             Facturas Recientes
@@ -43,7 +37,7 @@ export const RecentInvoices: React.FC = () => {
   }
 
   return (
-    <Card className="p-6  ">
+    <Card className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-foreground">
           Facturas Recientes
@@ -88,7 +82,13 @@ export const RecentInvoices: React.FC = () => {
                         : "bg-blue-500/20 text-blue-400"
                     }`}
                   >
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                    {status === "paid"
+                      ? "Pagada"
+                      : status === "pending"
+                      ? "Pendiente"
+                      : status === "overdue"
+                      ? "Vencida"
+                      : status}
                   </span>
                 </div>
               </div>

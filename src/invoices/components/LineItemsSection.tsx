@@ -27,8 +27,10 @@ type LineItemWithoutId = Omit<
   "id" | "total"
 >;
 
+type FormLineItem = LineItemWithoutId & { clientKey: string };
+
 interface LineItemsSectionProps {
-  lineItems: LineItemWithoutId[];
+  lineItems: FormLineItem[];
   issueDate: string;
   currentLineItem: LineItemWithoutId;
   vatRate: number;
@@ -122,7 +124,7 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
             <div className="space-y-3">
               {lineItems.map((item, index) => (
                 <div
-                  key={index}
+                  key={item.clientKey}
                   className="flex items-start gap-3 p-4 rounded-lg bg-accent/30 border border-border"
                 >
                   <div className="flex-1 space-y-3">
