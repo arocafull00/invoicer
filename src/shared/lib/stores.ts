@@ -96,7 +96,14 @@ interface SettingsStoreState {
   isLoaded: boolean;
   loading: boolean;
   load: () => Promise<void>;
-  update: (partial: Partial<Pick<UserSettings, 'default_currency' | 'date_format' | 'pdf_color_palette'>>) => Promise<void>;
+  update: (
+    partial: Partial<
+      Pick<
+        UserSettings,
+        'default_currency' | 'date_format' | 'pdf_color_palette' | 'irpf_rate'
+      >
+    >
+  ) => Promise<void>;
   uploadLogo: (file: File) => Promise<void>;
   removeLogo: () => Promise<void>;
 }

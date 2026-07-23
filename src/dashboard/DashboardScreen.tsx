@@ -3,7 +3,7 @@ import {
   DashboardHeader,
   StatsGrid,
   RecentInvoices,
-  QuickActions,
+  TopClientsCard,
   QuarterlyTaxesCard,
 } from "./components";
 
@@ -16,7 +16,7 @@ export const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <RecentInvoices />
         <QuarterlyTaxesCard />
-        <QuickActions />
+        <TopClientsCard />
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ function getSettings() {
       date_format: 'dd/mm/yyyy' as SupportedDateFormat,
       pdf_color_palette: 'violet' as const,
       logo_url: null,
+      irpf_rate: 20,
     }
   );
 }

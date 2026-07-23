@@ -20,12 +20,22 @@ export function setStoredPdfColorPalette(palette: PdfColorPalette): void {
   window.localStorage.setItem(PDF_COLOR_PALETTE_STORAGE_KEY, palette);
 }
 
+const DEFAULT_IRPF_RATE = 20;
+
+function mapIrpfRate(value: unknown): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return DEFAULT_IRPF_RATE;
+  if (parsed < 0 || parsed > 100) return DEFAULT_IRPF_RATE;
+  return Number(parsed.toFixed(2));
+}
+
 function mapRowToSettings(row: {
   id: string;
   default_currency: SupportedCurrency;
   date_format: SupportedDateFormat;
   pdf_color_palette?: PdfColorPalette | null;
   logo_url?: string | null;
+  irpf_rate?: number | string | null;
 }): UserSettings {
   const localPalette = getStoredPdfColorPalette();
   const palette = isPdfColorPalette(row?.pdf_color_palette)
@@ -38,6 +48,7 @@ function mapRowToSettings(row: {
     date_format: row?.date_format ?? 'dd/mm/yyyy',
     pdf_color_palette: palette,
     logo_url: row?.logo_url ?? null,
+    irpf_rate: mapIrpfRate(row?.irpf_rate),
   };
 }
 
@@ -51,7 +62,12 @@ export async function getUserSettings(): Promise<UserSettings> {
 }
 
 export async function updateUserSettings(
-  partial: Partial<Pick<UserSettings, 'default_currency' | 'date_format' | 'pdf_color_palette'>>
+  partial: Partial<
+    Pick<
+      UserSettings,
+      'default_currency' | 'date_format' | 'pdf_color_palette' | 'irpf_rate'
+    >
+  >
 ): Promise<UserSettings> {
   if (partial.pdf_color_palette) {
     setStoredPdfColorPalette(partial.pdf_color_palette);

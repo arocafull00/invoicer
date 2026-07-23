@@ -102,7 +102,7 @@ export function ExpenseTable() {
   if (expenses.length === 0) {
     return (
       <Card className="py-12 text-center text-muted-foreground">
-        No hay gastos todavía. Importa un CSV para empezar.
+        No hay gastos todavía. Añade un gasto o importa un CSV para empezar.
       </Card>
     );
   }

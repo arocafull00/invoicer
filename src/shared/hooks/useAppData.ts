@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useInvoiceStore, useSettingsStore } from '@/shared/lib/stores';
+import { useExpensesStore } from '@/expenses/store/useExpensesStore';
 import {
   getInvoices,
   getConsultants,
   getClients,
   getPaymentInstructions
 } from '@/shared/api/services';
+import { getExpenses, getExpenseTypes } from '@/shared/api/services/expenses';
 import { getLineItemTemplates } from '@/shared/api/services/lineItemTemplates';
 
 type UseAppDataOptions = {
@@ -26,6 +28,8 @@ export const useAppData = ({ enabled = true }: UseAppDataOptions = {}) => {
     setLineItemTemplates,
     setDataReady,
   } = useInvoiceStore();
+  const { setExpenses, setExpenseTypes, setLoaded: setExpensesLoaded } =
+    useExpensesStore();
   const { load: loadSettings } = useSettingsStore();
 
   const loadAppData = useCallback(async () => {
@@ -33,11 +37,20 @@ export const useAppData = ({ enabled = true }: UseAppDataOptions = {}) => {
     setLoadError(false);
 
     try {
-      const [invoices, consultants, clients, paymentInstructions] = await Promise.all([
+      const [
+        invoices,
+        consultants,
+        clients,
+        paymentInstructions,
+        expenses,
+        expenseTypes,
+      ] = await Promise.all([
         getInvoices(),
         getConsultants(),
         getClients(),
-        getPaymentInstructions()
+        getPaymentInstructions(),
+        getExpenses(),
+        getExpenseTypes(),
       ]);
 
       await loadSettings();
@@ -51,6 +64,9 @@ export const useAppData = ({ enabled = true }: UseAppDataOptions = {}) => {
       setClients(clients);
       setPaymentInstructions(paymentInstructions);
       setLineItemTemplates(templates);
+      setExpenses(expenses);
+      setExpenseTypes(expenseTypes);
+      setExpensesLoaded(true);
       setDataReady(true);
       setIsInitialized(true);
     } catch (error) {
@@ -71,6 +87,9 @@ export const useAppData = ({ enabled = true }: UseAppDataOptions = {}) => {
     setClients,
     setPaymentInstructions,
     setLineItemTemplates,
+    setExpenses,
+    setExpenseTypes,
+    setExpensesLoaded,
     setDataReady,
   ]);
 

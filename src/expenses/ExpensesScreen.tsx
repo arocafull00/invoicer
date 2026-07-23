@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExpenseTable } from "@/expenses/components/ExpenseTable";
+import { CreateExpenseDialog } from "@/expenses/components/CreateExpenseDialog";
 
 export default function ExpensesScreen() {
   return (
@@ -10,15 +13,18 @@ export default function ExpensesScreen() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Gastos</h1>
           <p className="text-muted-foreground mt-1">
-            Consulta e importa tus gastos desde un CSV
+            Consulta, crea e importa tus gastos
           </p>
         </div>
-        <Button asChild>
-          <Link href="/expenses/import">
-            <FileUp className="w-4 h-4 mr-2" />
-            Importar CSV
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" asChild>
+            <Link href="/expenses/import">
+              <FileUp className="w-4 h-4 mr-2" />
+              Importar CSV
+            </Link>
+          </Button>
+          <CreateExpenseDialog />
+        </div>
       </div>
 
       <ExpenseTable />

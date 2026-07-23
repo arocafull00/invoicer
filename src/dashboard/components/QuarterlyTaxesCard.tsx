@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useInvoiceStore, useSettingsStore } from "@/shared/lib/stores";
+import { useExpensesStore } from "@/expenses/store/useExpensesStore";
 import {
   getQuarterlyPeriod,
   calculateQuarterlyTaxes,
@@ -12,14 +13,15 @@ import { QuarterlyTaxMonthRow } from "./QuarterlyTaxMonthRow";
 
 export const QuarterlyTaxesCard: React.FC = () => {
   const { invoices } = useInvoiceStore();
-  useSettingsStore((s) => s.settings);
+  const expenses = useExpensesStore((s) => s.expenses);
+  const irpfRate = useSettingsStore((s) => s.settings?.irpf_rate ?? 20);
   const [offset, setOffset] = useState(0);
   const period = getQuarterlyPeriod(offset);
-  const taxes = calculateQuarterlyTaxes(invoices, period);
+  const taxes = calculateQuarterlyTaxes(invoices, period, expenses, irpfRate);
 
-  const hasInvoices = taxes.monthlyBreakdown.some(
-    (m) => m.irpf > 0 || m.iva > 0
-  );
+  const hasInvoices =
+    taxes.totalInvoiced > 0 ||
+    taxes.monthlyBreakdown.some((m) => m.irpf !== 0 || m.iva !== 0);
 
   return (
     <Card className="p-6">

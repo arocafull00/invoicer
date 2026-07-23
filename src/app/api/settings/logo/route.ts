@@ -15,8 +15,8 @@ async function getOrCreateSettings(sql: Sql, userId: string) {
   if (existing[0]) return existing[0];
 
   const inserted = await sql`
-    INSERT INTO user_settings (default_currency, date_format, pdf_color_palette, user_id)
-    VALUES ('eur', 'dd/mm/yyyy', 'violet', ${userId})
+    INSERT INTO user_settings (default_currency, date_format, pdf_color_palette, irpf_rate, user_id)
+    VALUES ('eur', 'dd/mm/yyyy', 'violet', 20, ${userId})
     RETURNING *
   `;
   return inserted[0];

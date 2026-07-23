@@ -14,6 +14,7 @@ import {
 import { AutosaveStatus } from "@/settings/components/AutosaveStatus";
 import { CurrencySelectItem } from "@/settings/components/CurrencySelectItem";
 import { DateFormatSelectItem } from "@/settings/components/DateFormatSelectItem";
+import { IrpfRateField } from "@/settings/components/IrpfRateField";
 import { PdfPaletteOption } from "@/settings/components/PdfPaletteOption";
 import { PdfPaletteSelectItem } from "@/settings/components/PdfPaletteSelectItem";
 import { SettingsField } from "@/settings/components/SettingsField";
@@ -134,6 +135,8 @@ export function BillingSettingsCard() {
             </SelectContent>
           </Select>
         </SettingsField>
+
+        <IrpfRateField />
 
         <SettingsField
           id="invoice-palette"

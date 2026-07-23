@@ -86,6 +86,7 @@ export interface UserSettings {
   date_format: SupportedDateFormat;
   pdf_color_palette: PdfColorPalette;
   logo_url: string | null;
+  irpf_rate: number;
 }
 
 export interface ExpenseType {
