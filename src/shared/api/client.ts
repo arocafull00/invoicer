@@ -1,6 +1,8 @@
 import type {
   Client,
   Consultant,
+  Expense,
+  ExpenseType,
   Invoice,
   LineItemTemplate,
   PaymentInstruction,
@@ -139,9 +141,12 @@ export class ApiClient {
   }
 
   softDeleteInvoice(id: string) {
-    return request<Invoice>(`/invoices/${id}/soft-delete`, {
-      method: 'PATCH',
-    });
+    return request<{ id: string; deleted: boolean }>(
+      `/invoices/${id}/soft-delete`,
+      {
+        method: 'PATCH',
+      }
+    );
   }
 
   getNextInvoiceNumber() {
@@ -184,6 +189,34 @@ export class ApiClient {
     return request<void>(`/line-item-templates/${id}/usage`, {
       method: 'POST',
     });
+  }
+
+  getExpenseTypes() {
+    return request<ExpenseType[]>('/expense-types');
+  }
+
+  createExpenseType(expenseType: Omit<ExpenseType, 'id'>) {
+    return request<ExpenseType>('/expense-types', {
+      method: 'POST',
+      body: JSON.stringify(expenseType),
+    });
+  }
+
+  getExpenses() {
+    return request<Expense[]>('/expenses');
+  }
+
+  createExpense(
+    expense: Omit<Expense, 'id' | 'expense_type' | 'created_at' | 'updated_at'>
+  ) {
+    return request<Expense>('/expenses', {
+      method: 'POST',
+      body: JSON.stringify(expense),
+    });
+  }
+
+  deleteExpense(id: string) {
+    return request<void>(`/expenses/${id}`, { method: 'DELETE' });
   }
 }
 

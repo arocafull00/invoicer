@@ -6,6 +6,8 @@ import { registerConsultantRoutes } from './routes/consultants.js';
 import { registerClientRoutes } from './routes/clients.js';
 import { registerPaymentInstructionRoutes } from './routes/payment-instructions.js';
 import { registerInvoiceRoutes } from './routes/invoices.js';
+import { registerExpenseTypeRoutes } from './routes/expense-types.js';
+import { registerExpenseRoutes } from './routes/expenses.js';
 import { registerLineItemTemplateRoutes } from './routes/line-item-templates.js';
 import { registerSettingsRoutes } from './routes/settings.js';
 
@@ -27,5 +29,7 @@ registerConsultantRoutes(app, sql);
 registerClientRoutes(app, sql);
 registerPaymentInstructionRoutes(app, sql);
 registerInvoiceRoutes(app, sql);
+registerExpenseTypeRoutes(app, sql);
+registerExpenseRoutes(app, sql);
 registerLineItemTemplateRoutes(app, sql);
 registerSettingsRoutes(app, sql);

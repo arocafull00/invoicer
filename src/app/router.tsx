@@ -11,6 +11,8 @@ import NewInvoice from '@/invoices/NewInvoice';
 import ImportInvoices from '@/invoices/ImportInvoices';
 import { EditInvoice } from '@/invoices/EditInvoice';
 import { ViewInvoice } from '@/invoices/ViewInvoice';
+import ExpensesScreen from '@/expenses/ExpensesScreen';
+import ImportExpenses from '@/expenses/ImportExpenses';
 import { SettingsPage } from '@/settings/SettingsScreen';
 import ConsultantsPage from '@/consultants';
 import ClientsPage from '@/clients';
@@ -141,6 +143,22 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedApp>
         <PaymentsPage />
+      </ProtectedApp>
+    ),
+  },
+  {
+    path: '/expenses',
+    element: (
+      <ProtectedApp>
+        <ExpensesScreen />
+      </ProtectedApp>
+    ),
+  },
+  {
+    path: '/expenses/import',
+    element: (
+      <ProtectedApp>
+        <ImportExpenses />
       </ProtectedApp>
     ),
   },

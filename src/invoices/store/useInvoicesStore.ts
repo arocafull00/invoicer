@@ -313,6 +313,7 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
         };
         const created = await createInvoice(payload);
         useInvoiceStore.getState().addInvoice(created);
+        void queryClient.invalidateQueries({ queryKey: ["invoices"] });
         return created;
       } finally {
         set((state) => ({ form: { ...state.form, isSaving: false } }));

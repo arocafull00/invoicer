@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FileText, Home, Settings, UserCog, Users, CreditCard } from 'lucide-react';
+import { FileText, Home, Settings, UserCog, Users, CreditCard, Receipt } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -31,6 +31,7 @@ const navSections: NavSection[] = [
     label: 'Facturación',
     items: [
       { title: 'Facturas', to: '/invoices', icon: FileText },
+      { title: 'Gastos', to: '/expenses', icon: Receipt },
       { title: 'Datos de facturación', to: '/consultants', icon: UserCog },
       { title: 'Métodos de pago', to: '/payments', icon: CreditCard },
       { title: 'Clientes', to: '/clients', icon: Users },

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useInvoiceStore } from "@/shared/lib/stores";
 import { useInvoiceFormStore } from "@/invoices/store/useInvoicesStore";
 import { updateInvoice } from "@/shared/api/services/invoices";
+import { queryClient } from "@/shared/api/queryClient";
 import { InvoiceHeader } from "@/invoices/components/InvoiceHeader";
 import { InvoiceBasicInfo } from "@/invoices/components/InvoiceBasicInfo";
 import { ConsultantSection } from "@/invoices/components/ConsultantSection";
@@ -136,6 +137,7 @@ export const EditInvoice: React.FC = () => {
         inv.id === updated.id ? updated : inv
       );
       useInvoiceStore.getState().setInvoices(next);
+      void queryClient.invalidateQueries({ queryKey: ["invoices"] });
       toast.success("Factura actualizada exitosamente");
       navigate("/invoices");
     } catch (error) {

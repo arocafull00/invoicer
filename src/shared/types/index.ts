@@ -96,3 +96,23 @@ export interface UserSettings {
   date_format: SupportedDateFormat;
   pdf_color_palette: PdfColorPalette;
 }
+
+export interface ExpenseType {
+  id: string;
+  name: string;
+}
+
+export interface Expense {
+  id: string;
+  date: string;
+  invoice_number: string;
+  provider: string;
+  concept: string;
+  base_amount: number;
+  vat_amount: number;
+  total: number;
+  expense_type_id?: string | null;
+  expense_type?: ExpenseType | null;
+  created_at?: string;
+  updated_at?: string;
+}

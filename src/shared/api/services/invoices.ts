@@ -22,6 +22,8 @@ export const getNextInvoiceNumber = async (): Promise<string> => {
   return await apiClient.getNextInvoiceNumber();
 };
 
-export const softDeleteInvoice = async (id: string): Promise<Invoice> => {
+export const softDeleteInvoice = async (
+  id: string
+): Promise<{ id: string; deleted: boolean }> => {
   return await apiClient.softDeleteInvoice(id);
 };
