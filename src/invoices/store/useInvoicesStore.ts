@@ -14,6 +14,7 @@ import {
   getNextInvoiceNumber,
 } from "@/shared/api/services";
 import { useInvoiceStore } from "@/shared/lib/stores";
+import { queryClient } from "@/shared/api/queryClient";
 
 interface NewInvoiceFormState {
   invoiceNumber: string;
@@ -339,6 +340,7 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
         nif: newConsultant.nif,
       });
       useInvoiceStore.getState().addConsultant(created);
+      void queryClient.invalidateQueries({ queryKey: ["consultants"] });
       set((state) => ({
         form: {
           ...state.form,
@@ -369,6 +371,7 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
         company_number: newClient.company_number,
       });
       useInvoiceStore.getState().addClient(created);
+      void queryClient.invalidateQueries({ queryKey: ["clients"] });
       set((state) => ({
         form: {
           ...state.form,
@@ -398,6 +401,7 @@ export const useInvoiceFormStore = create<InvoiceFormStoreState>(
         additional_data: newPayment.additional_data,
       });
       useInvoiceStore.getState().addPaymentInstruction(created);
+      void queryClient.invalidateQueries({ queryKey: ["paymentInstructions"] });
       set((state) => ({
         form: {
           ...state.form,

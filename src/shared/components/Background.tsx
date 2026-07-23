@@ -8,7 +8,7 @@ interface BackgroundProps {
 
 export const Background: React.FC<BackgroundProps> = ({ className, children }) => {
   return (
-    <div className={cn('relative min-h-screen w-full bg-[#1e1e1e]', className)}>
+    <div className={cn('relative min-h-screen w-full bg-background', className)}>
 
       <div className="relative z-0">
         {children}

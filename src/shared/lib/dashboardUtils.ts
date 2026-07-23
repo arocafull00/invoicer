@@ -188,7 +188,12 @@ export const calculateQuarterlyTaxes = (
     if (!monthInfo) return;
 
     const current = monthlyData.get(monthInfo.name) || { irpf: 0, iva: 0 };
-    const irpf = invoice.subtotal * 0.2;
+    const irpf =
+      invoice.irpf_amount != null
+        ? invoice.irpf_amount
+        : invoice.irpf_rate != null
+          ? invoice.subtotal * (invoice.irpf_rate / 100)
+          : 0;
     const iva = invoice.vat_amount || 0;
 
     monthlyData.set(monthInfo.name, {

@@ -70,7 +70,7 @@ export default function NewInvoice() {
     <div className="space-y-6 max-w-[900px] mx-auto">
       <InvoiceHeader
         title="Facturas"
-        subtitle="Crear nueva factura con vista previa"
+        subtitle="Crear nueva factura"
         actionLabel={form.isSaving ? "Guardando..." : "Crear factura"}
         onAction={handleSave}
         actionDisabled={!isFormValid() || form.isSaving}

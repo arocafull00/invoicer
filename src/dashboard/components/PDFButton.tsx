@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Download } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import { downloadInvoicePDF } from '@/shared/lib/pdf';
 import type { Invoice } from '@/shared/types';
 
@@ -16,16 +18,19 @@ export const PDFButton: React.FC<PDFButtonProps> = ({ invoice }) => {
       await downloadInvoicePDF(invoice);
     } catch (error) {
       console.error('Error downloading PDF:', error);
+      toast.error('No se pudo descargar el PDF');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <button
+    <Button
+      variant="secondary"
+      size="sm"
       onClick={handleDownload}
       disabled={isLoading}
-      className="btn-secondary flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex items-center gap-2"
     >
       {isLoading ? (
         <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -33,6 +38,6 @@ export const PDFButton: React.FC<PDFButtonProps> = ({ invoice }) => {
         <Download className="w-4 h-4" />
       )}
       PDF
-    </button>
+    </Button>
   );
-}; 
+};

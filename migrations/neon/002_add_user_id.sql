@@ -5,12 +5,13 @@ ALTER TABLE invoices ADD COLUMN IF NOT EXISTS user_id TEXT;
 ALTER TABLE line_item_templates ADD COLUMN IF NOT EXISTS user_id TEXT;
 ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS user_id TEXT;
 
-UPDATE consultants SET user_id = 'user_3GvDYPwakMuEjOfSJH3lYAHNe0u' WHERE user_id IS NULL;
-UPDATE clients SET user_id = 'user_3GvDYPwakMuEjOfSJH3lYAHNe0u' WHERE user_id IS NULL;
-UPDATE payment_instructions SET user_id = 'user_3GvDYPwakMuEjOfSJH3lYAHNe0u' WHERE user_id IS NULL;
-UPDATE invoices SET user_id = 'user_3GvDYPwakMuEjOfSJH3lYAHNe0u' WHERE user_id IS NULL;
-UPDATE line_item_templates SET user_id = 'user_3GvDYPwakMuEjOfSJH3lYAHNe0u' WHERE user_id IS NULL;
-UPDATE user_settings SET user_id = 'user_3GvDYPwakMuEjOfSJH3lYAHNe0u' WHERE user_id IS NULL;
+-- Backfill existing rows with your Clerk user id before setting NOT NULL:
+-- UPDATE consultants SET user_id = '<CLERK_USER_ID>' WHERE user_id IS NULL;
+-- UPDATE clients SET user_id = '<CLERK_USER_ID>' WHERE user_id IS NULL;
+-- UPDATE payment_instructions SET user_id = '<CLERK_USER_ID>' WHERE user_id IS NULL;
+-- UPDATE invoices SET user_id = '<CLERK_USER_ID>' WHERE user_id IS NULL;
+-- UPDATE line_item_templates SET user_id = '<CLERK_USER_ID>' WHERE user_id IS NULL;
+-- UPDATE user_settings SET user_id = '<CLERK_USER_ID>' WHERE user_id IS NULL;
 
 ALTER TABLE consultants ALTER COLUMN user_id SET NOT NULL;
 ALTER TABLE clients ALTER COLUMN user_id SET NOT NULL;

@@ -18,8 +18,7 @@ app.onError((error, c) => {
     return c.json({ error: error.message }, error.status);
   }
   console.error(error);
-  const message = error instanceof Error ? error.message : 'Internal server error';
-  return c.json({ error: message }, 500);
+  return c.json({ error: 'Internal server error' }, 500);
 });
 
 const sql = getSql();

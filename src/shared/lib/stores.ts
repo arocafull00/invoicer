@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { toast } from 'sonner';
 import type { WizardDraft, Invoice, Consultant, Client, PaymentInstruction, UserSettings, LineItemTemplate } from '@/shared/types';
 import { getUserSettings, updateUserSettings } from '@/shared/api/services/userSettings';
 
@@ -10,18 +11,24 @@ interface InvoiceStoreState {
   line_item_templates: LineItemTemplate[];
   wizardDraft: WizardDraft;
   invoiceNumber: string;
+  isDataReady: boolean;
   setInvoices: (invoices: Invoice[]) => void;
   setConsultants: (consultants: Consultant[]) => void;
   setClients: (clients: Client[]) => void;
   setPaymentInstructions: (paymentInstructions: PaymentInstruction[]) => void;
   setLineItemTemplates: (templates: LineItemTemplate[]) => void;
   setWizardDraft: (draft: WizardDraft) => void;
+  setDataReady: (ready: boolean) => void;
   addInvoice: (invoice: Invoice) => void;
   addConsultant: (consultant: Consultant) => void;
   patchConsultant: (id: string, patch: Partial<Consultant>) => void;
   removeConsultant: (id: string) => void;
   addClient: (client: Client) => void;
+  patchClient: (id: string, patch: Partial<Client>) => void;
+  removeClient: (id: string) => void;
   addPaymentInstruction: (paymentInstruction: PaymentInstruction) => void;
+  patchPaymentInstruction: (id: string, patch: Partial<PaymentInstruction>) => void;
+  removePaymentInstruction: (id: string) => void;
   addLineItemTemplate: (template: LineItemTemplate) => void;
   updateLineItemTemplate: (id: string, template: Partial<LineItemTemplate>) => void;
   removeLineItemTemplate: (id: string) => void;
@@ -35,12 +42,14 @@ export const useInvoiceStore = create<InvoiceStoreState>((set) => ({
   line_item_templates: [],
   wizardDraft: {},
   invoiceNumber: "",
+  isDataReady: false,
   setInvoices: (invoices) => set({ invoices }),
   setConsultants: (consultants) => set({ consultants }),
   setClients: (clients) => set({ clients }),
   setPaymentInstructions: (paymentInstructions) => set({ payment_instructions: paymentInstructions }),
   setLineItemTemplates: (templates) => set({ line_item_templates: templates }),
   setWizardDraft: (draft) => set({ wizardDraft: draft }),
+  setDataReady: (ready) => set({ isDataReady: ready }),
   addInvoice: (invoice) => set((state) => ({ invoices: [...state.invoices, invoice] })),
   addConsultant: (consultant) => set((state) => ({ consultants: [...state.consultants, consultant] })),
   patchConsultant: (id, patch) =>
@@ -52,7 +61,28 @@ export const useInvoiceStore = create<InvoiceStoreState>((set) => ({
       consultants: state.consultants.filter((c) => c.id !== id),
     })),
   addClient: (client) => set((state) => ({ clients: [...state.clients, client] })),
-  addPaymentInstruction: (paymentInstruction) => set((state) => ({ payment_instructions: [...state.payment_instructions, paymentInstruction] })),
+  patchClient: (id, patch) =>
+    set((state) => ({
+      clients: state.clients.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    })),
+  removeClient: (id) =>
+    set((state) => ({
+      clients: state.clients.filter((c) => c.id !== id),
+    })),
+  addPaymentInstruction: (paymentInstruction) =>
+    set((state) => ({
+      payment_instructions: [...state.payment_instructions, paymentInstruction],
+    })),
+  patchPaymentInstruction: (id, patch) =>
+    set((state) => ({
+      payment_instructions: state.payment_instructions.map((p) =>
+        p.id === id ? { ...p, ...patch } : p
+      ),
+    })),
+  removePaymentInstruction: (id) =>
+    set((state) => ({
+      payment_instructions: state.payment_instructions.filter((p) => p.id !== id),
+    })),
   addLineItemTemplate: (template) => set((state) => ({ line_item_templates: [...state.line_item_templates, template] })),
   updateLineItemTemplate: (id, updatedTemplate) => set((state) => ({
     line_item_templates: state.line_item_templates.map(t => t.id === id ? { ...t, ...updatedTemplate } : t)
@@ -82,6 +112,7 @@ export const useSettingsStore = create<SettingsStoreState>((set, get) => ({
       set({ settings, isLoaded: true });
     } catch (error) {
       console.error('Error loading user settings:', error);
+      toast.error('No se pudieron cargar los ajustes');
     } finally {
       set({ loading: false });
     }
@@ -92,6 +123,8 @@ export const useSettingsStore = create<SettingsStoreState>((set, get) => ({
       set({ settings: updated });
     } catch (error) {
       console.error('Error updating user settings:', error);
+      toast.error('No se pudieron guardar los ajustes');
+      throw error;
     }
   },
 }));

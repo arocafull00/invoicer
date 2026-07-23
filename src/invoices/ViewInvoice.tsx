@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +17,6 @@ import {
 import { useInvoiceStore } from "@/shared/lib/stores";
 import { formatDate, formatCurrency } from "@/shared/lib/helpers";
 import { downloadInvoicePDF } from "@/shared/lib/pdf";
-import { useState } from "react";
 
 export const ViewInvoice: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,10 +30,10 @@ export const ViewInvoice: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-text mb-4">
+          <h1 className="text-2xl font-bold text-foreground mb-4">
             Factura no encontrada
           </h1>
-          <Button onClick={() => navigate("/invoices")} className="btn-primary">
+          <Button onClick={() => navigate("/invoices")}>
             Volver a facturas
           </Button>
         </div>
@@ -47,6 +47,7 @@ export const ViewInvoice: React.FC = () => {
       await downloadInvoicePDF(invoice);
     } catch (error) {
       console.error("Error downloading PDF:", error);
+      toast.error("No se pudo descargar el PDF");
     } finally {
       setLoadingPdf(false);
     }
@@ -69,17 +70,18 @@ export const ViewInvoice: React.FC = () => {
             </Button>
           </div>
           <div className="flex flex-col gap-2 justify-center items-center text-center flex-1 lg:flex-none">
-            <h1 className="text-2xl lg:text-3xl font-bold text-text">
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
               Factura {invoice.number}
             </h1>
-            <p className="text-textMedium">
+            <p className="text-muted-foreground">
               Creada el {formatDate(invoice.created_date)}
             </p>
           </div>
           <div className="flex gap-2 justify-center lg:justify-end">
             <Button
+              variant="secondary"
               onClick={() => navigate(`/invoices/edit/${invoice.id}`)}
-              className="btn-secondary flex items-center gap-2"
+              className="flex items-center gap-2"
             >
               <Edit className="w-4 h-4" />
               <span className="hidden sm:inline">Editar</span>
@@ -87,7 +89,7 @@ export const ViewInvoice: React.FC = () => {
             <Button
               onClick={handleDownloadPDF}
               disabled={loadingPdf}
-              className="btn-primary flex items-center gap-2"
+              className="flex items-center gap-2"
             >
               {loadingPdf ? (
                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />

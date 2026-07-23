@@ -35,6 +35,24 @@ type InvoiceInput = {
 
 type InvoiceRow = Parameters<typeof mapInvoice>[0];
 
+type ComputedAmounts = {
+  lineItems: Array<{
+    description: string;
+    quantity: number;
+    rate: number;
+    total: number;
+    includeVat: boolean;
+  }>;
+  subtotal: number;
+  vat_rate: number;
+  vat_amount: number;
+  vat_exempt: boolean;
+  irpf_rate: number | null;
+  irpf_amount: number | null;
+  total: number;
+  description: string;
+};
+
 async function fetchAllInvoices(sql: Sql, userId: string) {
   const rows = await sql`
     SELECT
@@ -102,19 +120,101 @@ async function fetchInvoiceById(sql: Sql, id: string, userId: string) {
     LEFT JOIN consultants c ON c.id = i.consultant_id
     LEFT JOIN clients cl ON cl.id = i.client_id
     LEFT JOIN payment_instructions pi ON pi.id = i.payment_instructions_id
-    WHERE i.id = ${id} AND i.user_id = ${userId}
+    WHERE i.id = ${id}
+      AND i.user_id = ${userId}
+      AND COALESCE(i.deleted, false) = false
   `;
   return rows[0] ? mapInvoice(rows[0] as InvoiceRow) : null;
+}
+
+async function assertOwnedRefs(
+  sql: Sql,
+  userId: string,
+  consultantId: string,
+  clientId: string,
+  paymentId: string
+) {
+  const [consultants, clients, payments] = await Promise.all([
+    sql`SELECT id FROM consultants WHERE id = ${consultantId} AND user_id = ${userId}`,
+    sql`SELECT id FROM clients WHERE id = ${clientId} AND user_id = ${userId}`,
+    sql`SELECT id FROM payment_instructions WHERE id = ${paymentId} AND user_id = ${userId}`,
+  ]);
+
+  if (!consultants[0] || !clients[0] || !payments[0]) {
+    throw new ApiError('Related entity not found', 400);
+  }
+}
+
+function computeInvoiceAmounts(
+  lineItems: LineItemInput[] | undefined,
+  vatRateInput: number | undefined,
+  irpfRateInput: number | null | undefined,
+  descriptionFallback?: string
+): ComputedAmounts {
+  if (!lineItems?.length) {
+    throw new ApiError('At least one line item is required', 400);
+  }
+
+  const normalized = lineItems.map((item) => {
+    const quantity = Number(item.quantity) || 0;
+    const rate = Number(item.rate) || 0;
+    if (!item.description?.trim()) {
+      throw new ApiError('Line item description is required', 400);
+    }
+    if (quantity <= 0 || rate < 0) {
+      throw new ApiError('Invalid line item amounts', 400);
+    }
+    return {
+      description: item.description.trim(),
+      quantity,
+      rate,
+      total: Number((quantity * rate).toFixed(2)),
+      includeVat: Boolean(item.includeVat),
+    };
+  });
+
+  const subtotal = Number(
+    normalized.reduce((sum, item) => sum + item.total, 0).toFixed(2)
+  );
+  const hasVatItems = normalized.some((item) => item.includeVat);
+  const vat_rate = hasVatItems ? Number(vatRateInput) || 0 : 0;
+  const vatableAmount = normalized
+    .filter((item) => item.includeVat)
+    .reduce((sum, item) => sum + item.total, 0);
+  const vat_amount = Number((vatableAmount * (vat_rate / 100)).toFixed(2));
+  const irpf_rate =
+    irpfRateInput === undefined || irpfRateInput === null
+      ? null
+      : Number(irpfRateInput);
+  const irpf_amount =
+    irpf_rate == null
+      ? null
+      : Number((subtotal * (irpf_rate / 100)).toFixed(2));
+  const total = Number((subtotal + vat_amount).toFixed(2));
+  const description =
+    descriptionFallback?.trim() ||
+    normalized.map((item) => item.description).join(', ');
+
+  return {
+    lineItems: normalized,
+    subtotal,
+    vat_rate,
+    vat_amount,
+    vat_exempt: !hasVatItems,
+    irpf_rate,
+    irpf_amount,
+    total,
+    description,
+  };
 }
 
 async function insertLineItems(
   sql: Sql,
   invoiceId: string,
-  lineItems: LineItemInput[]
+  lineItems: ComputedAmounts['lineItems']
 ) {
   for (let index = 0; index < lineItems.length; index++) {
     const item = lineItems[index];
-    const total = item.total ?? item.quantity * item.rate;
     await sql`
       INSERT INTO invoice_line_items (
         invoice_id, description, quantity, rate, total, include_vat, order_index
@@ -124,8 +224,8 @@ async function insertLineItems(
         ${item.description},
         ${item.quantity},
         ${item.rate},
-        ${total},
-        ${item.includeVat ?? false},
+        ${item.total},
+        ${item.includeVat},
         ${index}
       )
     `;
@@ -142,16 +242,47 @@ export function registerInvoiceRoutes(app: Hono<AppEnv>, sql: Sql) {
   app.get('/invoices/next-number', async (c) => {
     const userId = c.get('userId');
     const rows = await sql`
-      SELECT number FROM invoices
-      WHERE COALESCE(deleted, false) = false
-        AND user_id = ${userId}
+      SELECT COALESCE(
+        MAX(
+          CASE
+            WHEN number ~ '^[0-9]+$' THEN number::int
+            ELSE 0
+          END
+        ),
+        0
+      ) + 1 AS next_number
+      FROM invoices
+      WHERE user_id = ${userId}
     `;
-    return c.json({ number: String(rows.length + 1) });
+    return c.json({ number: String(rows[0]?.next_number ?? 1) });
   });
 
   app.post('/invoices', async (c) => {
     const userId = c.get('userId');
     const body = await c.req.json<InvoiceInput>();
+
+    if (!body.number?.trim()) {
+      throw new ApiError('Invoice number is required', 400);
+    }
+    if (!body.consultant?.id || !body.client?.id || !body.payment_instructions?.id) {
+      throw new ApiError('Consultant, client and payment method are required', 400);
+    }
+
+    await assertOwnedRefs(
+      sql,
+      userId,
+      body.consultant.id,
+      body.client.id,
+      body.payment_instructions.id
+    );
+
+    const amounts = computeInvoiceAmounts(
+      body.line_items,
+      body.vat_rate,
+      body.irpf_rate,
+      body.description
+    );
+
     try {
       const inserted = await sql`
         INSERT INTO invoices (
@@ -168,24 +299,22 @@ export function registerInvoiceRoutes(app: Hono<AppEnv>, sql: Sql) {
           ${body.consultant.id},
           ${body.client.id},
           ${body.payment_instructions.id},
-          ${body.description ?? ''},
-          ${body.subtotal},
-          ${body.vat_rate},
-          ${body.vat_amount},
-          ${body.total},
-          ${body.vat_exempt},
+          ${amounts.description},
+          ${amounts.subtotal},
+          ${amounts.vat_rate},
+          ${amounts.vat_amount},
+          ${amounts.total},
+          ${amounts.vat_exempt},
           ${body.status},
-          ${body.irpf_rate ?? null},
-          ${body.irpf_amount ?? null},
+          ${amounts.irpf_rate},
+          ${amounts.irpf_amount},
           ${userId}
         )
         RETURNING id
       `;
 
       const invoiceId = inserted[0].id as string;
-      if (body.line_items?.length) {
-        await insertLineItems(sql, invoiceId, body.line_items);
-      }
+      await insertLineItems(sql, invoiceId, amounts.lineItems);
 
       const invoice = await fetchInvoiceById(sql, invoiceId, userId);
       return c.json(invoice, 201);
@@ -204,36 +333,80 @@ export function registerInvoiceRoutes(app: Hono<AppEnv>, sql: Sql) {
     const id = c.req.param('id');
     const body = await c.req.json<Partial<InvoiceInput>>();
 
-    const rows = await sql`
-      UPDATE invoices SET
-        number = COALESCE(${body.number ?? null}, number),
-        created_date = COALESCE(${body.created_date ?? null}, created_date),
-        start_date = COALESCE(${body.start_date ?? null}, start_date),
-        end_date = COALESCE(${body.end_date ?? null}, end_date),
-        consultant_id = COALESCE(${body.consultant?.id ?? null}, consultant_id),
-        client_id = COALESCE(${body.client?.id ?? null}, client_id),
-        payment_instructions_id = COALESCE(${body.payment_instructions?.id ?? null}, payment_instructions_id),
-        description = COALESCE(${body.description ?? null}, description),
-        subtotal = COALESCE(${body.subtotal ?? null}, subtotal),
-        vat_rate = COALESCE(${body.vat_rate ?? null}, vat_rate),
-        vat_amount = COALESCE(${body.vat_amount ?? null}, vat_amount),
-        total = COALESCE(${body.total ?? null}, total),
-        vat_exempt = COALESCE(${body.vat_exempt ?? null}, vat_exempt),
-        status = COALESCE(${body.status ?? null}, status),
-        irpf_rate = COALESCE(${body.irpf_rate ?? null}, irpf_rate),
-        irpf_amount = COALESCE(${body.irpf_amount ?? null}, irpf_amount)
-      WHERE id = ${id} AND user_id = ${userId}
-      RETURNING id
+    const existing = await sql`
+      SELECT id, consultant_id, client_id, payment_instructions_id
+      FROM invoices
+      WHERE id = ${id}
+        AND user_id = ${userId}
+        AND COALESCE(deleted, false) = false
     `;
+    if (!existing[0]) throw new ApiError('Invoice not found', 404);
+
+    const consultantId = body.consultant?.id ?? (existing[0].consultant_id as string);
+    const clientId = body.client?.id ?? (existing[0].client_id as string);
+    const paymentId =
+      body.payment_instructions?.id ??
+      (existing[0].payment_instructions_id as string);
+
+    if (body.consultant?.id || body.client?.id || body.payment_instructions?.id) {
+      await assertOwnedRefs(sql, userId, consultantId, clientId, paymentId);
+    }
+
+    const shouldRecompute = body.line_items !== undefined;
+    const amounts = shouldRecompute
+      ? computeInvoiceAmounts(
+          body.line_items,
+          body.vat_rate,
+          body.irpf_rate,
+          body.description
+        )
+      : null;
+
+    let rows;
+    if (amounts) {
+      rows = await sql`
+        UPDATE invoices SET
+          number = COALESCE(${body.number ?? null}, number),
+          created_date = COALESCE(${body.created_date ?? null}, created_date),
+          start_date = COALESCE(${body.start_date ?? null}, start_date),
+          end_date = COALESCE(${body.end_date ?? null}, end_date),
+          consultant_id = ${consultantId},
+          client_id = ${clientId},
+          payment_instructions_id = ${paymentId},
+          description = ${amounts.description},
+          subtotal = ${amounts.subtotal},
+          vat_rate = ${amounts.vat_rate},
+          vat_amount = ${amounts.vat_amount},
+          total = ${amounts.total},
+          vat_exempt = ${amounts.vat_exempt},
+          status = COALESCE(${body.status ?? null}, status),
+          irpf_rate = ${amounts.irpf_rate},
+          irpf_amount = ${amounts.irpf_amount}
+        WHERE id = ${id} AND user_id = ${userId}
+        RETURNING id
+      `;
+      await sql`DELETE FROM invoice_line_items WHERE invoice_id = ${id}`;
+      await insertLineItems(sql, id, amounts.lineItems);
+    } else {
+      rows = await sql`
+        UPDATE invoices SET
+          number = COALESCE(${body.number ?? null}, number),
+          created_date = COALESCE(${body.created_date ?? null}, created_date),
+          start_date = COALESCE(${body.start_date ?? null}, start_date),
+          end_date = COALESCE(${body.end_date ?? null}, end_date),
+          consultant_id = ${consultantId},
+          client_id = ${clientId},
+          payment_instructions_id = ${paymentId},
+          description = COALESCE(${body.description ?? null}, description),
+          status = COALESCE(${body.status ?? null}, status),
+          irpf_rate = COALESCE(${body.irpf_rate ?? null}, irpf_rate),
+          irpf_amount = COALESCE(${body.irpf_amount ?? null}, irpf_amount)
+        WHERE id = ${id} AND user_id = ${userId}
+        RETURNING id
+      `;
+    }
 
     if (!rows[0]) throw new ApiError('Invoice not found', 404);
-
-    if (body.line_items !== undefined) {
-      await sql`DELETE FROM invoice_line_items WHERE invoice_id = ${id}`;
-      if (body.line_items.length > 0) {
-        await insertLineItems(sql, id, body.line_items);
-      }
-    }
 
     const invoice = await fetchInvoiceById(sql, id, userId);
     return c.json(invoice);
@@ -245,11 +418,12 @@ export function registerInvoiceRoutes(app: Hono<AppEnv>, sql: Sql) {
     const rows = await sql`
       UPDATE invoices
       SET deleted = true
-      WHERE id = ${id} AND user_id = ${userId}
+      WHERE id = ${id}
+        AND user_id = ${userId}
+        AND COALESCE(deleted, false) = false
       RETURNING id
     `;
     if (!rows[0]) throw new ApiError('Invoice not found', 404);
-    const invoice = await fetchInvoiceById(sql, id, userId);
-    return c.json(invoice);
+    return c.json({ id: rows[0].id as string, deleted: true });
   });
 }

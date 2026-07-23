@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -19,8 +20,11 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
+  Plus,
+  FileText,
 } from "lucide-react";
 import { useInvoiceStore } from "@/shared/lib/stores";
+import { Spinner } from "@/shared/components/Spinner";
 import { formatDate, formatCurrency } from "@/shared/lib/helpers";
 import { downloadInvoicePDF } from "@/shared/lib/pdf";
 import type { Invoice } from "@/shared/types";
@@ -57,10 +61,8 @@ import {
 
 export function InvoiceTable() {
   const navigate = useNavigate();
-  const { invoices } = useInvoiceStore();
+  const { invoices, isDataReady } = useInvoiceStore();
   const [loadingPdf, setLoadingPdf] = useState<string | null>(null);
-
-  // Mock status for demonstration - in real app this would come from the invoice data
 
   const handleDownloadPDF = async (invoice: Invoice) => {
     setLoadingPdf(invoice.id);
@@ -68,6 +70,7 @@ export function InvoiceTable() {
       await downloadInvoicePDF(invoice);
     } catch (error) {
       console.error("Error downloading PDF:", error);
+      toast.error("No se pudo descargar el PDF");
     } finally {
       setLoadingPdf(null);
     }
@@ -96,8 +99,10 @@ export function InvoiceTable() {
       const current = useInvoiceStore.getState().invoices;
       const mapped = current.map((i) => (i.id === updated.id ? updated : i));
       useInvoiceStore.getState().setInvoices(mapped);
+      toast.success("Estado actualizado");
     } catch (err) {
       console.error("Failed to update invoice status", err);
+      toast.error("No se pudo actualizar el estado");
     } finally {
       setUpdatingId(null);
     }
@@ -115,8 +120,10 @@ export function InvoiceTable() {
       const current = useInvoiceStore.getState().invoices;
       const remaining = current.filter((i) => i.id !== confirmId);
       useInvoiceStore.getState().setInvoices(remaining);
+      toast.success("Factura eliminada");
     } catch (err) {
       console.error("Failed to delete invoice", err);
+      toast.error("No se pudo eliminar la factura");
     } finally {
       setDeletingId(null);
       setConfirmId(null);
@@ -327,15 +334,41 @@ export function InvoiceTable() {
     initialState: { pagination: { pageSize } },
   });
 
-  // Sync external page size selector
-  if (table.getState().pagination.pageSize !== pageSize) {
-    table.setPageSize(pageSize);
+  if (!isDataReady) {
+    return (
+      <Card className="p-12 flex items-center justify-center">
+        <Spinner className="h-10 w-10" />
+      </Card>
+    );
+  }
+
+  if (invoices.length === 0) {
+    return (
+      <Card className="p-12">
+        <div className="flex flex-col items-center justify-center gap-4 text-center">
+          <div className="rounded-full bg-muted p-4 text-muted-foreground">
+            <FileText className="h-8 w-8" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">No hay facturas</h2>
+            <p className="text-muted-foreground mt-1">
+              Crea tu primera factura para empezar a facturar
+            </p>
+          </div>
+          <Button asChild>
+            <Link to="/invoices/new">
+              <Plus className="w-4 h-4 mr-2" />
+              Nueva Factura
+            </Link>
+          </Button>
+        </div>
+      </Card>
+    );
   }
 
   return (
-    <Card className=" ">
+    <Card>
       <div className="p-6">
-        {/* Global search and column filters */}
         <div className="flex flex-col gap-3 mb-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12 lg:items-end">
             <div className="min-w-0 sm:col-span-2 lg:col-span-3">
@@ -449,21 +482,32 @@ export function InvoiceTable() {
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className="border-b border-border hover:bg-accent/30 transition-colors"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-4 px-2">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+              {table.getRowModel().rows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="py-10 text-center text-muted-foreground"
+                  >
+                    No hay facturas que coincidan con los filtros
+                  </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className="border-b border-border hover:bg-accent/30 transition-colors"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="py-4 px-2">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
@@ -473,7 +517,11 @@ export function InvoiceTable() {
             <div className="w-24">
               <Select
                 value={String(pageSize)}
-                onValueChange={(v: string) => setPageSize(Number(v))}
+                onValueChange={(v: string) => {
+                  const next = Number(v);
+                  setPageSize(next);
+                  table.setPageSize(next);
+                }}
               >
                 <SelectTrigger className="bg-card border-border text-foreground h-8">
                   <SelectValue />
@@ -526,7 +574,7 @@ export function InvoiceTable() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction className="bg-[#EF4444] hover:bg-[#DC2626]" onClick={confirmDelete}>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={confirmDelete}>
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
