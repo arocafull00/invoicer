@@ -1,20 +1,13 @@
-import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { UserButton } from '@clerk/react';
 import { FileText, Home, Settings, UserCog, Users, CreditCard } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar';
+import { SidebarNavSection } from '@/components/SidebarNavSection';
+import { SidebarUserButton } from '@/components/SidebarUserButton';
 import { APP_LOGO_URL } from '@/shared/lib/appLogo';
 
 type NavItem = {
@@ -23,18 +16,32 @@ type NavItem = {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 };
 
-const navItems: NavItem[] = [
-  { title: 'Dashboard', to: '/dashboard', icon: Home },
-  { title: 'Facturas', to: '/invoices', icon: FileText },
-  { title: 'Datos de facturación', to: '/consultants', icon: UserCog },
-  { title: 'Metodos de pago', to: '/payments', icon: CreditCard },
-  { title: 'Clientes', to: '/clients', icon: Users },
-  { title: 'Configuración', to: '/settings', icon: Settings },
+type NavSection = {
+  label: string;
+  items: NavItem[];
+};
+
+const navSections: NavSection[] = [
+  {
+    label: 'General',
+    items: [{ title: 'Dashboard', to: '/dashboard', icon: Home }],
+  },
+  {
+    label: 'Facturación',
+    items: [
+      { title: 'Facturas', to: '/invoices', icon: FileText },
+      { title: 'Datos de facturación', to: '/consultants', icon: UserCog },
+      { title: 'Métodos de pago', to: '/payments', icon: CreditCard },
+      { title: 'Clientes', to: '/clients', icon: Users },
+    ],
+  },
+  {
+    label: 'Cuenta',
+    items: [{ title: 'Configuración', to: '/settings', icon: Settings }],
+  },
 ];
 
 export function AppSidebar() {
-  const location = useLocation();
-
   return (
     <Sidebar>
       <SidebarHeader>
@@ -44,32 +51,16 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Aplicación</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.to || location.pathname.startsWith(item.to + '/');
-                const Icon = item.icon;
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive}>
-                      <NavLink to={item.to} className="flex items-center gap-2">
-                        <Icon />
-                        <span>{item.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {navSections.map((section) => (
+          <SidebarNavSection
+            key={section.label}
+            label={section.label}
+            items={section.items}
+          />
+        ))}
       </SidebarContent>
       <SidebarFooter>
-        <div className="px-2 py-1.5">
-          <UserButton />
-        </div>
+        <SidebarUserButton />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
