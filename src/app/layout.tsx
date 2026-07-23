@@ -8,7 +8,25 @@ export const metadata: Metadata = {
   title: 'Invoicer',
   description: 'Gestiona facturas, clientes y gastos desde un solo lugar.',
   icons: {
-    icon: '/mi-logo.png',
+    icon: '/logo.png',
+  },
+  openGraph: {
+    title: 'Invoicer',
+    description: 'Gestiona facturas, clientes y gastos desde un solo lugar.',
+    images: [
+      {
+        url: '/logo.png',
+        width: 500,
+        height: 500,
+        alt: 'Invoicer',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Invoicer',
+    description: 'Gestiona facturas, clientes y gastos desde un solo lugar.',
+    images: ['/logo.png'],
   },
 };
 
