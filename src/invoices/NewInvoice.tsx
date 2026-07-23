@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { useInvoiceStore } from "@/shared/lib/stores";
 import { useInvoiceFormStore } from "@/invoices/store/useInvoicesStore";
 import { InvoiceHeader } from "@/invoices/components/InvoiceHeader";

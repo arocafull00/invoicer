@@ -1,4 +1,4 @@
-type DbLineItemTemplate = {
+export type DbLineItemTemplate = {
   id: string;
   description: string;
   default_quantity: number | string;

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { useInvoiceStore } from "@/shared/lib/stores";
 import { useInvoiceFormStore } from "@/invoices/store/useInvoicesStore";
 import { updateInvoice } from "@/shared/api/services/invoices";

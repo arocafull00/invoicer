@@ -8,6 +8,7 @@ import { AppLayout } from '@/shared/components/AppLayout';
 import { DashboardPage } from '@/dashboard/DashboardScreen';
 import Invoices from '@/invoices/InvoicesScreen';
 import NewInvoice from '@/invoices/NewInvoice';
+import ImportInvoices from '@/invoices/ImportInvoices';
 import { EditInvoice } from '@/invoices/EditInvoice';
 import { ViewInvoice } from '@/invoices/ViewInvoice';
 import { SettingsPage } from '@/settings/SettingsScreen';
@@ -84,6 +85,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedApp>
         <NewInvoice />
+      </ProtectedApp>
+    ),
+  },
+  {
+    path: '/invoices/import',
+    element: (
+      <ProtectedApp>
+        <ImportInvoices />
       </ProtectedApp>
     ),
   },
