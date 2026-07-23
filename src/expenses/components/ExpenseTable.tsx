@@ -44,10 +44,7 @@ export function ExpenseTable() {
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
 
   useEffect(() => {
-    if (isLoaded) {
-      setIsLoading(false);
-      return;
-    }
+    if (isLoaded) return;
 
     let cancelled = false;
 

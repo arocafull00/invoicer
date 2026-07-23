@@ -85,6 +85,7 @@ export interface UserSettings {
   default_currency: SupportedCurrency;
   date_format: SupportedDateFormat;
   pdf_color_palette: PdfColorPalette;
+  logo_url: string | null;
 }
 
 export interface ExpenseType {

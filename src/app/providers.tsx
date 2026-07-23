@@ -1,19 +1,23 @@
-import React from 'react';
+'use client';
+
+import type { ReactNode } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
-import { AppInitializer } from './AppInitializer';
 import { Toaster } from '@/components/ui/sonner';
 import { queryClient } from '@/shared/api/queryClient';
 
-export { queryClient } from '@/shared/api/queryClient';
-
-export const AppProviders: React.FC = () => {
+export function Providers({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="dark"
+      enableSystem
+      disableTransitionOnChange
+    >
       <QueryClientProvider client={queryClient}>
-        <AppInitializer />
+        {children}
         <Toaster position="top-right" richColors />
       </QueryClientProvider>
     </ThemeProvider>
   );
-};
+}

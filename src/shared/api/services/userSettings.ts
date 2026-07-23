@@ -25,6 +25,7 @@ function mapRowToSettings(row: {
   default_currency: SupportedCurrency;
   date_format: SupportedDateFormat;
   pdf_color_palette?: PdfColorPalette | null;
+  logo_url?: string | null;
 }): UserSettings {
   const localPalette = getStoredPdfColorPalette();
   const palette = isPdfColorPalette(row?.pdf_color_palette)
@@ -36,6 +37,7 @@ function mapRowToSettings(row: {
     default_currency: row?.default_currency ?? 'eur',
     date_format: row?.date_format ?? 'dd/mm/yyyy',
     pdf_color_palette: palette,
+    logo_url: row?.logo_url ?? null,
   };
 }
 
@@ -72,6 +74,41 @@ export async function updateUserSettings(
 
   if (!response.ok) {
     throw new Error('Failed to update user settings');
+  }
+
+  const data = await response.json();
+  return mapRowToSettings(data);
+}
+
+export async function uploadUserLogo(file: File): Promise<UserSettings> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch('/api/settings/logo', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    const message =
+      typeof payload.error === 'string'
+        ? payload.error
+        : 'Failed to upload logo';
+    throw new Error(message);
+  }
+
+  const data = await response.json();
+  return mapRowToSettings(data);
+}
+
+export async function removeUserLogo(): Promise<UserSettings> {
+  const response = await fetch('/api/settings/logo', {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to remove logo');
   }
 
   const data = await response.json();

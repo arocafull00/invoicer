@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { FileUp, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InvoiceTable } from "@/invoices/components/InvoiceTable";
@@ -15,13 +15,13 @@ export default function Invoices() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" asChild>
-            <Link to="/invoices/import">
+            <Link href="/invoices/import">
               <FileUp className="w-4 h-4 mr-2" />
               Importar CSV
             </Link>
           </Button>
           <Button asChild>
-            <Link to="/invoices/new">
+            <Link href="/invoices/new">
               <Plus className="w-4 h-4 mr-2" />
               Nueva Factura
             </Link>

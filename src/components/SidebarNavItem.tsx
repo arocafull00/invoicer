@@ -1,4 +1,5 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -20,15 +21,15 @@ function isRouteActive(pathname: string, to: string) {
 }
 
 export function SidebarNavItem({ title, to, icon: Icon }: SidebarNavItemProps) {
-  const location = useLocation();
+  const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
-  const isActive = isRouteActive(location.pathname, to);
+  const isActive = isRouteActive(pathname, to);
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
-        <NavLink
-          to={to}
+        <Link
+          href={to}
           className="flex items-center gap-2"
           onClick={() => {
             if (!isMobile) return;
@@ -37,7 +38,7 @@ export function SidebarNavItem({ title, to, icon: Icon }: SidebarNavItemProps) {
         >
           <Icon />
           <span>{title}</span>
-        </NavLink>
+        </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );

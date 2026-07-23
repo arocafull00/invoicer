@@ -1,4 +1,4 @@
-import { useClerk, useUser } from '@clerk/react';
+import { useClerk, useUser } from '@clerk/nextjs';
 import { ChevronsUpDown, LogOut, UserRound } from 'lucide-react';
 import {
   Popover,

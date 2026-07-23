@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ChangeEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, FileUp, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ import { getExpenseTypes } from "@/shared/api/services/expenses";
 import { ImportExpensePreviewRow } from "@/expenses/components/ImportExpensePreviewRow";
 
 export default function ImportExpenses() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const { setExpenseTypes, setLoaded } = useExpensesStore();
   const {
@@ -85,7 +86,7 @@ export default function ImportExpenses() {
       if (result.failed === 0) {
         setLoaded(false);
         toast.success(`${result.success} gastos importados`);
-        navigate("/expenses");
+        router.push("/expenses");
         return;
       }
       toast.error(
@@ -114,7 +115,7 @@ export default function ImportExpenses() {
           </p>
         </div>
         <Button variant="outline" asChild>
-          <Link to="/expenses">
+          <Link href="/expenses">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Volver
           </Link>

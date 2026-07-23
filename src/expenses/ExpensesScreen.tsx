@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExpenseTable } from "@/expenses/components/ExpenseTable";
@@ -14,7 +14,7 @@ export default function ExpensesScreen() {
           </p>
         </div>
         <Button asChild>
-          <Link to="/expenses/import">
+          <Link href="/expenses/import">
             <FileUp className="w-4 h-4 mr-2" />
             Importar CSV
           </Link>

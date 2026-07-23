@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ChangeEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, FileUp, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ import { ImportPreviewRow } from "@/invoices/components/ImportPreviewRow";
 import { ConsultantSelectOption } from "@/invoices/components/ConsultantSelectOption";
 
 export default function ImportInvoices() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const { consultants } = useInvoiceStore();
   const {
@@ -86,7 +87,7 @@ export default function ImportInvoices() {
       const result = await importAll();
       if (result.failed === 0) {
         toast.success(`${result.success} facturas importadas`);
-        navigate("/invoices");
+        router.push("/invoices");
         return;
       }
       toast.error(
@@ -115,7 +116,7 @@ export default function ImportInvoices() {
           </p>
         </div>
         <Button variant="outline" asChild>
-          <Link to="/invoices">
+          <Link href="/invoices">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Volver
           </Link>

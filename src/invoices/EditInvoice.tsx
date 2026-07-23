@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useInvoiceStore } from "@/shared/lib/stores";
 import { useInvoiceFormStore } from "@/invoices/store/useInvoicesStore";
@@ -14,7 +14,7 @@ import { PaymentMethodSection } from "@/invoices/components/PaymentMethodSection
 
 export const EditInvoice: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const router = useRouter();
   const { consultants, clients, payment_instructions, invoices } =
     useInvoiceStore();
   const {
@@ -45,7 +45,7 @@ export const EditInvoice: React.FC = () => {
 
   useEffect(() => {
     if (!invoice) {
-      navigate("/invoices");
+      router.replace("/invoices");
       return;
     }
     
@@ -89,7 +89,7 @@ export const EditInvoice: React.FC = () => {
       includeVat: !invoice.vat_exempt,
       vatRate: invoice.vat_rate || 21,
     });
-  }, [invoice, navigate, setForm]);
+  }, [invoice, router, setForm]);
 
   if (!invoice) return null;
 
@@ -145,7 +145,7 @@ export const EditInvoice: React.FC = () => {
       useInvoiceStore.getState().setInvoices(next);
       void queryClient.invalidateQueries({ queryKey: ["invoices"] });
       toast.success("Factura actualizada exitosamente");
-      navigate("/invoices");
+      router.push("/invoices");
     } catch (error) {
       console.error(error);
       toast.error("Error al actualizar la factura");

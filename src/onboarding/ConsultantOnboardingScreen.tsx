@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { UserCog } from 'lucide-react';
 import { useCreateConsultant } from '@/shared/api/hooks';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 export default function ConsultantOnboardingScreen() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const createMutation = useCreateConsultant();
   const [form, setForm] = useState<Partial<Consultant>>({});
   const [pending, setPending] = useState(false);
@@ -26,7 +26,7 @@ export default function ConsultantOnboardingScreen() {
         country: form.country!,
         nif: form.nif!,
       });
-      navigate('/dashboard', { replace: true });
+      router.replace('/dashboard');
     } catch {
       toast.error('No se pudieron guardar tus datos');
     } finally {

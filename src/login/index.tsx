@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth as useClerkAuth } from '@clerk/react';
+import { useAuth as useClerkAuth } from '@clerk/nextjs';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { useAuth } from '@/login/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -25,7 +26,7 @@ export const LoginPage: React.FC = () => {
   }
 
   if (isSignedIn) {
-    return <Navigate to="/dashboard" replace />;
+    redirect('/dashboard');
   }
 
   const handleGoogleSignIn = async () => {
@@ -67,7 +68,7 @@ export const LoginPage: React.FC = () => {
           <div className="text-center mb-8">
             <div className="lg:hidden mb-6">
               <img
-                src={logoImage}
+                src={logoImage.src}
                 alt="Invoicer Logo"
                 className="w-16 h-16 mx-auto mb-4"
               />
@@ -115,13 +116,13 @@ export const LoginPage: React.FC = () => {
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Al hacer clic en continuar, aceptas nuestros{' '}
-              <a href="/terms" className="text-primary hover:underline">
+              <Link href="/terms" className="text-primary hover:underline">
                 Términos de Servicio
-              </a>{' '}
+              </Link>{' '}
               y{' '}
-              <a href="/privacy" className="text-primary hover:underline">
+              <Link href="/privacy" className="text-primary hover:underline">
                 Política de Privacidad
-              </a>
+              </Link>
             </p>
           </div>
         </div>

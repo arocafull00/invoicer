@@ -1,7 +1,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { useInvoiceStore, useSettingsStore } from "@/shared/lib/stores";
 import { getRecentInvoices } from "@/shared/lib/dashboardUtils";
 import { formatCurrency, formatDate } from "@/shared/lib/helpers";
@@ -23,13 +23,13 @@ export const RecentInvoices: React.FC = () => {
             asChild
             className="text-primary hover:bg-primary/10"
           >
-            <Link to="/invoices">Ver todas</Link>
+            <Link href="/invoices">Ver todas</Link>
           </Button>
         </div>
         <div className="text-center py-8 text-muted-foreground">
           <p>No hay facturas recientes</p>
           <Button asChild className="mt-4">
-            <Link to="/invoices/new">Crear primera factura</Link>
+            <Link href="/invoices/new">Crear primera factura</Link>
           </Button>
         </div>
       </Card>
@@ -47,7 +47,7 @@ export const RecentInvoices: React.FC = () => {
           asChild
           className="text-primary hover:bg-primary/10"
         >
-          <Link to="/invoices">Ver todas</Link>
+          <Link href="/invoices">Ver todas</Link>
         </Button>
       </div>
       <div className="space-y-4">

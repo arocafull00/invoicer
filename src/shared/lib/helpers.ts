@@ -13,6 +13,7 @@ function getSettings() {
       default_currency: 'eur' as SupportedCurrency,
       date_format: 'dd/mm/yyyy' as SupportedDateFormat,
       pdf_color_palette: 'violet' as const,
+      logo_url: null,
     }
   );
 }

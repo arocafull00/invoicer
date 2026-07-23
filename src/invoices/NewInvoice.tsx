@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useInvoiceStore } from "@/shared/lib/stores";
 import { useInvoiceFormStore } from "@/invoices/store/useInvoicesStore";
@@ -11,7 +11,7 @@ import { LineItemsSection } from "@/invoices/components/LineItemsSection";
 import { PaymentMethodSection } from "@/invoices/components/PaymentMethodSection";
 
 export default function NewInvoice() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { consultants, clients, payment_instructions } = useInvoiceStore();
   const {
     form,
@@ -59,7 +59,7 @@ export default function NewInvoice() {
     try {
       await saveInvoice();
       toast.success("Factura creada exitosamente");
-      navigate("/invoices");
+      router.push("/invoices");
     } catch (error) {
       console.error(error);
       toast.error("Error al crear la factura");

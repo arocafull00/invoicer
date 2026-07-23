@@ -80,9 +80,12 @@ export const useAppData = ({ enabled = true }: UseAppDataOptions = {}) => {
     if (!enabled) return;
     if (isInitialized) return;
 
-    void loadAppData();
+    const timeoutId = window.setTimeout(() => {
+      void loadAppData();
+    }, 0);
 
     return () => {
+      window.clearTimeout(timeoutId);
       cancelledRef.current = true;
     };
   }, [enabled, isInitialized, loadAppData]);

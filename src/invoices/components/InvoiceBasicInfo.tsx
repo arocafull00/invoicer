@@ -2,7 +2,8 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { APP_LOGO_URL } from "@/shared/lib/appLogo";
+import { resolveLogoUrl } from "@/shared/lib/appLogo";
+import { useSettingsStore } from "@/shared/lib/stores";
 
 interface InvoiceBasicInfoProps {
   invoiceNumber: string;
@@ -23,6 +24,10 @@ export const InvoiceBasicInfo: React.FC<InvoiceBasicInfoProps> = ({
   onDueDateChange,
   readOnlyNumber = false,
 }) => {
+  const logoSrc = resolveLogoUrl(
+    useSettingsStore((s) => s.settings?.logo_url)
+  );
+
   return (
     <Card>
       <CardContent className="p-6">
@@ -61,7 +66,7 @@ export const InvoiceBasicInfo: React.FC<InvoiceBasicInfoProps> = ({
           <div className="flex items-center justify-center">
             <div className="w-full h-40 rounded-xl border border-border bg-accent/50 flex items-center justify-center p-4">
               <img
-                src={APP_LOGO_URL}
+                src={logoSrc}
                 alt="Logo"
                 className="max-h-36 object-contain"
               />

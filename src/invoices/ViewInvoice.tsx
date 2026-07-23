@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import { downloadInvoicePDF } from "@/shared/lib/pdf";
 
 export const ViewInvoice: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const router = useRouter();
   const { invoices } = useInvoiceStore();
   useSettingsStore((s) => s.settings);
   const [loadingPdf, setLoadingPdf] = useState(false);
@@ -34,7 +34,7 @@ export const ViewInvoice: React.FC = () => {
           <h1 className="text-2xl font-bold text-foreground mb-4">
             Factura no encontrada
           </h1>
-          <Button onClick={() => navigate("/invoices")}>
+          <Button onClick={() => router.push("/invoices")}>
             Volver a facturas
           </Button>
         </div>
@@ -63,7 +63,7 @@ export const ViewInvoice: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate("/invoices")}
+              onClick={() => router.push("/invoices")}
               className="text-muted-foreground hover:text-foreground hover:bg-accent"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -81,7 +81,7 @@ export const ViewInvoice: React.FC = () => {
           <div className="flex gap-2 justify-center lg:justify-end">
             <Button
               variant="secondary"
-              onClick={() => navigate(`/invoices/edit/${invoice.id}`)}
+              onClick={() => router.push(`/invoices/edit/${invoice.id}`)}
               className="flex items-center gap-2"
             >
               <Edit className="w-4 h-4" />

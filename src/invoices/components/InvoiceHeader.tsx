@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
@@ -18,14 +18,14 @@ export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({
   onAction,
   actionDisabled = false,
 }) => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
     <>
       <Button
         className="fixed top-4 right-4"
         variant="ghost"
-        onClick={() => navigate("/invoices")}
+        onClick={() => router.push("/invoices")}
       >
         <X className="w-4 h-4" />
       </Button>

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { FileText, Home, Settings, UserCog, Users, CreditCard, Receipt } from 'lucide-react';
 import {
   Sidebar,
@@ -47,7 +47,7 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <Link to="/dashboard" className="flex items-center gap-3 px-2 py-1.5">
+        <Link href="/dashboard" className="flex items-center gap-3 px-2 py-1.5">
           <img src={APP_LOGO_URL} alt="Invoicer logo" className="size-8 object-contain" />
           <h1 className="text-xl font-semibold text-sidebar-primary">Invoicer</h1>
         </Link>

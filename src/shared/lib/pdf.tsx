@@ -1,8 +1,6 @@
-import { pdf } from "@react-pdf/renderer";
 import type { Invoice } from "@/shared/types";
 import { useSettingsStore } from "@/shared/lib/stores";
-import { InvoicePDFDocument } from "@/shared/lib/InvoicePDFDocument";
-import { APP_LOGO_URL } from "@/shared/lib/appLogo";
+import { resolveLogoUrl } from "@/shared/lib/appLogo";
 
 const convertBlobToPNG = async (blob: Blob): Promise<string | null> => {
   return new Promise((resolve) => {
@@ -74,8 +72,13 @@ export const createInvoicePDF = async (
   }
   const settings = useSettingsStore.getState().settings;
   const pdfColorPalette = settings?.pdf_color_palette ?? "violet";
+  const logoSource = resolveLogoUrl(settings?.logo_url);
 
-  const logoBase64 = await imageUrlToBase64(APP_LOGO_URL);
+  const logoBase64 = await imageUrlToBase64(logoSource);
+  const [{ pdf }, { InvoicePDFDocument }] = await Promise.all([
+    import("@react-pdf/renderer"),
+    import("@/shared/lib/InvoicePDFDocument"),
+  ]);
 
   const blob = await pdf(
     <InvoicePDFDocument

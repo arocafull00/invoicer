@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -58,7 +59,7 @@ import {
 // Removed badge rendering for status; using editable Select instead
 
 export function InvoiceTable() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { invoices, isDataReady } = useInvoiceStore();
   useSettingsStore((s) => s.settings);
   const [loadingPdf, setLoadingPdf] = useState<string | null>(null);
@@ -76,12 +77,12 @@ export function InvoiceTable() {
   };
 
   const handleEdit = useCallback((invoice: Invoice) => {
-    navigate(`/invoices/edit/${invoice.id}`);
-  }, [navigate]);
+    router.push(`/invoices/edit/${invoice.id}`);
+  }, [router]);
 
   const handleView = useCallback((invoice: Invoice) => {
-    navigate(`/invoices/view/${invoice.id}`);
-  }, [navigate]);
+    router.push(`/invoices/view/${invoice.id}`);
+  }, [router]);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -326,7 +327,7 @@ export function InvoiceTable() {
             </p>
           </div>
           <Button asChild>
-            <Link to="/invoices/new">
+            <Link href="/invoices/new">
               <Plus className="w-4 h-4 mr-2" />
               Nueva Factura
             </Link>

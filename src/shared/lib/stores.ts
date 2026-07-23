@@ -1,7 +1,12 @@
 import { create } from 'zustand';
 import { toast } from 'sonner';
 import type { Invoice, Consultant, Client, PaymentInstruction, UserSettings, LineItemTemplate } from '@/shared/types';
-import { getUserSettings, updateUserSettings } from '@/shared/api/services/userSettings';
+import {
+  getUserSettings,
+  removeUserLogo,
+  updateUserSettings,
+  uploadUserLogo,
+} from '@/shared/api/services/userSettings';
 
 interface InvoiceStoreState {
   invoices: Invoice[];
@@ -92,6 +97,8 @@ interface SettingsStoreState {
   loading: boolean;
   load: () => Promise<void>;
   update: (partial: Partial<Pick<UserSettings, 'default_currency' | 'date_format' | 'pdf_color_palette'>>) => Promise<void>;
+  uploadLogo: (file: File) => Promise<void>;
+  removeLogo: () => Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsStoreState>((set, get) => ({
@@ -118,6 +125,30 @@ export const useSettingsStore = create<SettingsStoreState>((set, get) => ({
     } catch (error) {
       console.error('Error updating user settings:', error);
       toast.error('No se pudieron guardar los ajustes');
+      throw error;
+    }
+  },
+  uploadLogo: async (file) => {
+    try {
+      const updated = await uploadUserLogo(file);
+      set({ settings: updated });
+      toast.success('Logo actualizado');
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      const message =
+        error instanceof Error ? error.message : 'No se pudo subir el logo';
+      toast.error(message);
+      throw error;
+    }
+  },
+  removeLogo: async () => {
+    try {
+      const updated = await removeUserLogo();
+      set({ settings: updated });
+      toast.success('Logo eliminado');
+    } catch (error) {
+      console.error('Error removing logo:', error);
+      toast.error('No se pudo eliminar el logo');
       throw error;
     }
   },
