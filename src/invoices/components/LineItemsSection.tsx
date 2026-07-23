@@ -244,7 +244,7 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
 
         {/* Dialog for selecting template */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="bg-popover border-border max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="bg-popover border-border max-w-2xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-card-foreground">
                 Seleccionar plantilla de concepto

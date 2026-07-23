@@ -28,7 +28,7 @@ export default function ConsultantOnboardingScreen() {
       });
       navigate('/dashboard', { replace: true });
     } catch {
-      toast.error('No se pudo crear el prestador del servicio');
+      toast.error('No se pudieron guardar tus datos');
     } finally {
       setPending(false);
     }
@@ -40,17 +40,17 @@ export default function ConsultantOnboardingScreen() {
         <div className="flex size-14 items-center justify-center rounded-full bg-primary/20 text-primary">
           <UserCog className="size-8" aria-hidden />
         </div>
-        <h1 className="text-3xl font-bold text-foreground">Configura tu perfil</h1>
+        <h1 className="text-3xl font-bold text-foreground">Configura tu cuenta</h1>
         <p className="text-muted-foreground max-w-md">
-          Para empezar, crea un prestador del servicio. Aparecerá en tus facturas como datos del emisor.
+          Añade tus datos para que aparezcan como emisor en tus facturas.
         </p>
       </div>
 
       <Card className="p-6 md:p-8 border-border bg-card/80 backdrop-blur-sm">
         <div className="space-y-6">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Tu primer prestador del servicio</h2>
-            <p className="text-sm text-muted-foreground mt-1">Podrás añadir más después desde el menú lateral.</p>
+            <h2 className="text-lg font-semibold text-foreground">Tus datos de facturación</h2>
+            <p className="text-sm text-muted-foreground mt-1">Podrás editarlos o añadir otros perfiles de emisor más adelante.</p>
           </div>
           <ConsultantFormFields value={form} onChange={setForm} />
           <Button

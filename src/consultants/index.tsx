@@ -46,7 +46,7 @@ export default function ConsultantsPage() {
       setOpenCreate(false);
       setForm({});
     } catch {
-      toast.error('No se pudo crear el prestador del servicio');
+      toast.error('No se pudo crear el perfil de emisor');
     } finally {
       setPending(false);
     }
@@ -60,7 +60,7 @@ export default function ConsultantsPage() {
       setOpenEditId(null);
       setForm({});
     } catch {
-      toast.error('No se pudo actualizar el prestador del servicio');
+      toast.error('No se pudo actualizar el perfil de emisor');
     } finally {
       setPending(false);
     }
@@ -71,7 +71,7 @@ export default function ConsultantsPage() {
       await deleteMutation.mutateAsync(id);
       setConfirmDeleteId(null);
     } catch {
-      toast.error('No se pudo eliminar el prestador del servicio');
+      toast.error('No se pudo eliminar el perfil de emisor');
     }
   }
 
@@ -79,19 +79,19 @@ export default function ConsultantsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Prestadores del servicio</h1>
-          <p className="text-muted-foreground mt-1">Gestiona tus prestadores del servicio</p>
+          <h1 className="text-3xl font-bold text-foreground">Datos de facturación</h1>
+          <p className="text-muted-foreground mt-1">Gestiona tus perfiles de emisor</p>
         </div>
         <Dialog open={openCreate} onOpenChange={(o: boolean) => { setOpenCreate(o); if (!o) setForm({}); }}>
           <DialogTrigger asChild>
             <Button onClick={() => setForm({})}>
               <Plus className="w-4 h-4" />
-              Añadir prestador del servicio
+              Añadir perfil de emisor
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Nuevo prestador del servicio</DialogTitle>
+              <DialogTitle>Nuevo perfil de emisor</DialogTitle>
             </DialogHeader>
             <ConsultantFormFields value={form} onChange={setForm} />
             <DialogFooter>
@@ -130,7 +130,7 @@ export default function ConsultantsPage() {
                 {isLoading ? (
                   <TableRow className="border-b border-border"><TableCell className="py-6 px-2" colSpan={6}><div className="flex justify-center py-2"><Spinner /></div></TableCell></TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow className="border-b border-border"><TableCell className="py-6 px-2" colSpan={6}>No hay prestadores del servicio</TableCell></TableRow>
+                  <TableRow className="border-b border-border"><TableCell className="py-6 px-2" colSpan={6}>No hay perfiles de emisor</TableCell></TableRow>
                 ) : (
                   filtered.map((c) => (
                     <TableRow key={c.id} className="border-b border-border hover:bg-accent/30 transition-colors">
@@ -150,7 +150,7 @@ export default function ConsultantsPage() {
                             </DialogTrigger>
                             <DialogContent>
                               <DialogHeader>
-                                <DialogTitle>Editar prestador del servicio</DialogTitle>
+                                <DialogTitle>Editar perfil de emisor</DialogTitle>
                               </DialogHeader>
                               <ConsultantFormFields value={form} onChange={setForm} />
                               <DialogFooter>
@@ -177,7 +177,7 @@ export default function ConsultantsPage() {
       <AlertDialog open={!!confirmDeleteId} onOpenChange={(o: boolean) => !o && setConfirmDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar prestador del servicio</AlertDialogTitle>
+            <AlertDialogTitle>Eliminar perfil de emisor</AlertDialogTitle>
             <AlertDialogDescription>Esta acción no se puede deshacer</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

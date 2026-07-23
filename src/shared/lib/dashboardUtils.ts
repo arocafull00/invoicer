@@ -89,53 +89,60 @@ export interface QuarterlyPeriod {
   startDate: Date;
   endDate: Date;
   paymentMonth: string;
+  label: string;
+  quarter: number;
+  year: number;
   months: Array<{ name: string; month: number; year: number }>;
 }
 
-export const getNextQuarterlyPeriod = (): QuarterlyPeriod => {
+const PAYMENT_MONTHS = ['Abril', 'Julio', 'Octubre', 'Enero'] as const;
+const MONTH_NAMES = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+] as const;
+
+export const getQuarterlyPeriod = (offset = 0): QuarterlyPeriod => {
   const now = new Date();
-  const currentMonth = now.getMonth(); // 0-11 (Jan = 0, Dec = 11)
-  const currentYear = now.getFullYear();
+  const currentQuarterIndex = Math.floor(now.getMonth() / 3);
+  const absoluteQuarter = now.getFullYear() * 4 + currentQuarterIndex + offset;
+  const year = Math.floor(absoluteQuarter / 4);
+  const quarterIndex = ((absoluteQuarter % 4) + 4) % 4;
+  const quarter = quarterIndex + 1;
+  const startMonth = quarterIndex * 3;
 
-  let startMonth: number;
-  let startYear: number;
-  let paymentMonth: string;
+  const paymentMonthName = PAYMENT_MONTHS[quarterIndex];
+  const paymentMonth =
+    quarterIndex === 3
+      ? `${paymentMonthName} ${year + 1}`
+      : paymentMonthName;
 
-  if (currentMonth >= 0 && currentMonth <= 2) {
-    startMonth = 0; // January
-    startYear = currentYear;
-    paymentMonth = 'Abril';
-  } else if (currentMonth >= 3 && currentMonth <= 5) {
-    startMonth = 3; // April
-    startYear = currentYear;
-    paymentMonth = 'Julio';
-  } else if (currentMonth >= 6 && currentMonth <= 8) {
-    startMonth = 6; // July
-    startYear = currentYear;
-    paymentMonth = 'Octubre';
-  } else {
-    startMonth = 9; // October
-    startYear = currentYear;
-    paymentMonth = 'Enero';
-  }
-
-  const startDate = new Date(startYear, startMonth, 1);
-  const endMonth = startMonth + 2;
-  const endDate = new Date(startYear, endMonth + 1, 0);
+  const startDate = new Date(year, startMonth, 1);
+  const endDate = new Date(year, startMonth + 3, 0);
   endDate.setHours(23, 59, 59, 999);
 
-  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-  
   const months = [
-    { name: monthNames[startMonth], month: startMonth, year: startYear },
-    { name: monthNames[startMonth + 1], month: startMonth + 1, year: startYear },
-    { name: monthNames[startMonth + 2], month: startMonth + 2, year: startYear },
+    { name: MONTH_NAMES[startMonth], month: startMonth, year },
+    { name: MONTH_NAMES[startMonth + 1], month: startMonth + 1, year },
+    { name: MONTH_NAMES[startMonth + 2], month: startMonth + 2, year },
   ];
 
   return {
     startDate,
     endDate,
     paymentMonth,
+    label: `T${quarter} ${year}`,
+    quarter,
+    year,
     months,
   };
 };
@@ -162,41 +169,34 @@ export const calculateQuarterlyTaxes = (
     const invoiceDate = new Date(invoice.created_date);
     return invoiceDate >= period.startDate && invoiceDate <= period.endDate;
   });
-console.log(periodInvoices)
+
   const monthlyData: Map<string, { irpf: number; iva: number }> = new Map();
-  
+
   period.months.forEach(({ name }) => {
     monthlyData.set(name, { irpf: 0, iva: 0 });
   });
 
-  // Calculate taxes per invoice
   periodInvoices.forEach((invoice) => {
-    const invoiceDate = new Date(invoice.start_date);
+    const invoiceDate = new Date(invoice.created_date);
     const invoiceMonth = invoiceDate.getMonth();
     const invoiceYear = invoiceDate.getFullYear();
-    
-    // Find which month in the period this invoice belongs to
+
     const monthInfo = period.months.find(
       (m) => m.month === invoiceMonth && m.year === invoiceYear
     );
 
-    if (monthInfo) {
-      const current = monthlyData.get(monthInfo.name) || { irpf: 0, iva: 0 };
-      
-      // IRPF: 20% of subtotal
-      const irpf = invoice.subtotal * 0.20;
-      
-      // IVA: vat_amount from invoice
-      const iva = invoice.vat_amount || 0;
-      
-      monthlyData.set(monthInfo.name, {
-        irpf: current.irpf + irpf,
-        iva: current.iva + iva,
-      });
-    }
+    if (!monthInfo) return;
+
+    const current = monthlyData.get(monthInfo.name) || { irpf: 0, iva: 0 };
+    const irpf = invoice.subtotal * 0.2;
+    const iva = invoice.vat_amount || 0;
+
+    monthlyData.set(monthInfo.name, {
+      irpf: current.irpf + irpf,
+      iva: current.iva + iva,
+    });
   });
 
-  // Convert to array format
   const monthlyBreakdown: MonthlyTaxBreakdown[] = period.months.map(({ name }) => {
     const data = monthlyData.get(name) || { irpf: 0, iva: 0 };
     return {
@@ -206,7 +206,6 @@ console.log(periodInvoices)
     };
   });
 
-  // Calculate totals
   const totalIrpf = monthlyBreakdown.reduce((sum, m) => sum + m.irpf, 0);
   const totalIva = monthlyBreakdown.reduce((sum, m) => sum + m.iva, 0);
   const totalTaxes = totalIrpf + totalIva;

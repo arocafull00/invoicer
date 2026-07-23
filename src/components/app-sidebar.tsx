@@ -26,7 +26,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { title: 'Dashboard', to: '/dashboard', icon: Home },
   { title: 'Facturas', to: '/invoices', icon: FileText },
-  { title: 'Prestadores del servicio', to: '/consultants', icon: UserCog },
+  { title: 'Datos de facturación', to: '/consultants', icon: UserCog },
   { title: 'Metodos de pago', to: '/payments', icon: CreditCard },
   { title: 'Clientes', to: '/clients', icon: Users },
   { title: 'Configuración', to: '/settings', icon: Settings },
