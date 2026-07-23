@@ -175,7 +175,14 @@ export const useImportInvoicesStore = create<ImportInvoicesState>((set, get) => 
       .map((item, index) => ({ item, index }))
       .filter(
         ({ item }) => item.status === "pending" || item.status === "error"
-      );
+      )
+      .sort((a, b) => {
+        const aHasNumber = Boolean(a.item.row.number?.trim());
+        const bHasNumber = Boolean(b.item.row.number?.trim());
+        if (aHasNumber === bHasNumber) return 0;
+        if (aHasNumber) return -1;
+        return 1;
+      });
     if (targets.length === 0) return { success: 0, failed: 0 };
 
     const consultant = useInvoiceStore
