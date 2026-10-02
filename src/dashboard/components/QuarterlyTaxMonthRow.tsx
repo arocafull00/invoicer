@@ -5,14 +5,16 @@ interface QuarterlyTaxMonthRowProps {
   month: string;
   irpf: number;
   iva: number;
+  hasActivity: boolean;
 }
 
 export const QuarterlyTaxMonthRow: React.FC<QuarterlyTaxMonthRowProps> = ({
   month,
   irpf,
   iva,
+  hasActivity,
 }) => {
-  if (irpf === 0 && iva === 0) return null;
+  if (!hasActivity) return null;
 
   return (
     <div className="flex items-center justify-between py-2 border-b border-border last:border-0">

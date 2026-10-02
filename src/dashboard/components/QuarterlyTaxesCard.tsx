@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,9 +20,7 @@ export const QuarterlyTaxesCard: React.FC = () => {
   const period = getQuarterlyPeriod(offset);
   const taxes = calculateQuarterlyTaxes(invoices, period, expenses, irpfRate);
 
-  const hasInvoices =
-    taxes.totalInvoiced > 0 ||
-    taxes.monthlyBreakdown.some((m) => m.irpf !== 0 || m.iva !== 0);
+  const hasActivity = taxes.monthlyBreakdown.some((m) => m.hasActivity);
 
   return (
     <Card className="p-6">
@@ -54,11 +53,24 @@ export const QuarterlyTaxesCard: React.FC = () => {
         <p className="text-sm text-muted-foreground mt-1">
           {period.label} · Pago en {period.paymentMonth}
         </p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Facturas agrupadas por fecha de cobro
+        </p>
       </div>
 
-      {!hasInvoices ? (
+      {taxes.invoicesMissingPaidDate > 0 && (
+        <p role="status" className="mb-4 text-sm text-muted-foreground">
+          Cálculo incompleto: {taxes.invoicesMissingPaidDate} facturas pagadas sin
+          fecha de cobro no están incluidas.{' '}
+          <Link href="/invoices" className="text-primary underline">
+            Registrar fechas de cobro
+          </Link>
+        </p>
+      )}
+
+      {!hasActivity ? (
         <div className="text-center py-8 text-muted-foreground">
-          <p>No hay facturas en este período</p>
+          <p>No hay cobros ni gastos registrados en este período</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -69,6 +81,7 @@ export const QuarterlyTaxesCard: React.FC = () => {
                 month={month.month}
                 irpf={month.irpf}
                 iva={month.iva}
+                hasActivity={month.hasActivity}
               />
             ))}
           </div>
@@ -100,7 +113,7 @@ export const QuarterlyTaxesCard: React.FC = () => {
             </div>
             <div className="flex justify-between items-center pt-2">
               <span className="text-sm font-medium text-foreground">
-                Total facturado:
+                Total cobrado:
               </span>
               <span className="font-semibold text-foreground">
                 {formatCurrency(taxes.totalInvoiced)}

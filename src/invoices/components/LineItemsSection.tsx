@@ -10,7 +10,18 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Calendar, Plus, Trash2, TrendingUp } from "lucide-react";
+import { Calendar, Pencil, Plus, Trash2, TrendingUp } from "lucide-react";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -58,7 +69,11 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
   getTotalAmount,
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [openNewTemplate, setOpenNewTemplate] = useState(false);
+  const [openTemplateEditor, setOpenTemplateEditor] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<LineItemTemplate | null>(null);
+  const [templateToDelete, setTemplateToDelete] = useState<LineItemTemplate | null>(null);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+  const [isDeletingTemplate, setIsDeletingTemplate] = useState(false);
   const [newTemplate, setNewTemplate] = useState({
     description: '',
     default_quantity: 1,
@@ -69,6 +84,8 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
   const { 
     templates, 
     createTemplate, 
+    updateTemplate,
+    deleteTemplate,
     getMostUsedTemplates 
   } = useLineItemTemplates();
 
@@ -94,23 +111,124 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
     setIsDialogOpen(false);
   };
 
-  const handleCreateNewTemplate = async () => {
-    if (!newTemplate.description.trim() || newTemplate.default_rate <= 0) return;
+  const isTemplateValid =
+    newTemplate.description.trim().length > 0 &&
+    Number.isFinite(newTemplate.default_quantity) &&
+    newTemplate.default_quantity >= 1 &&
+    Number.isFinite(newTemplate.default_rate) &&
+    newTemplate.default_rate > 0;
 
+  const handleOpenTemplateEditor = (template: LineItemTemplate | null = null) => {
+    setEditingTemplate(template);
+    setNewTemplate({
+      description: template?.description ?? '',
+      default_quantity: template?.default_quantity ?? 1,
+      default_rate: template?.default_rate ?? 0,
+      category: template ? template.category ?? '' : 'Personalizado',
+    });
+    setOpenTemplateEditor(true);
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!isTemplateValid || isSavingTemplate) return;
+
+    setIsSavingTemplate(true);
     try {
-      const createdTemplate = await createTemplate(newTemplate);
-      handleSelectTemplate(createdTemplate);
-      setOpenNewTemplate(false);
-      setNewTemplate({
-        description: '',
-        default_quantity: 1,
-        default_rate: 0,
-        category: 'Personalizado'
-      });
+      const values = {
+        ...newTemplate,
+        description: newTemplate.description.trim(),
+        category: newTemplate.category.trim(),
+      };
+      if (editingTemplate) {
+        await updateTemplate(editingTemplate.id, values);
+        toast.success('Plantilla actualizada');
+      } else {
+        const createdTemplate = await createTemplate(values);
+        handleSelectTemplate(createdTemplate);
+      }
+      setOpenTemplateEditor(false);
     } catch (error) {
-      console.error('Error creating template:', error);
+      console.error('Error saving template:', error);
+    } finally {
+      setIsSavingTemplate(false);
     }
   };
+
+  const handleDeleteTemplate = async () => {
+    if (!templateToDelete || isDeletingTemplate) return;
+
+    setIsDeletingTemplate(true);
+    try {
+      await deleteTemplate(templateToDelete.id);
+      toast.success('Plantilla eliminada');
+      setTemplateToDelete(null);
+    } catch (error) {
+      console.error('Error deleting template:', error);
+    } finally {
+      setIsDeletingTemplate(false);
+    }
+  };
+
+  const renderTemplate = (template: LineItemTemplate, showUsage: boolean) => (
+    <div
+      key={template.id}
+      className="flex items-center gap-1 rounded-lg bg-input border border-border p-1"
+    >
+      <button
+        type="button"
+        onClick={() => handleSelectTemplate(template)}
+        className="min-w-0 flex-1 cursor-pointer flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-md p-2 hover:bg-input/80 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-card-foreground font-medium break-words min-w-0">
+              {template.description}
+            </p>
+            {!showUsage && template.category && (
+              <Badge variant="outline" className="text-xs">
+                {template.category}
+              </Badge>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {template.default_quantity} × €{template.default_rate.toFixed(2)}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {showUsage && (
+            <Badge variant="secondary" className="text-xs">
+              {template.usage_count}
+            </Badge>
+          )}
+          <span className="text-sm font-semibold text-card-foreground">
+            €{(template.default_quantity * template.default_rate).toFixed(2)}
+          </span>
+        </div>
+      </button>
+      <div className="flex shrink-0 items-center">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => handleOpenTemplateEditor(template)}
+          aria-label={`Editar plantilla: ${template.description}`}
+          title="Editar plantilla"
+        >
+          <Pencil />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => setTemplateToDelete(template)}
+          aria-label={`Eliminar plantilla: ${template.description}`}
+          title="Eliminar plantilla"
+        >
+          <Trash2 />
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <Card>
@@ -261,30 +379,7 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
                     Más utilizados
                   </div>
                   <div className="space-y-2">
-                    {mostUsedTemplates.map((template) => (
-                      <button
-                        key={template.id}
-                        onClick={() => handleSelectTemplate(template)}
-                        className="w-full cursor-pointer flex items-center justify-between p-3 rounded-lg bg-input border border-border hover:bg-input/80 hover:border-primary/50 transition-colors text-left"
-                      >
-                        <div className="flex-1">
-                          <p className="text-card-foreground font-medium">
-                            {template.description}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {template.default_quantity} × €{template.default_rate.toFixed(2)}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {template.usage_count}
-                          </Badge>
-                          <span className="text-sm font-semibold text-card-foreground">
-                            €{(template.default_quantity * template.default_rate).toFixed(2)}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
+                    {mostUsedTemplates.map((template) => renderTemplate(template, true))}
                   </div>
                 </div>
               )}
@@ -301,41 +396,23 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
                       if (mostUsedTemplates.some(mut => mut.id === template.id)) {
                         return null;
                       }
-                      return (
-                        <button
-                          key={template.id}
-                          onClick={() => handleSelectTemplate(template)}
-                          className="cursor-pointer w-full flex items-center justify-between p-3 rounded-lg bg-input border border-border hover:bg-input/80 hover:border-primary/50 transition-colors text-left"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <p className="text-card-foreground font-medium">
-                                {template.description}
-                              </p>
-                              {template.category && (
-                                <Badge variant="outline" className="text-xs">
-                                  {template.category}
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              {template.default_quantity} × €{template.default_rate.toFixed(2)}
-                            </p>
-                          </div>
-                          <span className="text-sm font-semibold text-card-foreground">
-                            €{(template.default_quantity * template.default_rate).toFixed(2)}
-                          </span>
-                        </button>
-                      );
+                      return renderTemplate(template, false);
                     })}
                   </div>
                 </div>
               )}
 
+              {templates.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No hay plantillas. Crea una para añadir conceptos rápidamente.
+                </p>
+              )}
+
               {/* Create new template button */}
               <div className="border-t border-border pt-4">
                 <Button 
-                  onClick={() => setOpenNewTemplate(true)}
+                  type="button"
+                  onClick={() => handleOpenTemplateEditor()}
                   variant="outline"
                   className="w-full"
                 >
@@ -347,18 +424,24 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
           </DialogContent>
         </Dialog>
 
-        {/* Dialog for creating new template */}
-        <Dialog open={openNewTemplate} onOpenChange={setOpenNewTemplate}>
-          <DialogContent className="bg-popover border-border">
+        {/* Dialog for creating or editing a template */}
+        <Dialog
+          open={openTemplateEditor}
+          onOpenChange={(open) => {
+            if (!isSavingTemplate) setOpenTemplateEditor(open);
+          }}
+        >
+          <DialogContent className="bg-popover border-border" showClose={!isSavingTemplate}>
             <DialogHeader>
               <DialogTitle className="text-card-foreground">
-                Crear plantilla de concepto
+                {editingTemplate ? 'Editar plantilla de concepto' : 'Crear plantilla de concepto'}
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-card-foreground">Descripción</Label>
+            <fieldset disabled={isSavingTemplate} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="template-description" className="text-card-foreground">Descripción</Label>
                 <Input
+                  id="template-description"
                   className="bg-input border-border text-card-foreground"
                   value={newTemplate.description}
                   onChange={(e) =>
@@ -368,9 +451,10 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-card-foreground">Cantidad por defecto</Label>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="template-quantity" className="text-card-foreground">Cantidad por defecto</Label>
                   <Input
+                    id="template-quantity"
                     type="number"
                     min="1"
                     className="bg-input border-border text-card-foreground"
@@ -380,9 +464,10 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
                     }
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-card-foreground">Tarifa por defecto (€)</Label>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="template-rate" className="text-card-foreground">Tarifa por defecto (€)</Label>
                   <Input
+                    id="template-rate"
                     type="number"
                     min="0"
                     step="0.01"
@@ -394,9 +479,10 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-card-foreground">Categoría</Label>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="template-category" className="text-card-foreground">Categoría</Label>
                 <Input
+                  id="template-category"
                   className="bg-input border-border text-card-foreground"
                   value={newTemplate.category}
                   onChange={(e) =>
@@ -405,12 +491,60 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
                   placeholder="Ej: Desarrollo, Consultoría, Diseño..."
                 />
               </div>
-            </div>
+            </fieldset>
             <DialogFooter>
-              <Button onClick={handleCreateNewTemplate}>Crear plantilla</Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSavingTemplate}
+                onClick={() => setOpenTemplateEditor(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSaveTemplate}
+                disabled={!isTemplateValid || isSavingTemplate}
+              >
+                {isSavingTemplate ? 'Guardando...' : editingTemplate ? 'Guardar cambios' : 'Crear plantilla'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog
+          open={Boolean(templateToDelete)}
+          onOpenChange={(open) => {
+            if (!open && !isDeletingTemplate) setTemplateToDelete(null);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eliminar plantilla</AlertDialogTitle>
+              <AlertDialogDescription>
+                ¿Quieres eliminar la plantilla «{templateToDelete?.description}»?
+                Esta acción no se puede deshacer. Los conceptos ya añadidos a
+                las facturas se conservarán.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeletingTemplate}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction asChild>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isDeletingTemplate}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    void handleDeleteTemplate();
+                  }}
+                >
+                  {isDeletingTemplate ? 'Eliminando...' : 'Eliminar plantilla'}
+                </Button>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Totals */}
         <div className="border-t border-border pt-6">

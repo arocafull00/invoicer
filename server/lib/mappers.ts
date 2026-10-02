@@ -33,6 +33,7 @@ type DbInvoiceRow = {
   total: number;
   vat_exempt: boolean;
   status: string;
+  paid_date?: string | null;
   deleted: boolean;
   irpf_rate: number | null;
   irpf_amount: number | null;
@@ -85,6 +86,7 @@ export function mapInvoice(row: DbInvoiceRow) {
     total: Number(row.total),
     vat_exempt: row.vat_exempt,
     status: row.status,
+    paid_date: row.paid_date ?? null,
     deleted: row.deleted,
     irpf_rate: row.irpf_rate != null ? Number(row.irpf_rate) : null,
     irpf_amount: row.irpf_amount != null ? Number(row.irpf_amount) : null,

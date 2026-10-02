@@ -65,6 +65,7 @@ export interface Invoice {
   payment_instructions: PaymentInstruction;
   vat_exempt: boolean;
   status: "paid" | "pending" | "overdue";
+  paid_date?: string | null;
   deleted?: boolean;
   irpf_rate?: number | null;
   irpf_amount?: number | null;

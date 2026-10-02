@@ -86,21 +86,24 @@ export const calculateDashboardStats = (invoices: Invoice[]): DashboardStats => 
   const totalRevenue = invoices.reduce((sum, invoice) => sum + invoice.total, 0);
   const thisMonthRevenue = thisMonthInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
   
-  // Para este ejemplo, asumimos que las facturas están "pendientes" por defecto
-  // En una implementación real, tendrías un campo de estado
-  const pendingInvoices = Math.floor(invoices.length * 0.2); // 20% pendientes (ejemplo)
-  const collectionRate = invoices.length > 0 ? ((invoices.length - pendingInvoices) / invoices.length) * 100 : 0;
+  const pendingInvoices = invoices.filter(invoice => invoice.status === 'pending').length;
+  const paidInvoices = invoices.filter(invoice => invoice.status === 'paid').length;
+  const collectionRate = invoices.length > 0 ? (paidInvoices / invoices.length) * 100 : 0;
+  const thisMonthPending = thisMonthInvoices.filter(invoice => invoice.status === 'pending').length;
+  const thisMonthPaid = thisMonthInvoices.filter(invoice => invoice.status === 'paid').length;
+  const thisMonthCollectionRate = invoicesThisMonth > 0 ? (thisMonthPaid / invoicesThisMonth) * 100 : 0;
 
   // Calcular cambios respecto al mes anterior
   const lastMonthRevenue = lastMonthInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
   const lastMonthCount = lastMonthInvoices.length;
-  const lastMonthPending = Math.floor(lastMonthCount * 0.2);
-  const lastMonthCollectionRate = lastMonthCount > 0 ? ((lastMonthCount - lastMonthPending) / lastMonthCount) * 100 : 0;
+  const lastMonthPending = lastMonthInvoices.filter(invoice => invoice.status === 'pending').length;
+  const lastMonthPaid = lastMonthInvoices.filter(invoice => invoice.status === 'paid').length;
+  const lastMonthCollectionRate = lastMonthCount > 0 ? (lastMonthPaid / lastMonthCount) * 100 : 0;
 
   const invoiceChange = lastMonthCount > 0 ? ((invoicesThisMonth - lastMonthCount) / lastMonthCount) * 100 : 0;
   const revenueChange = lastMonthRevenue > 0 ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0;
-  const pendingChange = lastMonthPending > 0 ? ((pendingInvoices - lastMonthPending) / lastMonthPending) * 100 : 0;
-  const collectionRateChange = lastMonthCollectionRate > 0 ? collectionRate - lastMonthCollectionRate : 0;
+  const pendingChange = lastMonthPending > 0 ? ((thisMonthPending - lastMonthPending) / lastMonthPending) * 100 : 0;
+  const collectionRateChange = lastMonthCollectionRate > 0 ? thisMonthCollectionRate - lastMonthCollectionRate : 0;
 
   return {
     invoicesThisMonth,
@@ -251,6 +254,7 @@ export interface MonthlyTaxBreakdown {
   month: string;
   irpf: number;
   iva: number;
+  hasActivity: boolean;
 }
 
 export interface QuarterlyTaxesResult {
@@ -259,9 +263,11 @@ export interface QuarterlyTaxesResult {
   totalIva: number;
   totalTaxes: number;
   totalInvoiced: number;
+  invoicesMissingPaidDate: number;
 }
 
 type MonthlyTaxAccumulator = {
+  hasActivity: boolean;
   income: number;
   expenseBase: number;
   retention: number;
@@ -280,8 +286,14 @@ export const calculateQuarterlyTaxes = (
     : DEFAULT_IRPF_RATE_PERCENT;
   const irpfRate = ratePercent / 100;
 
-  const periodInvoices = invoices.filter((invoice) =>
-    isDateInPeriod(invoice.created_date, period)
+  const paidInvoices = invoices.filter(
+    (invoice) => invoice.status === 'paid' && !invoice.deleted
+  );
+  const invoicesMissingPaidDate = paidInvoices.filter(
+    (invoice) => !invoice.paid_date || !getLocalDateParts(invoice.paid_date)
+  ).length;
+  const periodInvoices = paidInvoices.filter((invoice) =>
+    invoice.paid_date && isDateInPeriod(invoice.paid_date, period)
   );
   const periodExpenses = expenses.filter((expense) =>
     isDateInPeriod(expense.date, period)
@@ -291,6 +303,7 @@ export const calculateQuarterlyTaxes = (
 
   period.months.forEach(({ name }) => {
     monthlyData.set(name, {
+      hasActivity: false,
       income: 0,
       expenseBase: 0,
       retention: 0,
@@ -300,7 +313,7 @@ export const calculateQuarterlyTaxes = (
   });
 
   periodInvoices.forEach((invoice) => {
-    const monthInfo = findPeriodMonth(invoice.created_date, period);
+    const monthInfo = findPeriodMonth(invoice.paid_date!, period);
     if (!monthInfo) return;
 
     const current = monthlyData.get(monthInfo.name);
@@ -308,6 +321,7 @@ export const calculateQuarterlyTaxes = (
 
     monthlyData.set(monthInfo.name, {
       ...current,
+      hasActivity: true,
       income: current.income + (Number(invoice.subtotal) || 0),
       retention: current.retention + getInvoiceRetention(invoice),
       vatCharged: current.vatCharged + (Number(invoice.vat_amount) || 0),
@@ -323,6 +337,7 @@ export const calculateQuarterlyTaxes = (
 
     monthlyData.set(monthInfo.name, {
       ...current,
+      hasActivity: true,
       expenseBase: current.expenseBase + (Number(expense.base_amount) || 0),
       vatPaid: current.vatPaid + (Number(expense.vat_amount) || 0),
     });
@@ -330,6 +345,7 @@ export const calculateQuarterlyTaxes = (
 
   const monthlyBreakdown: MonthlyTaxBreakdown[] = period.months.map(({ name }) => {
     const data = monthlyData.get(name) || {
+      hasActivity: false,
       income: 0,
       expenseBase: 0,
       retention: 0,
@@ -344,6 +360,7 @@ export const calculateQuarterlyTaxes = (
       month: name,
       irpf,
       iva,
+      hasActivity: data.hasActivity,
     };
   });
 
@@ -387,5 +404,6 @@ export const calculateQuarterlyTaxes = (
     totalIva,
     totalTaxes,
     totalInvoiced,
+    invoicesMissingPaidDate,
   };
 };

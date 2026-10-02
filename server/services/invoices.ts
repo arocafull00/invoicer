@@ -1,6 +1,7 @@
 import type { Sql } from '../lib/db';
 import { ApiError } from '../lib/errors';
 import { mapInvoice } from '../lib/mappers';
+import { z } from 'zod';
 
 export type LineItemInput = {
   id?: string;
@@ -27,11 +28,22 @@ export type InvoiceInput = {
   total: number;
   vat_exempt: boolean;
   status: string;
+  paid_date?: string | null;
   irpf_rate?: number | null;
   irpf_amount?: number | null;
 };
 
 type InvoiceRow = Parameters<typeof mapInvoice>[0];
+
+export function validateInvoicePaidDate(
+  status: string,
+  value: unknown
+): string | null {
+  if (value != null && !z.iso.date().safeParse(value).success) {
+    throw new ApiError('La fecha de cobro debe ser una fecha válida (AAAA-MM-DD)', 400);
+  }
+  return status === 'paid' ? (value as string | null | undefined) ?? null : null;
+}
 
 export type ComputedAmounts = {
   lineItems: Array<{
