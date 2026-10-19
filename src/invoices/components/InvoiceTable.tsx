@@ -29,11 +29,13 @@ import {
   Trash2,
   Plus,
   FileText,
+  Mail,
 } from "lucide-react";
 import { useInvoiceStore, useSettingsStore } from "@/shared/lib/stores";
 import { Spinner } from "@/shared/components/Spinner";
 import { formatDate, formatCurrency } from "@/shared/lib/helpers";
 import { downloadInvoicePDF } from "@/shared/lib/pdf";
+import { getInvoiceEmailContent } from "@/shared/lib/invoiceEmail";
 import type { Invoice } from "@/shared/types";
 import { updateInvoice, softDeleteInvoice } from "@/shared/api/services/invoices";
 import { queryClient } from "@/shared/api/queryClient";
@@ -93,6 +95,24 @@ export function InvoiceTable() {
   const handleView = useCallback((invoice: Invoice) => {
     router.push(`/invoices/view/${invoice.id}`);
   }, [router]);
+
+  const handleOpenGmail = useCallback((invoice: Invoice) => {
+    const recipient = invoice.client.email?.trim();
+    if (!recipient) {
+      toast.error("Añade un email al cliente para preparar el correo en Gmail");
+      return;
+    }
+
+    const { subject, body } = getInvoiceEmailContent(invoice);
+    const params = new URLSearchParams({
+      view: "cm",
+      fs: "1",
+      to: recipient,
+      su: subject,
+      body,
+    });
+    window.open(`https://mail.google.com/mail/?${params}`, "_blank", "noopener,noreferrer");
+  }, []);
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: "number", desc: true },
@@ -334,6 +354,16 @@ export function InvoiceTable() {
             <Button
               variant="ghost"
               size="sm"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent p-2"
+              onClick={() => handleOpenGmail(row.original)}
+              title="Abrir en Gmail"
+              aria-label={`Preparar correo en Gmail para la factura ${row.original.number}`}
+            >
+              <Mail className="w-4 h-4" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               className="text-destructive hover:text-foreground hover:bg-destructive/20 p-2"
               onClick={() => handleDelete(row.original)}
               disabled={deletingId === row.original.id}
@@ -350,7 +380,7 @@ export function InvoiceTable() {
         ),
       },
     ],
-    [loadingPdf, updatingId, deletingId, handleEdit, handleView, handleStatusChange, handleDelete, openPaymentDate]
+    [loadingPdf, updatingId, deletingId, handleEdit, handleView, handleOpenGmail, handleStatusChange, handleDelete, openPaymentDate]
   );
 
   const table = useReactTable({
