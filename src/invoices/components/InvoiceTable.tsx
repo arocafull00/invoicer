@@ -13,18 +13,8 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Download,
-  Eye,
   Edit,
   Trash2,
   Plus,
@@ -122,56 +112,28 @@ export function InvoiceTable() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
-  const [paidInvoice, setPaidInvoice] = useState<Invoice | null>(null);
-  const [paidDate, setPaidDate] = useState("");
-
-  const openPaymentDate = useCallback((inv: Invoice) => {
-    setPaidInvoice(inv);
-    setPaidDate(inv.paid_date ?? "");
-  }, []);
-
-  const savePaymentStatus = useCallback(async (
+  const handleStatusChange = useCallback(async (
     inv: Invoice,
-    next: Invoice["status"],
-    date: string | null
+    next: Invoice["status"]
   ) => {
+    if (inv.status === next) return;
     try {
       setUpdatingId(inv.id);
       const updated = await updateInvoice(inv.id, {
         status: next,
-        paid_date: date,
       });
       const current = useInvoiceStore.getState().invoices;
       const mapped = current.map((i) => (i.id === updated.id ? updated : i));
       useInvoiceStore.getState().setInvoices(mapped);
       void queryClient.invalidateQueries({ queryKey: ["invoices"] });
-      toast.success(next === "paid" ? "Fecha de cobro guardada" : "Estado actualizado");
-      return true;
+      toast.success("Estado actualizado");
     } catch (err) {
       console.error("Failed to update invoice status", err);
       toast.error("No se pudo actualizar el estado");
-      return false;
     } finally {
       setUpdatingId(null);
     }
   }, []);
-
-  const handleStatusChange = useCallback((inv: Invoice, next: Invoice["status"]) => {
-    if (inv.status === next) return;
-    if (next === "paid") {
-      openPaymentDate(inv);
-      return;
-    }
-    void savePaymentStatus(inv, next, null);
-  }, [openPaymentDate, savePaymentStatus]);
-
-  const handleSavePaymentDate = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!paidInvoice || !paidDate || updatingId) return;
-    if (await savePaymentStatus(paidInvoice, "paid", paidDate)) {
-      setPaidInvoice(null);
-    }
-  };
 
   const handleDelete = useCallback(async (invoice: Invoice) => {
     setConfirmId(invoice.id);
@@ -204,7 +166,13 @@ export function InvoiceTable() {
           <InvoiceTableSortHeader label="NÚMERO" column={column} />
         ),
         cell: ({ row }) => (
-          <span className="font-medium text-foreground">{row.original.number}</span>
+          <Link
+            href={`/invoices/view/${row.original.id}`}
+            className="rounded-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={`Ver factura ${row.original.number}`}
+          >
+            {row.original.number}
+          </Link>
         ),
       },
       {
@@ -273,7 +241,7 @@ export function InvoiceTable() {
         accessorFn: (row) => row.status ?? "",
         header: () => <div>ESTADO</div>,
         cell: ({ row }) => (
-          <div className="min-w-[140px] space-y-1">
+          <div className="min-w-[140px]">
             <Select
               value={row.original.status}
               onValueChange={(v: string) =>
@@ -292,21 +260,6 @@ export function InvoiceTable() {
                 <SelectItem value="overdue">Vencida</SelectItem>
               </SelectContent>
             </Select>
-            {row.original.status === "paid" && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-auto px-0 py-1 text-xs text-muted-foreground"
-                disabled={updatingId === row.original.id}
-                onClick={() => openPaymentDate(row.original)}
-                aria-label={`Fecha de cobro de factura ${row.original.number}`}
-              >
-                {row.original.paid_date
-                  ? `Cobro: ${formatDate(row.original.paid_date)}`
-                  : "Registrar fecha de cobro"}
-              </Button>
-            )}
           </div>
         ),
       },
@@ -316,16 +269,6 @@ export function InvoiceTable() {
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground hover:bg-accent p-2"
-              onClick={() => handleView(row.original)}
-              title="Ver"
-              aria-label={`Ver factura ${row.original.number}`}
-            >
-              <Eye className="w-4 h-4" aria-hidden="true" />
-            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -380,7 +323,7 @@ export function InvoiceTable() {
         ),
       },
     ],
-    [loadingPdf, updatingId, deletingId, handleEdit, handleView, handleOpenGmail, handleStatusChange, handleDelete, openPaymentDate]
+    [loadingPdf, updatingId, deletingId, handleEdit, handleOpenGmail, handleStatusChange, handleDelete]
   );
 
   const table = useReactTable({
@@ -557,7 +500,15 @@ export function InvoiceTable() {
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className="border-b border-border hover:bg-accent/30 transition-colors"
+                    className="cursor-pointer border-b border-border hover:bg-accent/30 transition-colors"
+                    onClick={(event) => {
+                      const target = event.target as HTMLElement;
+                      if (
+                        !event.currentTarget.contains(target) ||
+                        target.closest("a, button, [role='combobox']")
+                      ) return;
+                      handleView(row.original);
+                    }}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="py-4 px-2">
@@ -626,48 +577,6 @@ export function InvoiceTable() {
           </div>
         </div>
       </div>
-      <Dialog
-        open={Boolean(paidInvoice)}
-        onOpenChange={(open) => {
-          if (!open && !updatingId) setPaidInvoice(null);
-        }}
-      >
-        <DialogContent showClose={!updatingId}>
-          <form onSubmit={handleSavePaymentDate} className="space-y-4">
-            <DialogHeader>
-              <DialogTitle>Fecha de cobro · Factura {paidInvoice?.number}</DialogTitle>
-              <DialogDescription>
-                Indica cuándo recibiste el pago. Esta fecha determina el mes y
-                trimestre de la factura en el resumen de impuestos.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-2">
-              <Label htmlFor="invoice-paid-date">Fecha de cobro real</Label>
-              <Input
-                id="invoice-paid-date"
-                type="date"
-                required
-                value={paidDate}
-                onChange={(event) => setPaidDate(event.target.value)}
-                disabled={Boolean(updatingId)}
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setPaidInvoice(null)}
-                disabled={Boolean(updatingId)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={!paidDate || Boolean(updatingId)}>
-                {updatingId ? "Guardando..." : "Guardar cobro"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
       <AlertDialog open={Boolean(confirmId)} onOpenChange={(open) => !open && setConfirmId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

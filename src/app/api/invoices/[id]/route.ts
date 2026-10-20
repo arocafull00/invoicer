@@ -7,7 +7,6 @@ import {
   computeInvoiceAmounts,
   fetchInvoiceById,
   insertLineItems,
-  validateInvoicePaidDate,
   type InvoiceInput,
 } from '@server/services/invoices';
 
@@ -21,7 +20,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
     const body = (await request.json()) as Partial<InvoiceInput>;
 
     const existing = await sql`
-      SELECT id, consultant_id, client_id, payment_instructions_id, status, paid_date
+      SELECT id, consultant_id, client_id, payment_instructions_id, status
       FROM invoices
       WHERE id = ${id}
         AND user_id = ${userId}
@@ -30,13 +29,6 @@ export async function PUT(request: Request, { params }: RouteContext) {
     if (!existing[0]) throw new ApiError('Invoice not found', 404);
 
     const status = body.status ?? (existing[0].status as string);
-    const paidDate = validateInvoicePaidDate(
-      status,
-      body.paid_date === undefined ? existing[0].paid_date : body.paid_date
-    );
-    if (status === 'paid' && existing[0].status !== 'paid' && !paidDate) {
-      throw new ApiError('Indica la fecha de cobro para marcar la factura como pagada', 400);
-    }
 
     const consultantId =
       body.consultant?.id ?? (existing[0].consultant_id as string);
@@ -63,6 +55,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
           )
         : null;
 
+    // Keep the legacy payment date compatible with the database status constraint.
     let rows;
     if (amounts) {
       rows = await sql`
@@ -81,7 +74,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
           total = ${amounts.total},
           vat_exempt = ${amounts.vat_exempt},
           status = COALESCE(${body.status ?? null}, status),
-          paid_date = ${paidDate},
+          paid_date = CASE WHEN ${status} = 'paid' THEN paid_date ELSE NULL END,
           irpf_rate = ${amounts.irpf_rate},
           irpf_amount = ${amounts.irpf_amount}
         WHERE id = ${id} AND user_id = ${userId}
@@ -101,7 +94,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
           payment_instructions_id = ${paymentId},
           description = COALESCE(${body.description ?? null}, description),
           status = COALESCE(${body.status ?? null}, status),
-          paid_date = ${paidDate},
+          paid_date = CASE WHEN ${status} = 'paid' THEN paid_date ELSE NULL END,
           irpf_rate = COALESCE(${body.irpf_rate ?? null}, irpf_rate),
           irpf_amount = COALESCE(${body.irpf_amount ?? null}, irpf_amount)
         WHERE id = ${id} AND user_id = ${userId}

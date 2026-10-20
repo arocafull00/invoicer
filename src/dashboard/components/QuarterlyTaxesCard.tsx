@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,19 +53,9 @@ export const QuarterlyTaxesCard: React.FC = () => {
           {period.label} · Pago en {period.paymentMonth}
         </p>
         <p className="text-sm text-muted-foreground mt-1">
-          Facturas agrupadas por fecha de cobro
+          Facturas agrupadas por fecha de factura
         </p>
       </div>
-
-      {taxes.invoicesMissingPaidDate > 0 && (
-        <p role="status" className="mb-4 text-sm text-muted-foreground">
-          Cálculo incompleto: {taxes.invoicesMissingPaidDate} facturas pagadas sin
-          fecha de cobro no están incluidas.{' '}
-          <Link href="/invoices" className="text-primary underline">
-            Registrar fechas de cobro
-          </Link>
-        </p>
-      )}
 
       {!hasActivity ? (
         <div className="text-center py-8 text-muted-foreground">

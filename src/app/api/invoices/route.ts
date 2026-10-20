@@ -10,7 +10,6 @@ import {
   fetchAllInvoices,
   fetchInvoiceById,
   insertLineItems,
-  validateInvoicePaidDate,
   type InvoiceInput,
 } from '@server/services/invoices';
 
@@ -29,7 +28,6 @@ export async function POST(request: Request) {
     const userId = await requireUserId();
     const sql = getSql();
     const body = (await request.json()) as InvoiceInput;
-    const paidDate = validateInvoicePaidDate(body.status, body.paid_date);
 
     if (
       !body.consultant?.id ||
@@ -67,7 +65,7 @@ export async function POST(request: Request) {
             number, created_date, start_date, end_date,
             consultant_id, client_id, payment_instructions_id,
             description, subtotal, vat_rate, vat_amount, total,
-            vat_exempt, status, paid_date, irpf_rate, irpf_amount, user_id
+            vat_exempt, status, irpf_rate, irpf_amount, user_id
           )
           VALUES (
             ${number},
@@ -84,7 +82,6 @@ export async function POST(request: Request) {
             ${amounts.total},
             ${amounts.vat_exempt},
             ${body.status},
-            ${paidDate},
             ${amounts.irpf_rate},
             ${amounts.irpf_amount},
             ${userId}

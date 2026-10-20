@@ -263,7 +263,6 @@ export interface QuarterlyTaxesResult {
   totalIva: number;
   totalTaxes: number;
   totalInvoiced: number;
-  invoicesMissingPaidDate: number;
 }
 
 type MonthlyTaxAccumulator = {
@@ -289,11 +288,8 @@ export const calculateQuarterlyTaxes = (
   const paidInvoices = invoices.filter(
     (invoice) => invoice.status === 'paid' && !invoice.deleted
   );
-  const invoicesMissingPaidDate = paidInvoices.filter(
-    (invoice) => !invoice.paid_date || !getLocalDateParts(invoice.paid_date)
-  ).length;
   const periodInvoices = paidInvoices.filter((invoice) =>
-    invoice.paid_date && isDateInPeriod(invoice.paid_date, period)
+    isDateInPeriod(invoice.created_date, period)
   );
   const periodExpenses = expenses.filter((expense) =>
     isDateInPeriod(expense.date, period)
@@ -313,7 +309,7 @@ export const calculateQuarterlyTaxes = (
   });
 
   periodInvoices.forEach((invoice) => {
-    const monthInfo = findPeriodMonth(invoice.paid_date!, period);
+    const monthInfo = findPeriodMonth(invoice.created_date, period);
     if (!monthInfo) return;
 
     const current = monthlyData.get(monthInfo.name);
@@ -404,6 +400,5 @@ export const calculateQuarterlyTaxes = (
     totalIva,
     totalTaxes,
     totalInvoiced,
-    invoicesMissingPaidDate,
   };
 };
