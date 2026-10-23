@@ -1,4 +1,6 @@
 import type {
+  Appointment,
+  AppointmentInput,
   Client,
   Consultant,
   Expense,
@@ -217,6 +219,28 @@ export class ApiClient {
 
   deleteExpense(id: string) {
     return request<void>(`/expenses/${id}`, { method: 'DELETE' });
+  }
+
+  getAppointments() {
+    return request<Appointment[]>('/appointments');
+  }
+
+  createAppointment(appointment: AppointmentInput) {
+    return request<Appointment>('/appointments', {
+      method: 'POST',
+      body: JSON.stringify(appointment),
+    });
+  }
+
+  updateAppointment(id: string, appointment: AppointmentInput) {
+    return request<Appointment>(`/appointments/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(appointment),
+    });
+  }
+
+  deleteAppointment(id: string) {
+    return request<void>(`/appointments/${id}`, { method: 'DELETE' });
   }
 }
 

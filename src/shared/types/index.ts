@@ -108,3 +108,21 @@ export interface Expense {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface Appointment {
+  id: string;
+  title: string;
+  client_id?: string | null;
+  client?: Pick<Client, "id" | "name"> | null;
+  start_at: string;
+  end_at: string;
+  all_day: boolean;
+  notes: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type AppointmentInput = Omit<
+  Appointment,
+  "id" | "client" | "created_at" | "updated_at"
+>;

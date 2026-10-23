@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FileText, Home, Settings, UserCog, Users, CreditCard, Receipt } from 'lucide-react';
+import { CalendarDays, FileText, Home, Settings, UserCog, Users, CreditCard, Receipt } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -25,7 +25,10 @@ type NavSection = {
 const navSections: NavSection[] = [
   {
     label: 'General',
-    items: [{ title: 'Dashboard', to: '/dashboard', icon: Home }],
+    items: [
+      { title: 'Dashboard', to: '/dashboard', icon: Home },
+      { title: 'Calendario', to: '/calendar', icon: CalendarDays },
+    ],
   },
   {
     label: 'Facturación',
