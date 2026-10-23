@@ -135,7 +135,7 @@ export function AppointmentFormDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>{isEditing ? "Editar cita" : "Nueva cita"}</DialogTitle>
           </DialogHeader>

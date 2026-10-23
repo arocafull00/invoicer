@@ -70,25 +70,21 @@ function DialogContent({
   )
 }
 
-function DialogHeader(
-  props: React.ComponentProps<"div">
-) {
+function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col space-y-1.5 text-left pr-8", props.className)}
+      className={cn("flex flex-col space-y-1.5 text-left pr-8", className)}
       {...props}
     />
   )
 }
 
-function DialogFooter(
-  props: React.ComponentProps<"div">
-) {
+function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn("mt-auto flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", props.className)}
+      className={cn("mt-auto flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
       {...props}
     />
   )
