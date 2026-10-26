@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 import { shadcn } from '@clerk/ui/themes';
 import { Providers } from './providers';
@@ -9,6 +9,12 @@ export const metadata: Metadata = {
   description: 'Gestiona facturas, clientes y gastos desde un solo lugar.',
   icons: {
     icon: '/logo.png',
+    apple: '/apple-touch-icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'Invoicer',
+    statusBarStyle: 'black-translucent',
   },
   openGraph: {
     title: 'Invoicer',
@@ -28,6 +34,10 @@ export const metadata: Metadata = {
     description: 'Gestiona facturas, clientes y gastos desde un solo lugar.',
     images: ['/logo.png'],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0D0D0D',
 };
 
 export default function RootLayout({

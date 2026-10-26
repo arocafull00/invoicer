@@ -12,6 +12,7 @@ import {
 import { useTheme } from "next-themes";
 import { BillingSettingsCard } from "@/settings/components/BillingSettingsCard";
 import { IdentitySettingsCard } from "@/settings/components/IdentitySettingsCard";
+import { InstallAppCard } from "@/settings/components/InstallAppCard";
 
 export const SettingsPage: React.FC = () => {
   const { theme, setTheme, systemTheme } = useTheme();
@@ -60,6 +61,7 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
         </Card>
+        <InstallAppCard />
       </div>
     </div>
   );

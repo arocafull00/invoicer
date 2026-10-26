@@ -5,8 +5,11 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { queryClient } from '@/shared/api/queryClient';
+import { useRegisterPwa } from '@/shared/hooks/usePwaInstall';
 
 export function Providers({ children }: { children: ReactNode }) {
+  useRegisterPwa();
+
   return (
     <ThemeProvider
       attribute="class"
