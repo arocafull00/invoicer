@@ -23,6 +23,7 @@ import { parseIngresosCsv } from "@/invoices/lib/csvImport";
 import { useImportInvoicesStore } from "@/invoices/store/useImportInvoicesStore";
 import { ImportPreviewRow } from "@/invoices/components/ImportPreviewRow";
 import { ConsultantSelectOption } from "@/invoices/components/ConsultantSelectOption";
+import { PageHeader } from "@/shared/components/PageHeader";
 
 export default function ImportInvoices() {
   const router = useRouter();
@@ -108,20 +109,17 @@ export default function ImportInvoices() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Importar facturas</h1>
-          <p className="text-muted-foreground mt-1">
-            Sube un CSV con el formato de ingresos para crear facturas en bloque
-          </p>
-        </div>
-        <Button variant="outline" asChild>
-          <Link href="/invoices">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
-          </Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="Importar facturas"
+        actions={
+          <Button variant="outline" asChild>
+            <Link href="/invoices">
+              <ArrowLeft className="w-4 h-4 sm:mr-2" />
+              <span className="sr-only sm:not-sr-only">Volver</span>
+            </Link>
+          </Button>
+        }
+      />
 
       <Card>
         <CardHeader>
@@ -210,7 +208,7 @@ export default function ImportInvoices() {
               }
               onClick={handleImport}
             >
-              <FileUp className="w-4 h-4 mr-2" />
+              <FileUp className="w-4 h-4 sm:mr-2" />
               Importar {importableCount > 0 ? importableCount : rows.length}{" "}
               facturas
             </Button>

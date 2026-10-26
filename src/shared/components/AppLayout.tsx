@@ -13,10 +13,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <div className="flex items-center gap-2 p-4">
-            <SidebarTrigger />
-          </div>
-          <main className="min-h-screen p-4 md:p-6 space-y-6">
+          <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-4 md:p-4">
+            <div className="flex items-center">
+              <SidebarTrigger />
+            </div>
+            <div id="page-title" className="min-w-0" />
+            <div id="page-actions" className="flex items-center justify-end gap-2" />
+          </header>
+          <main className="min-h-screen px-3 py-4 md:p-6 space-y-6">
             {children}
           </main>
         </SidebarInset>

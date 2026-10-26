@@ -5,27 +5,25 @@ import { FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ExpenseTable } from "@/expenses/components/ExpenseTable";
 import { CreateExpenseDialog } from "@/expenses/components/CreateExpenseDialog";
+import { PageHeader } from "@/shared/components/PageHeader";
 
 export default function ExpensesScreen() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Gastos</h1>
-          <p className="text-muted-foreground mt-1">
-            Consulta, crea e importa tus gastos
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button variant="outline" asChild>
-            <Link href="/expenses/import">
-              <FileUp className="w-4 h-4 mr-2" />
-              Importar CSV
-            </Link>
-          </Button>
-          <CreateExpenseDialog />
-        </div>
-      </div>
+      <PageHeader
+        title="Gastos"
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="outline" asChild>
+              <Link href="/expenses/import">
+                <FileUp className="w-4 h-4 sm:mr-2" />
+                <span className="sr-only sm:not-sr-only">Importar CSV</span>
+              </Link>
+            </Button>
+            <CreateExpenseDialog />
+          </div>
+        }
+      />
 
       <ExpenseTable />
     </div>

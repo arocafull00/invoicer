@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { Spinner } from '@/shared/components/Spinner';
 import { ConsultantFormFields, canSubmitConsultantFields } from '@/consultants/ConsultantFormFields';
+import { PageHeader } from "@/shared/components/PageHeader";
 
 export default function ConsultantsPage() {
   const { data: consultants = [], isLoading } = useConsultants();
@@ -77,33 +78,32 @@ export default function ConsultantsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Datos de facturación</h1>
-          <p className="text-muted-foreground mt-1">Gestiona tus perfiles de emisor</p>
-        </div>
-        <Dialog open={openCreate} onOpenChange={(o: boolean) => { setOpenCreate(o); if (!o) setForm({}); }}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setForm({})}>
-              <Plus className="w-4 h-4" />
-              Añadir perfil de emisor
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nuevo perfil de emisor</DialogTitle>
-            </DialogHeader>
-            <ConsultantFormFields value={form} onChange={setForm} />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancelar</Button>
-              <Button onClick={handleCreate} disabled={!canSubmitConsultantFields(form) || pending}>{pending ? 'Guardando...' : 'Guardar'}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+      <PageHeader
+        title="Datos de facturación"
+        actions={
+          <Dialog open={openCreate} onOpenChange={(o: boolean) => { setOpenCreate(o); if (!o) setForm({}); }}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setForm({})}>
+                <Plus className="w-4 h-4" />
+                <span className="sr-only sm:not-sr-only">Añadir perfil de emisor</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nuevo perfil de emisor</DialogTitle>
+              </DialogHeader>
+              <ConsultantFormFields value={form} onChange={setForm} />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancelar</Button>
+                <Button onClick={handleCreate} disabled={!canSubmitConsultantFields(form) || pending}>{pending ? 'Guardando...' : 'Guardar'}</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        }
+      />
 
-      <Card className=" ">
-        <div className="p-6">
+      <Card className="p-0 md:p-6">
+        <div className="p-3 md:p-6">
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input

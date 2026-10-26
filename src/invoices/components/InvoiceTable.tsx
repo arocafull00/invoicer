@@ -20,6 +20,7 @@ import {
   Plus,
   FileText,
   Mail,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useInvoiceStore, useSettingsStore } from "@/shared/lib/stores";
 import { Spinner } from "@/shared/components/Spinner";
@@ -112,6 +113,7 @@ export function InvoiceTable() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   const handleStatusChange = useCallback(async (
     inv: Invoice,
     next: Invoice["status"]
@@ -339,9 +341,11 @@ export function InvoiceTable() {
     initialState: { pagination: { pageSize } },
   });
 
+  const activeFilterCount = table.getState().columnFilters.length;
+
   if (!isDataReady) {
     return (
-      <Card className="p-12 flex items-center justify-center">
+      <Card className="p-6 md:p-12 flex items-center justify-center">
         <Spinner className="h-10 w-10" />
       </Card>
     );
@@ -349,7 +353,7 @@ export function InvoiceTable() {
 
   if (invoices.length === 0) {
     return (
-      <Card className="p-12">
+      <Card className="p-6 md:p-12">
         <div className="flex flex-col items-center justify-center gap-4 text-center">
           <div className="rounded-full bg-muted p-4 text-muted-foreground">
             <FileText className="h-8 w-8" />
@@ -372,19 +376,33 @@ export function InvoiceTable() {
   }
 
   return (
-    <Card>
-      <div className="p-6">
+    <Card className="p-0 md:p-6">
+      <div className="p-3 md:p-6">
         <div className="flex flex-col gap-3 mb-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12 lg:items-end">
-            <div className="min-w-0 sm:col-span-2 lg:col-span-3">
+          <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-12 lg:items-end">
+            <div className="flex gap-2 min-w-0 sm:col-span-2 lg:col-span-3">
               <Input
-                placeholder="Buscar en todas las columnas..."
+                placeholder="Buscar facturas..."
                 className="bg-card border-border text-foreground placeholder:text-muted-foreground w-full min-w-0"
                 value={globalFilter}
                 onChange={(e) => setGlobalFilter(e.target.value)}
               />
+              <Button
+                variant="outline"
+                className="sm:hidden shrink-0 gap-2"
+                onClick={() => setShowFilters((v) => !v)}
+                aria-expanded={showFilters}
+                aria-label="Mostrar filtros"
+              >
+                <SlidersHorizontal className="w-4 h-4" aria-hidden="true" />
+                {activeFilterCount > 0 && (
+                  <span className="rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
             </div>
-            <div className="min-w-0 lg:col-span-3">
+            <div className={`${showFilters ? "block" : "hidden"} sm:block min-w-0 lg:col-span-3`}>
               <Select
                 value={
                   (table.getColumn("status")?.getFilterValue() as string) ??
@@ -407,7 +425,7 @@ export function InvoiceTable() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="min-w-0 lg:col-span-3">
+            <div className={`${showFilters ? "block" : "hidden"} sm:block min-w-0 lg:col-span-3`}>
               <Select
                 value={
                   (table
@@ -435,7 +453,7 @@ export function InvoiceTable() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="min-w-0 lg:col-span-3">
+            <div className={`${showFilters ? "block" : "hidden"} sm:block min-w-0 lg:col-span-3`}>
               <Select
                 value={
                   (table.getColumn("clientName")?.getFilterValue() as string) ??
@@ -452,9 +470,11 @@ export function InvoiceTable() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los clientes</SelectItem>
-                  {invoices.map((i) => (
-                    <SelectItem key={i.client.name} value={i.client.name}>
-                      {i.client.name}
+                  {Array.from(
+                    new Set(invoices.map((i) => i.client.name))
+                  ).map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -524,7 +544,7 @@ export function InvoiceTable() {
             </TableBody>
           </Table>
         </div>
-        <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Filas por página</span>
             <div className="w-24">

@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { PageHeader } from "@/shared/components/PageHeader";
 
 function ClientForm({ value, onChange }: { value: Partial<Client>; onChange: (v: Partial<Client>) => void }) {
   return (
@@ -91,33 +92,32 @@ export default function ClientsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Clientes</h1>
-          <p className="text-muted-foreground mt-1">Gestiona tus clientes</p>
-        </div>
-        <Dialog open={openCreate} onOpenChange={(o: boolean) => { setOpenCreate(o); if (!o) setForm({}); }}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setForm({})}>
-              <Plus className="w-4 h-4" />
-              Añadir cliente
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nuevo cliente</DialogTitle>
-            </DialogHeader>
-            <ClientForm value={form} onChange={setForm} />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancelar</Button>
-              <Button onClick={handleCreate} disabled={pending}>{pending ? 'Guardando...' : 'Guardar'}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+      <PageHeader
+        title="Clientes"
+        actions={
+          <Dialog open={openCreate} onOpenChange={(o: boolean) => { setOpenCreate(o); if (!o) setForm({}); }}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setForm({})}>
+                <Plus className="w-4 h-4" />
+                <span className="sr-only sm:not-sr-only">Añadir cliente</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nuevo cliente</DialogTitle>
+              </DialogHeader>
+              <ClientForm value={form} onChange={setForm} />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpenCreate(false)}>Cancelar</Button>
+                <Button onClick={handleCreate} disabled={pending}>{pending ? 'Guardando...' : 'Guardar'}</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        }
+      />
 
-      <Card className=" ">
-        <div className="p-6">
+      <Card className="p-0 md:p-6">
+        <div className="p-3 md:p-6">
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input

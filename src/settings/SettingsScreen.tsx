@@ -13,18 +13,14 @@ import { useTheme } from "next-themes";
 import { BillingSettingsCard } from "@/settings/components/BillingSettingsCard";
 import { IdentitySettingsCard } from "@/settings/components/IdentitySettingsCard";
 import { InstallAppCard } from "@/settings/components/InstallAppCard";
+import { PageHeader } from "@/shared/components/PageHeader";
 
 export const SettingsPage: React.FC = () => {
   const { theme, setTheme, systemTheme } = useTheme();
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Configuración</h1>
-        <p className="text-muted-foreground">
-          Gestiona la configuración de tu cuenta y preferencias
-        </p>
-      </div>
+      <PageHeader title="Configuración" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <IdentitySettingsCard />

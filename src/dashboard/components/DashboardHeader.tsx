@@ -2,20 +2,20 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
+import { PageHeader } from "@/shared/components/PageHeader";
 
 export const DashboardHeader: React.FC = () => {
   return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Resumen de tu actividad de facturación</p>
-      </div>
-      <Button asChild>
-        <Link href="/invoices/new">
-          <Plus className="w-4 h-4 mr-2" />
-          Nueva Factura
-        </Link>
-      </Button>
-    </div>
+    <PageHeader
+      title="Dashboard"
+      actions={
+        <Button asChild>
+          <Link href="/invoices/new" aria-label="Nueva Factura">
+            <Plus className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Nueva Factura</span>
+          </Link>
+        </Button>
+      }
+    />
   );
 };

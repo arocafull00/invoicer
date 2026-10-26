@@ -116,7 +116,7 @@ export function CreateExpenseDialog() {
       <DialogTrigger asChild>
         <Button onClick={() => setForm(emptyExpenseForm())}>
           <Plus className="w-4 h-4" />
-          Añadir gasto
+          <span className="sr-only sm:not-sr-only">Añadir gasto</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">

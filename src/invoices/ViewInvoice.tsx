@@ -17,6 +17,7 @@ import {
 import { useInvoiceStore, useSettingsStore } from "@/shared/lib/stores";
 import { formatDate, formatCurrency } from "@/shared/lib/helpers";
 import { downloadInvoicePDF } from "@/shared/lib/pdf";
+import { PageHeader } from "@/shared/components/PageHeader";
 
 export const ViewInvoice: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -56,36 +57,25 @@ export const ViewInvoice: React.FC = () => {
 
   return (
     <div className="w-full min-h-screen px-4 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="max-w-4xl mx-auto mb-8">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
-          <div className="flex items-center gap-4">
+      <PageHeader
+        title={`Factura ${invoice.number}`}
+        actions={
+          <>
             <Button
               variant="ghost"
-              size="sm"
               onClick={() => router.push("/invoices")}
               className="text-muted-foreground hover:text-foreground hover:bg-accent"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver
+              <ArrowLeft className="w-4 h-4" />
+              <span className="sr-only sm:not-sr-only">Volver</span>
             </Button>
-          </div>
-          <div className="flex flex-col gap-2 justify-center items-center text-center flex-1 lg:flex-none">
-            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-              Factura {invoice.number}
-            </h1>
-            <p className="text-muted-foreground">
-              Creada el {formatDate(invoice.created_date)}
-            </p>
-          </div>
-          <div className="flex gap-2 justify-center lg:justify-end">
             <Button
               variant="secondary"
               onClick={() => router.push(`/invoices/edit/${invoice.id}`)}
               className="flex items-center gap-2"
             >
               <Edit className="w-4 h-4" />
-              <span className="hidden sm:inline">Editar</span>
+              <span className="sr-only sm:not-sr-only">Editar</span>
             </Button>
             <Button
               onClick={handleDownloadPDF}
@@ -97,11 +87,11 @@ export const ViewInvoice: React.FC = () => {
               ) : (
                 <Download className="w-4 h-4" />
               )}
-              <span className="hidden sm:inline">Descargar PDF</span>
+              <span className="sr-only sm:not-sr-only">Descargar PDF</span>
             </Button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Bento Grid */}
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">

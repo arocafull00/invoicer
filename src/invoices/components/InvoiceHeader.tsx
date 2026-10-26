@@ -2,10 +2,10 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { PageHeader } from "@/shared/components/PageHeader";
 
 interface InvoiceHeaderProps {
   title: string;
-  subtitle: string;
   actionLabel: string;
   onAction: () => void;
   actionDisabled?: boolean;
@@ -13,7 +13,6 @@ interface InvoiceHeaderProps {
 
 export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({
   title,
-  subtitle,
   actionLabel,
   onAction,
   actionDisabled = false,
@@ -21,23 +20,22 @@ export const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({
   const router = useRouter();
 
   return (
-    <>
-      <Button
-        className="fixed top-4 right-4"
-        variant="ghost"
-        onClick={() => router.push("/invoices")}
-      >
-        <X className="w-4 h-4" />
-      </Button>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{title}</h1>
-          <p className="text-muted-foreground mt-1">{subtitle}</p>
-        </div>
-        <Button onClick={onAction} disabled={actionDisabled}>
-          {actionLabel}
-        </Button>
-      </div>
-    </>
+    <PageHeader
+      title={title}
+      actions={
+        <>
+          <Button onClick={onAction} disabled={actionDisabled}>
+            {actionLabel}
+          </Button>
+          <Button
+            variant="ghost"
+            aria-label="Cerrar"
+            onClick={() => router.push("/invoices")}
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </>
+      }
+    />
   );
 };

@@ -21,6 +21,7 @@ import {
   appointmentToEvent,
   eventToAppointmentInput,
 } from "@/calendar/lib/appointmentEvents";
+import { PageHeader } from "@/shared/components/PageHeader";
 
 const translations: Translations = {
   ...defaultTranslations,
@@ -91,12 +92,7 @@ export default function CalendarScreen() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Calendario</h1>
-        <p className="text-muted-foreground mt-1">
-          Registra tus citas y asígnalas a clientes
-        </p>
-      </div>
+      <PageHeader title="Calendario" />
 
       {isLoading ? (
         <div className="flex justify-center py-12">

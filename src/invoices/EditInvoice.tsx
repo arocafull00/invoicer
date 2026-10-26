@@ -155,8 +155,7 @@ export const EditInvoice: React.FC = () => {
   return (
     <div className="space-y-6 max-w-[900px] mx-auto">
       <InvoiceHeader
-        title="Editar factura"
-        subtitle={`Modificar factura #${invoice.number}`}
+        title={`Editar factura #${invoice.number}`}
         actionLabel="Guardar cambios"
         onAction={handleSave}
         actionDisabled={!isFormValid()}

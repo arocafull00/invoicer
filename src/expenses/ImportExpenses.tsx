@@ -17,6 +17,7 @@ import { useImportExpensesStore } from "@/expenses/store/useImportExpensesStore"
 import { useExpensesStore } from "@/expenses/store/useExpensesStore";
 import { getExpenseTypes } from "@/shared/api/services/expenses";
 import { ImportExpensePreviewRow } from "@/expenses/components/ImportExpensePreviewRow";
+import { PageHeader } from "@/shared/components/PageHeader";
 
 export default function ImportExpenses() {
   const router = useRouter();
@@ -107,20 +108,17 @@ export default function ImportExpenses() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Importar gastos</h1>
-          <p className="text-muted-foreground mt-1">
-            Sube un CSV con el formato de gastos para crear registros en bloque
-          </p>
-        </div>
-        <Button variant="outline" asChild>
-          <Link href="/expenses">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
-          </Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="Importar gastos"
+        actions={
+          <Button variant="outline" asChild>
+            <Link href="/expenses">
+              <ArrowLeft className="w-4 h-4 sm:mr-2" />
+              <span className="sr-only sm:not-sr-only">Volver</span>
+            </Link>
+          </Button>
+        }
+      />
 
       <Card>
         <CardHeader>
@@ -181,7 +179,7 @@ export default function ImportExpenses() {
               }
               onClick={handleImport}
             >
-              <FileUp className="w-4 h-4 mr-2" />
+              <FileUp className="w-4 h-4 sm:mr-2" />
               Importar {importableCount > 0 ? importableCount : rows.length}{" "}
               gastos
             </Button>

@@ -39,6 +39,7 @@ import {
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { PaymentInstructionForm } from "@/payments/components/PaymentInstructionForm";
 import { Spinner } from "@/shared/components/Spinner";
+import { PageHeader } from "@/shared/components/PageHeader";
 
 export default function PaymentsPage() {
   const { data: paymentInstructions = [], isLoading } =
@@ -125,48 +126,45 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Pagos</h1>
-          <p className="text-muted-foreground mt-1">
-            Gestiona tus instrucciones de pago
-          </p>
-        </div>
-        <Dialog
-          open={openCreate}
-          onOpenChange={(o: boolean) => {
-            setOpenCreate(o);
-            if (!o) setForm({});
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button onClick={() => setForm({})}>
-              <Plus className="w-4 h-4" />
-              Añadir método de pago
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nueva instrucción de pago</DialogTitle>
-            </DialogHeader>
-            <PaymentInstructionForm value={form} onChange={setForm} />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpenCreate(false)}>
-                Cancelar
+      <PageHeader
+        title="Pagos"
+        actions={
+          <Dialog
+            open={openCreate}
+            onOpenChange={(o: boolean) => {
+              setOpenCreate(o);
+              if (!o) setForm({});
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button onClick={() => setForm({})}>
+                <Plus className="w-4 h-4" />
+                <span className="sr-only sm:not-sr-only">Añadir método de pago</span>
               </Button>
-              <Button
-                onClick={handleCreate}
-                disabled={!canSubmit(form) || pending}
-              >
-                {pending ? "Guardando..." : "Guardar"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nueva instrucción de pago</DialogTitle>
+              </DialogHeader>
+              <PaymentInstructionForm value={form} onChange={setForm} />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpenCreate(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleCreate}
+                  disabled={!canSubmit(form) || pending}
+                >
+                  {pending ? "Guardando..." : "Guardar"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        }
+      />
 
-      <Card className=" ">
-        <div className="p-6">
+      <Card className="p-0 md:p-6">
+        <div className="p-3 md:p-6">
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
