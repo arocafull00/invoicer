@@ -75,6 +75,10 @@ export default function CalendarScreen() {
     }))) : undefined,
     [hours],
   );
+  const closedDays = useMemo(() => {
+    const days = WEEK_DAYS.filter(({ value }) => hours.days[value].length === 0).map(({ value }) => value);
+    return hours.enabled && days.length < WEEK_DAYS.length ? days : undefined;
+  }, [hours]);
 
   const canSchedule = (event: CalendarEvent, editing = false) => {
     const input = eventToAppointmentInput(event);
@@ -118,7 +122,7 @@ export default function CalendarScreen() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           {hours.enabled
-            ? `Las horas no disponibles están sombreadas. Zona horaria: ${hours.timeZone}.`
+            ? `Solo se muestra tu horario de apertura. Zona horaria: ${hours.timeZone}.`
             : "Configura tus días y horas disponibles desde ajustes."}
         </p>
         <Button asChild variant="outline" size="sm"><Link href="/settings">Configurar horarios</Link></Button>
@@ -138,6 +142,8 @@ export default function CalendarScreen() {
             translations={translations}
             timeFormat="24-hour"
             businessHours={businessHours}
+            hideNonBusinessHours={Boolean(businessHours?.length)}
+            hiddenDays={closedDays}
             timezone={hours.enabled ? hours.timeZone : undefined}
             slotDuration={hours.enabled ? 15 : 60}
             scrollTime={businessHours?.map((slot) => String(slot.startTime)).sort()[0]}
