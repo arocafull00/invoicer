@@ -16,7 +16,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
     const { id } = await params;
     const sql = getSql();
     const body = (await request.json()) as AppointmentBody;
-    await validateAppointment(sql, userId, body);
+    await validateAppointment(sql, userId, body, id);
 
     const rows = await sql`
       UPDATE appointments SET
@@ -25,7 +25,8 @@ export async function PUT(request: Request, { params }: RouteContext) {
         start_at = ${body.start_at},
         end_at = ${body.end_at},
         all_day = ${body.all_day ?? false},
-        notes = ${body.notes ?? ''}
+        notes = ${body.notes ?? ''},
+        whatsapp_reminder = COALESCE(${body.whatsapp_reminder ?? null}, whatsapp_reminder)
       WHERE id = ${id} AND user_id = ${userId}
       RETURNING id
     `;

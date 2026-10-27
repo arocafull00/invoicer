@@ -1,4 +1,46 @@
 import type { PdfColorPalette, SupportedCurrency, SupportedDateFormat, UserSettings } from '@/shared/types';
+import { getWorkingHours, workingHoursSchema } from '@/shared/lib/workingHours';
+import { z } from 'zod';
+
+const SETTINGS_CACHE_KEY = 'invoicer.settings.v1';
+const settingsCacheSchema = z.object({
+  userId: z.string(),
+  settings: z.object({
+    id: z.string().optional(),
+    default_currency: z.enum(['eur', 'usd', 'gbp']),
+    date_format: z.enum(['dd/mm/yyyy', 'mm/dd/yyyy', 'yyyy-mm-dd']),
+    pdf_color_palette: z.enum(['violet', 'blue', 'emerald', 'rose']),
+    logo_url: z.string().nullable(),
+    irpf_rate: z.number().min(0).max(100),
+    working_hours: workingHoursSchema,
+  }),
+});
+
+export function readCachedSettings(userId: string): UserSettings | null {
+  try {
+    const cached = settingsCacheSchema.safeParse(JSON.parse(localStorage.getItem(SETTINGS_CACHE_KEY) ?? 'null'));
+    return cached.success && cached.data.userId === userId ? cached.data.settings : null;
+  } catch {
+    return null;
+  }
+}
+
+export function cacheSettings(userId: string, settings: UserSettings): void {
+  try {
+    localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify({ userId, settings }));
+  } catch {
+    // Settings still work when browser storage is full or unavailable.
+  }
+}
+
+export function clearSettingsCache(): void {
+  try {
+    localStorage.removeItem(SETTINGS_CACHE_KEY);
+    localStorage.removeItem(PDF_COLOR_PALETTE_STORAGE_KEY);
+  } catch {
+    // Browser storage may be unavailable.
+  }
+}
 
 const PDF_COLOR_PALETTE_STORAGE_KEY = 'invoice.pdf.color_palette';
 export const DEFAULT_PDF_COLOR_PALETTE: PdfColorPalette = 'violet';
@@ -36,6 +78,7 @@ function mapRowToSettings(row: {
   pdf_color_palette?: PdfColorPalette | null;
   logo_url?: string | null;
   irpf_rate?: number | string | null;
+  working_hours?: unknown;
 }): UserSettings {
   const localPalette = getStoredPdfColorPalette();
   const palette = isPdfColorPalette(row?.pdf_color_palette)
@@ -49,12 +92,17 @@ function mapRowToSettings(row: {
     pdf_color_palette: palette,
     logo_url: row?.logo_url ?? null,
     irpf_rate: mapIrpfRate(row?.irpf_rate),
+    working_hours: getWorkingHours(row?.working_hours),
   };
 }
 
 export async function getUserSettings(): Promise<UserSettings> {
   const response = await fetch('/api/settings');
   if (!response.ok) {
+    if (response.status === 401) {
+      clearSettingsCache();
+      throw new Error('Unauthorized');
+    }
     throw new Error('Failed to fetch user settings');
   }
   const data = await response.json();
@@ -65,7 +113,7 @@ export async function updateUserSettings(
   partial: Partial<
     Pick<
       UserSettings,
-      'default_currency' | 'date_format' | 'pdf_color_palette' | 'irpf_rate'
+      'default_currency' | 'date_format' | 'pdf_color_palette' | 'irpf_rate' | 'working_hours'
     >
   >
 ): Promise<UserSettings> {

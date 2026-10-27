@@ -11,6 +11,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { SidebarUserMenuAction } from '@/components/SidebarUserMenuAction';
+import { useSettingsStore } from '@/shared/lib/stores';
 
 export function SidebarUserButton() {
   const { user } = useUser();
@@ -59,7 +60,10 @@ export function SidebarUserButton() {
             <SidebarUserMenuAction
               label="Cerrar sesión"
               icon={LogOut}
-              onClick={() => signOut({ redirectUrl: '/login' })}
+              onClick={() => {
+                useSettingsStore.getState().reset();
+                void signOut({ redirectUrl: '/login' });
+              }}
             />
           </PopoverContent>
         </Popover>

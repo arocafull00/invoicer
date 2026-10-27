@@ -8,6 +8,7 @@ import type {
   Invoice,
   LineItemTemplate,
   PaymentInstruction,
+  WhatsAppReminderSettings,
 } from '../types';
 
 type TokenProvider = () => Promise<string | null>;
@@ -53,6 +54,21 @@ async function request<T>(
 }
 
 export class ApiClient {
+  getWhatsAppReminderSettings() {
+    return request<WhatsAppReminderSettings>('/whatsapp-reminders');
+  }
+
+  updateWhatsAppReminderSettings(settings: { phone: string; api_token: string; enabled: boolean }) {
+    return request<WhatsAppReminderSettings>('/whatsapp-reminders', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    });
+  }
+
+  sendWhatsAppReminderTest() {
+    return request<{ status: 'queued' }>('/whatsapp-reminders/send-test', { method: 'POST' });
+  }
+
   getConsultants() {
     return request<Consultant[]>('/consultants');
   }

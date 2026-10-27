@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 
     const inserted = await sql`
       INSERT INTO appointments (
-        title, client_id, start_at, end_at, all_day, notes, user_id
+        title, client_id, start_at, end_at, all_day, notes, user_id, whatsapp_reminder
       )
       VALUES (
         ${body.title.trim()},
@@ -50,7 +50,8 @@ export async function POST(request: Request) {
         ${body.end_at},
         ${body.all_day ?? false},
         ${body.notes ?? ''},
-        ${userId}
+        ${userId},
+        ${body.whatsapp_reminder ?? true}
       )
       RETURNING id
     `;

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useReducer } from "react";
+import Link from "next/link";
 import "dayjs/locale/es";
 import { toast } from "sonner";
 import {
@@ -8,6 +9,7 @@ import {
   defaultTranslations,
   type CalendarEvent,
   type Translations,
+  type BusinessHours,
 } from "@ilamy/calendar";
 import { Spinner } from "@/shared/components/Spinner";
 import {
@@ -22,6 +24,9 @@ import {
   eventToAppointmentInput,
 } from "@/calendar/lib/appointmentEvents";
 import { PageHeader } from "@/shared/components/PageHeader";
+import { Button } from "@/components/ui/button";
+import { useSettingsStore } from "@/shared/lib/stores";
+import { DEFAULT_WORKING_HOURS, WEEK_DAYS, hasSameAppointmentTime, isWithinWorkingHours, OUTSIDE_WORKING_HOURS_MESSAGE } from "@/shared/lib/workingHours";
 
 const translations: Translations = {
   ...defaultTranslations,
@@ -60,25 +65,42 @@ export default function CalendarScreen() {
   const createAppointment = useCreateAppointment();
   const updateAppointment = useUpdateAppointment();
   const deleteAppointment = useDeleteAppointment();
+  const hours = useSettingsStore((state) => state.settings?.working_hours) ?? DEFAULT_WORKING_HOURS;
+  const [, refreshEvents] = useReducer((version: number) => version + 1, 0);
 
-  const events = useMemo(
-    () => (appointments ?? []).map(appointmentToEvent),
-    [appointments]
+  const events = (appointments ?? []).map(appointmentToEvent);
+  const businessHours = useMemo<BusinessHours[] | undefined>(
+    () => hours.enabled ? WEEK_DAYS.flatMap(({ value }) => hours.days[value].map((slot) => ({
+      daysOfWeek: [value], startTime: slot.start, endTime: slot.end,
+    }))) : undefined,
+    [hours],
   );
 
+  const canSchedule = (event: CalendarEvent, editing = false) => {
+    const input = eventToAppointmentInput(event);
+    const previous = editing ? appointments?.find((appointment) => appointment.id === String(event.id)) : undefined;
+    if (previous && hasSameAppointmentTime(previous, input)) return true;
+    if (isWithinWorkingHours(hours, event.start.toDate(), event.end.toDate(), Boolean(event.allDay))) return true;
+    toast.error(OUTSIDE_WORKING_HOURS_MESSAGE);
+    refreshEvents();
+    return false;
+  };
+
   const handleAdd = (event: CalendarEvent) => {
+    if (!canSchedule(event)) return;
     createAppointment.mutate(eventToAppointmentInput(event), {
       onSuccess: () => toast.success("Cita creada"),
-      onError: () => toast.error("No se pudo crear la cita"),
+      onError: (error) => { toast.error(error.message || "No se pudo crear la cita"); refreshEvents(); },
     });
   };
 
   const handleUpdate = (event: CalendarEvent) => {
+    if (!canSchedule(event, true)) return;
     updateAppointment.mutate(
       { id: String(event.id), appointment: eventToAppointmentInput(event) },
       {
         onSuccess: () => toast.success("Cita actualizada"),
-        onError: () => toast.error("No se pudo actualizar la cita"),
+        onError: (error) => { toast.error(error.message || "No se pudo actualizar la cita"); refreshEvents(); },
       }
     );
   };
@@ -93,6 +115,14 @@ export default function CalendarScreen() {
   return (
     <div className="space-y-6">
       <PageHeader title="Calendario" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {hours.enabled
+            ? `Las horas no disponibles están sombreadas. Zona horaria: ${hours.timeZone}.`
+            : "Configura tus días y horas disponibles desde ajustes."}
+        </p>
+        <Button asChild variant="outline" size="sm"><Link href="/settings">Configurar horarios</Link></Button>
+      </div>
 
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -107,6 +137,10 @@ export default function CalendarScreen() {
             locale="es"
             translations={translations}
             timeFormat="24-hour"
+            businessHours={businessHours}
+            timezone={hours.enabled ? hours.timeZone : undefined}
+            slotDuration={hours.enabled ? 15 : 60}
+            scrollTime={businessHours?.map((slot) => String(slot.startTime)).sort()[0]}
             onEventAdd={handleAdd}
             onEventUpdate={handleUpdate}
             onEventDelete={handleDelete}

@@ -6,6 +6,9 @@ import {
   removeUserLogo,
   updateUserSettings,
   uploadUserLogo,
+  readCachedSettings,
+  cacheSettings,
+  clearSettingsCache,
 } from '@/shared/api/services/userSettings';
 
 interface InvoiceStoreState {
@@ -92,15 +95,17 @@ export const useInvoiceStore = create<InvoiceStoreState>((set) => ({
 }));
 
 interface SettingsStoreState {
+  userId: string | null;
   settings: UserSettings | null;
   isLoaded: boolean;
   loading: boolean;
-  load: () => Promise<void>;
+  load: (userId?: string) => Promise<void>;
+  reset: () => void;
   update: (
     partial: Partial<
       Pick<
         UserSettings,
-        'default_currency' | 'date_format' | 'pdf_color_palette' | 'irpf_rate'
+        'default_currency' | 'date_format' | 'pdf_color_palette' | 'irpf_rate' | 'working_hours'
       >
     >
   ) => Promise<void>;
@@ -109,26 +114,44 @@ interface SettingsStoreState {
 }
 
 export const useSettingsStore = create<SettingsStoreState>((set, get) => ({
+  userId: null,
   settings: null,
   isLoaded: false,
   loading: false,
-  load: async () => {
-    if (get().isLoaded || get().loading) return;
-    set({ loading: true });
+  reset: () => {
+    clearSettingsCache();
+    set({ userId: null, settings: null, isLoaded: false, loading: false });
+  },
+  load: async (userId = get().userId ?? undefined) => {
+    if (!userId) return;
+    if (get().userId === userId && (get().isLoaded || get().loading)) return;
+    set({ userId, settings: readCachedSettings(userId), loading: true, isLoaded: false });
     try {
       const settings = await getUserSettings();
+      if (get().userId !== userId) return;
       set({ settings, isLoaded: true });
+      cacheSettings(userId, settings);
     } catch (error) {
+      if (get().userId !== userId) return;
+      if (error instanceof Error && error.message === 'Unauthorized') get().reset();
       console.error('Error loading user settings:', error);
       toast.error('No se pudieron cargar los ajustes');
     } finally {
-      set({ loading: false });
+      if (get().userId === userId) set({ loading: false });
     }
   },
   update: async (partial) => {
+    const userId = get().userId;
     try {
       const updated = await updateUserSettings(partial);
-      set({ settings: updated });
+      if (get().userId !== userId) return;
+      // Concurrent preference updates must not replace unrelated, newer settings.
+      const settings = { ...(get().settings ?? updated) };
+      for (const key of Object.keys(partial) as (keyof typeof partial)[]) {
+        Object.assign(settings, { [key]: updated[key] });
+      }
+      set({ settings });
+      if (userId) cacheSettings(userId, settings);
     } catch (error) {
       console.error('Error updating user settings:', error);
       toast.error('No se pudieron guardar los ajustes');
@@ -136,9 +159,13 @@ export const useSettingsStore = create<SettingsStoreState>((set, get) => ({
     }
   },
   uploadLogo: async (file) => {
+    const userId = get().userId;
     try {
       const updated = await uploadUserLogo(file);
-      set({ settings: updated });
+      if (get().userId !== userId) return;
+      const settings = { ...(get().settings ?? updated), logo_url: updated.logo_url };
+      set({ settings });
+      if (userId) cacheSettings(userId, settings);
       toast.success('Logo actualizado');
     } catch (error) {
       console.error('Error uploading logo:', error);
@@ -149,9 +176,13 @@ export const useSettingsStore = create<SettingsStoreState>((set, get) => ({
     }
   },
   removeLogo: async () => {
+    const userId = get().userId;
     try {
       const updated = await removeUserLogo();
-      set({ settings: updated });
+      if (get().userId !== userId) return;
+      const settings = { ...(get().settings ?? updated), logo_url: updated.logo_url };
+      set({ settings });
+      if (userId) cacheSettings(userId, settings);
       toast.success('Logo eliminado');
     } catch (error) {
       console.error('Error removing logo:', error);

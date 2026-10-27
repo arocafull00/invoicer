@@ -61,6 +61,12 @@
       "sourceType": "autoskills-registry",
       "computedHash": "e0b52fe3ffea533e1e543ac8a8a20fccca3beed9f8bdc31a0934fe9f554439e8"
     },
+    "whapi": {
+      "source": "Whapi-Cloud/whapi-whatsapp-api-skill",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/whapi/SKILL.md",
+      "computedHash": "dc032a0dc1e84adf9bb9be5186d01015c2a37df76c4ef75679709c626cf9603b"
+    },
     "zod": {
       "source": "pproenca/dot-skills",
       "sourceType": "autoskills-registry",

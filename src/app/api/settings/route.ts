@@ -2,12 +2,14 @@ import { NextResponse } from 'next/server';
 import { apiErrorResponse, requireUserId } from '@server/lib/api';
 import { getSql, type Sql } from '@server/lib/db';
 import { ApiError } from '@server/lib/errors';
+import { workingHoursSchema } from '@/shared/lib/workingHours';
 
 type SettingsBody = {
   default_currency?: 'eur' | 'usd' | 'gbp';
   date_format?: 'dd/mm/yyyy' | 'mm/dd/yyyy' | 'yyyy-mm-dd';
   pdf_color_palette?: 'violet' | 'blue' | 'emerald' | 'rose';
   irpf_rate?: number | null;
+  working_hours?: unknown;
 };
 
 function parseIrpfRate(value: unknown): number | null {
@@ -51,13 +53,20 @@ export async function PUT(request: Request) {
     const sql = getSql();
     const body = (await request.json()) as SettingsBody;
     const irpfRate = parseIrpfRate(body.irpf_rate);
+    const workingHours = body.working_hours === undefined
+      ? undefined
+      : workingHoursSchema.safeParse(body.working_hours);
+    if (workingHours && !workingHours.success) {
+      throw new ApiError(workingHours.error.issues.map((issue) => issue.message).join('. '), 400);
+    }
     const current = await getOrCreateSettings(sql, userId);
     const rows = await sql`
       UPDATE user_settings SET
         default_currency = COALESCE(${body.default_currency ?? null}, default_currency),
         date_format = COALESCE(${body.date_format ?? null}, date_format),
         pdf_color_palette = COALESCE(${body.pdf_color_palette ?? null}, pdf_color_palette),
-        irpf_rate = COALESCE(${irpfRate}, irpf_rate)
+        irpf_rate = COALESCE(${irpfRate}, irpf_rate),
+        working_hours = COALESCE(${workingHours?.success ? JSON.stringify(workingHours.data) : null}::jsonb, working_hours)
       WHERE id = ${current.id} AND user_id = ${userId}
       RETURNING *
     `;

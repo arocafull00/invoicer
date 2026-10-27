@@ -6,16 +6,22 @@ import { Button } from '@/components/ui/button';
 import { setTokenProvider } from '@/shared/api/client';
 import { Spinner } from '@/shared/components/Spinner';
 import { useAppData } from '@/shared/hooks/useAppData';
+import { useSettingsStore } from '@/shared/lib/stores';
 
 export function AuthenticatedDataGate({ children }: { children: ReactNode }) {
-  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const { getToken, isLoaded, isSignedIn, userId } = useAuth();
 
   useEffect(() => {
     setTokenProvider(() => getToken());
   }, [getToken]);
 
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) useSettingsStore.getState().reset();
+  }, [isLoaded, isSignedIn]);
+
   const { isLoading, loadError, retry } = useAppData({
     enabled: isLoaded && Boolean(isSignedIn),
+    userId,
   });
 
   if (!isLoaded || !isSignedIn || isLoading) {

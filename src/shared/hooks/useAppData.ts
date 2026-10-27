@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useInvoiceStore, useSettingsStore } from '@/shared/lib/stores';
 import { useExpensesStore } from '@/expenses/store/useExpensesStore';
@@ -13,13 +13,14 @@ import { getLineItemTemplates } from '@/shared/api/services/lineItemTemplates';
 
 type UseAppDataOptions = {
   enabled?: boolean;
+  userId?: string | null;
 };
 
-export const useAppData = ({ enabled = true }: UseAppDataOptions = {}) => {
+export const useAppData = ({ enabled = true, userId }: UseAppDataOptions = {}) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [initializedUserId, setInitializedUserId] = useState<string | null>(null);
+  const isInitialized = Boolean(userId && initializedUserId === userId);
   const [loadError, setLoadError] = useState(false);
-  const cancelledRef = useRef(false);
   const {
     setInvoices,
     setConsultants,
@@ -32,7 +33,7 @@ export const useAppData = ({ enabled = true }: UseAppDataOptions = {}) => {
     useExpensesStore();
   const { load: loadSettings } = useSettingsStore();
 
-  const loadAppData = useCallback(async () => {
+  const loadAppData = useCallback(async (signal: AbortSignal) => {
     setIsLoading(true);
     setLoadError(false);
 
@@ -44,6 +45,7 @@ export const useAppData = ({ enabled = true }: UseAppDataOptions = {}) => {
         paymentInstructions,
         expenses,
         expenseTypes,
+        templates,
       ] = await Promise.all([
         getInvoices(),
         getConsultants(),
@@ -51,13 +53,11 @@ export const useAppData = ({ enabled = true }: UseAppDataOptions = {}) => {
         getPaymentInstructions(),
         getExpenses(),
         getExpenseTypes(),
+        getLineItemTemplates(),
+        userId ? loadSettings(userId) : Promise.resolve(),
       ]);
 
-      await loadSettings();
-
-      const templates = await getLineItemTemplates();
-
-      if (cancelledRef.current) return;
+      if (signal.aborted) return;
 
       setInvoices(invoices);
       setConsultants(consultants);
@@ -68,20 +68,21 @@ export const useAppData = ({ enabled = true }: UseAppDataOptions = {}) => {
       setExpenseTypes(expenseTypes);
       setExpensesLoaded(true);
       setDataReady(true);
-      setIsInitialized(true);
+      setInitializedUserId(userId ?? null);
     } catch (error) {
-      if (cancelledRef.current) return;
+      if (signal.aborted) return;
       console.error('Error loading app data:', error);
       setLoadError(true);
       setDataReady(false);
       toast.error('No se pudieron cargar los datos. Inténtalo de nuevo.');
     } finally {
-      if (!cancelledRef.current) {
+      if (!signal.aborted) {
         setIsLoading(false);
       }
     }
   }, [
     loadSettings,
+    userId,
     setInvoices,
     setConsultants,
     setClients,
@@ -94,23 +95,22 @@ export const useAppData = ({ enabled = true }: UseAppDataOptions = {}) => {
   ]);
 
   useEffect(() => {
-    cancelledRef.current = false;
-
     if (!enabled) return;
     if (isInitialized) return;
 
+    const controller = new AbortController();
     const timeoutId = window.setTimeout(() => {
-      void loadAppData();
+      void loadAppData(controller.signal);
     }, 0);
 
     return () => {
       window.clearTimeout(timeoutId);
-      cancelledRef.current = true;
+      controller.abort();
     };
   }, [enabled, isInitialized, loadAppData]);
 
   const retry = useCallback(() => {
-    setIsInitialized(false);
+    setInitializedUserId(null);
     setLoadError(false);
   }, []);
 

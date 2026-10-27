@@ -1,3 +1,5 @@
+import type { WorkingHours } from '@/shared/lib/workingHours';
+
 export interface Consultant {
   id: string;
   name: string;
@@ -87,6 +89,7 @@ export interface UserSettings {
   pdf_color_palette: PdfColorPalette;
   logo_url: string | null;
   irpf_rate: number;
+  working_hours: WorkingHours;
 }
 
 export interface ExpenseType {
@@ -118,6 +121,7 @@ export interface Appointment {
   end_at: string;
   all_day: boolean;
   notes: string;
+  whatsapp_reminder: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -126,3 +130,17 @@ export type AppointmentInput = Omit<
   Appointment,
   "id" | "client" | "created_at" | "updated_at"
 >;
+
+export interface WhatsAppReminderSettings {
+  phone: string;
+  enabled: boolean;
+  has_api_token: boolean;
+  server_ready: boolean;
+  updated_at: string | null;
+  last_delivery: {
+    reminder_date: string;
+    status: 'processing' | 'queued' | 'failed' | 'unknown';
+    queued_at: string | null;
+    error: string | null;
+  } | null;
+}

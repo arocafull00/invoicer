@@ -14,6 +14,8 @@ import { BillingSettingsCard } from "@/settings/components/BillingSettingsCard";
 import { IdentitySettingsCard } from "@/settings/components/IdentitySettingsCard";
 import { InstallAppCard } from "@/settings/components/InstallAppCard";
 import { PageHeader } from "@/shared/components/PageHeader";
+import { WhatsAppRemindersCard } from "@/settings/components/WhatsAppRemindersCard";
+import { WorkingHoursSettingsCard } from "@/settings/components/WorkingHoursSettingsCard";
 
 export const SettingsPage: React.FC = () => {
   const { theme, setTheme, systemTheme } = useTheme();
@@ -25,6 +27,8 @@ export const SettingsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <IdentitySettingsCard />
         <BillingSettingsCard />
+        <WhatsAppRemindersCard />
+        <WorkingHoursSettingsCard />
         <Card className="p-6">
           <h2 className="text-xl font-semibold text-card-foreground mb-4">Apariencia</h2>
           <div className="space-y-4">
