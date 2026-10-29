@@ -1,5 +1,4 @@
 import type { Expense, Invoice } from '@/shared/types';
-import { subYears } from 'date-fns';
 
 const DEFAULT_IRPF_RATE_PERCENT = 20;
 
@@ -208,11 +207,10 @@ export interface AnnualRevenue {
 export const calculateAnnualRevenue = (
   invoices: Invoice[],
   irpfRatePercent: number = DEFAULT_IRPF_RATE_PERCENT,
-  now: Date = new Date()
+  year: number = new Date().getFullYear()
 ): AnnualRevenue => {
-  const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startDate = subYears(endDate, 1);
-  startDate.setDate(startDate.getDate() + 1);
+  const startDate = new Date(year, 0, 1);
+  const endDate = new Date(year, 11, 31);
   const irpfRate = Number.isFinite(irpfRatePercent)
     ? Math.min(100, Math.max(0, irpfRatePercent))
     : DEFAULT_IRPF_RATE_PERCENT;
@@ -227,9 +225,7 @@ export const calculateAnnualRevenue = (
   for (const invoice of invoices) {
     if (invoice.status !== 'paid' || invoice.deleted) continue;
     const parts = getLocalDateParts(invoice.created_date);
-    if (!parts) continue;
-    const date = new Date(parts.year, parts.month, parts.day);
-    if (date < startDate || date > endDate) continue;
+    if (!parts || parts.year !== year) continue;
 
     const amountCents = Math.round((Number(invoice.subtotal) || 0) * 100);
     baseCents += amountCents;

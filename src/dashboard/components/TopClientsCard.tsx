@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useInvoiceStore, useSettingsStore } from "@/shared/lib/stores";
 import { calculateAnnualRevenue } from "@/shared/lib/dashboardUtils";
 import { formatCurrency } from "@/shared/lib/helpers";
@@ -8,7 +10,8 @@ export const TopClientsCard: React.FC = () => {
   const invoices = useInvoiceStore((s) => s.invoices);
   const isDataReady = useInvoiceStore((s) => s.isDataReady);
   const settings = useSettingsStore((s) => s.settings);
-  const revenue = calculateAnnualRevenue(invoices, settings?.irpf_rate ?? 20);
+  const [year, setYear] = useState(() => new Date().getFullYear());
+  const revenue = calculateAnnualRevenue(invoices, settings?.irpf_rate ?? 20, year);
   const percentageFormatter = new Intl.NumberFormat("es-ES", {
     style: "percent",
     maximumFractionDigits: 1,
@@ -17,9 +20,31 @@ export const TopClientsCard: React.FC = () => {
   return (
     <Card className="min-w-0 p-6">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-foreground">
-          Ingresos del último año
-        </h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 aria-live="polite" className="text-xl font-semibold text-foreground">
+            Ingresos de {year}
+          </h2>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="Año anterior"
+              onClick={() => setYear((value) => value - 1)}
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="Año siguiente"
+              onClick={() => setYear((value) => value + 1)}
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {revenue.startDate.toLocaleDateString("es-ES")} – {revenue.endDate.toLocaleDateString("es-ES")}
         </p>
@@ -34,7 +59,7 @@ export const TopClientsCard: React.FC = () => {
         </p>
       ) : revenue.invoiceCount === 0 ? (
         <p className="py-8 text-center text-muted-foreground">
-          No hay facturas pagadas en los últimos 12 meses
+          No hay facturas pagadas en {year}
         </p>
       ) : (
         <div className="space-y-6">
