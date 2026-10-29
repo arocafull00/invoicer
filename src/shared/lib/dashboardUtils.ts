@@ -1,4 +1,5 @@
 import type { Expense, Invoice } from '@/shared/types';
+import { subYears } from 'date-fns';
 
 const DEFAULT_IRPF_RATE_PERCENT = 20;
 
@@ -186,6 +187,85 @@ export const getTopClientsBySpend = (
       return b.invoiceCount - a.invoiceCount;
     })
     .slice(0, limit);
+};
+
+export interface AnnualRevenue {
+  startDate: Date;
+  endDate: Date;
+  gross: number;
+  grossWithoutVat: number;
+  net: number;
+  irpfRate: number;
+  invoiceCount: number;
+  clients: Array<{
+    clientId: string;
+    clientName: string;
+    amount: number;
+    percentage: number;
+  }>;
+}
+
+export const calculateAnnualRevenue = (
+  invoices: Invoice[],
+  irpfRatePercent: number = DEFAULT_IRPF_RATE_PERCENT,
+  now: Date = new Date()
+): AnnualRevenue => {
+  const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startDate = subYears(endDate, 1);
+  startDate.setDate(startDate.getDate() + 1);
+  const irpfRate = Number.isFinite(irpfRatePercent)
+    ? Math.min(100, Math.max(0, irpfRatePercent))
+    : DEFAULT_IRPF_RATE_PERCENT;
+  const byClient = new Map<
+    string,
+    { clientId: string; clientName: string; amountCents: number }
+  >();
+  let baseCents = 0;
+  let vatCents = 0;
+  let invoiceCount = 0;
+
+  for (const invoice of invoices) {
+    if (invoice.status !== 'paid' || invoice.deleted) continue;
+    const parts = getLocalDateParts(invoice.created_date);
+    if (!parts) continue;
+    const date = new Date(parts.year, parts.month, parts.day);
+    if (date < startDate || date > endDate) continue;
+
+    const amountCents = Math.round((Number(invoice.subtotal) || 0) * 100);
+    baseCents += amountCents;
+    vatCents += Math.round((Number(invoice.vat_amount) || 0) * 100);
+    invoiceCount += 1;
+
+    const clientId = invoice.client?.id ?? '';
+    const existing = byClient.get(clientId);
+    if (existing) {
+      existing.amountCents += amountCents;
+    } else {
+      byClient.set(clientId, {
+        clientId,
+        clientName: invoice.client?.name?.trim() || 'Sin cliente',
+        amountCents,
+      });
+    }
+  }
+
+  return {
+    startDate,
+    endDate,
+    gross: (baseCents + vatCents) / 100,
+    grossWithoutVat: baseCents / 100,
+    net: Math.round(baseCents * (1 - irpfRate / 100)) / 100,
+    irpfRate,
+    invoiceCount,
+    clients: Array.from(byClient.values())
+      .sort((a, b) => b.amountCents - a.amountCents || a.clientName.localeCompare(b.clientName, 'es'))
+      .map((client) => ({
+        clientId: client.clientId,
+        clientName: client.clientName,
+        amount: client.amountCents / 100,
+        percentage: baseCents > 0 ? (client.amountCents / baseCents) * 100 : 0,
+      })),
+  };
 };
 
 export interface QuarterlyPeriod {
