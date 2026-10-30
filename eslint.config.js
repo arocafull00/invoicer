@@ -10,5 +10,7 @@ export default defineConfig([
     '.next/**',
     'dist/**',
     'next-env.d.ts',
+    'public/pdf.worker.min.mjs',
+    'public/pdfjs/**',
   ]),
 ]);

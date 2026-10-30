@@ -9,6 +9,7 @@ interface ExpensesStoreState {
   setExpenseTypes: (types: ExpenseType[]) => void;
   addExpense: (expense: Expense) => void;
   removeExpense: (id: string) => void;
+  updateExpense: (expense: Expense) => void;
   addExpenseType: (type: ExpenseType) => void;
   setLoaded: (loaded: boolean) => void;
 }
@@ -20,7 +21,8 @@ export const useExpensesStore = create<ExpensesStoreState>((set) => ({
   setExpenses: (expenses) => set({ expenses }),
   setExpenseTypes: (expenseTypes) => set({ expenseTypes }),
   addExpense: (expense) =>
-    set((state) => ({ expenses: [expense, ...state.expenses] })),
+    set((state) => ({ expenses: [expense, ...state.expenses.filter((item) => item.id !== expense.id)] })),
+  updateExpense: (expense) => set((state) => ({ expenses: state.expenses.map((item) => item.id === expense.id ? expense : item) })),
   removeExpense: (id) =>
     set((state) => ({
       expenses: state.expenses.filter((expense) => expense.id !== id),

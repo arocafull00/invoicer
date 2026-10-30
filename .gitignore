@@ -28,3 +28,6 @@ dist-ssr
 .agents
 data
 .vercel
+
+/public/pdf.worker.min.mjs
+/public/pdfjs/

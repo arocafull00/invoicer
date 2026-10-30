@@ -1,8 +1,18 @@
 import { apiErrorResponse, noContent, requireUserId } from '@server/lib/api';
 import { getSql } from '@server/lib/db';
 import { ApiError } from '@server/lib/errors';
+import { NextResponse } from 'next/server';
+import { saveExpense } from '@server/services/expenses';
 
 type RouteContext = { params: Promise<{ id: string }> };
+
+export async function PUT(request: Request, { params }: RouteContext) {
+  try {
+    const userId = await requireUserId();
+    const { id } = await params;
+    return NextResponse.json(await saveExpense(userId, await request.json(), null, id));
+  } catch (error) { return apiErrorResponse(error); }
+}
 
 export async function DELETE(_request: Request, { params }: RouteContext) {
   try {

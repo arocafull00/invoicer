@@ -19,7 +19,7 @@ export function setTokenProvider(provider: TokenProvider) {
   tokenProvider = provider;
 }
 
-async function request<T>(
+export async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -38,6 +38,7 @@ async function request<T>(
   });
 
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== 'undefined') window.dispatchEvent(new Event('invoicer:unauthorized'));
     const payload = await response.json().catch(() => ({}));
     const message =
       typeof payload.error === 'string'
@@ -231,6 +232,17 @@ export class ApiClient {
       method: 'POST',
       body: JSON.stringify(expense),
     });
+  }
+
+  importExpensePdf(expense: unknown, file: File) {
+    const body = new FormData();
+    body.append('expense', JSON.stringify(expense));
+    body.append('file', file);
+    return request<Expense>('/expenses', { method: 'POST', body });
+  }
+
+  updateExpense(id: string, expense: unknown) {
+    return request<Expense>(`/expenses/${id}`, { method: 'PUT', body: JSON.stringify(expense) });
   }
 
   deleteExpense(id: string) {

@@ -14,6 +14,7 @@ export default function ExpensesScreen() {
         title="Gastos"
         actions={
           <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="secondary" asChild><Link href="/expenses/import-pdf"><FileUp className="size-4" /> Subir PDF</Link></Button>
             <Button variant="outline" asChild>
               <Link href="/expenses/import">
                 <FileUp className="w-4 h-4 sm:mr-2" />

@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { SidebarUserMenuAction } from '@/components/SidebarUserMenuAction';
-import { useSettingsStore } from '@/shared/lib/stores';
+import { clearAppCache } from '@/shared/lib/appCache';
 
 export function SidebarUserButton() {
   const { user } = useUser();
@@ -61,7 +61,7 @@ export function SidebarUserButton() {
               label="Cerrar sesión"
               icon={LogOut}
               onClick={() => {
-                useSettingsStore.getState().reset();
+                clearAppCache();
                 void signOut({ redirectUrl: '/login' });
               }}
             />

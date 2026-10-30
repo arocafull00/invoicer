@@ -101,6 +101,7 @@ export async function getUserSettings(): Promise<UserSettings> {
   if (!response.ok) {
     if (response.status === 401) {
       clearSettingsCache();
+      window.dispatchEvent(new Event('invoicer:unauthorized'));
       throw new Error('Unauthorized');
     }
     throw new Error('Failed to fetch user settings');

@@ -91,7 +91,7 @@ export function ExpenseTable() {
     }
   }, [expenseToDelete, removeExpense]);
 
-  if (isLoading) {
+  if (isLoading && expenses.length === 0) {
     return (
       <Card className="flex items-center justify-center py-16">
         <Spinner />
@@ -102,7 +102,7 @@ export function ExpenseTable() {
   if (expenses.length === 0) {
     return (
       <Card className="py-12 text-center text-muted-foreground">
-        No hay gastos todavía. Añade un gasto o importa un CSV para empezar.
+        No hay gastos todavía. Añade un gasto o sube tus PDF para empezar.
       </Card>
     );
   }
@@ -114,6 +114,7 @@ export function ExpenseTable() {
           <TableHeader>
             <TableRow>
               <TableHead>Fecha</TableHead>
+              <TableHead>Trimestre</TableHead>
               <TableHead>Nº Factura</TableHead>
               <TableHead>Proveedor</TableHead>
               <TableHead>Concepto</TableHead>

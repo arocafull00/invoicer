@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useInvoiceStore, useSettingsStore } from "@/shared/lib/stores";
+import { useExpensesStore } from '@/expenses/store/useExpensesStore';
 import { calculateAnnualRevenue } from "@/shared/lib/dashboardUtils";
 import { formatCurrency } from "@/shared/lib/helpers";
 
@@ -11,7 +12,8 @@ export const TopClientsCard: React.FC = () => {
   const isDataReady = useInvoiceStore((s) => s.isDataReady);
   const settings = useSettingsStore((s) => s.settings);
   const [year, setYear] = useState(() => new Date().getFullYear());
-  const revenue = calculateAnnualRevenue(invoices, settings?.irpf_rate ?? 20, year);
+  const expenses = useExpensesStore((s) => s.expenses);
+  const revenue = calculateAnnualRevenue(invoices, settings?.irpf_rate ?? 20, year, expenses);
   const percentageFormatter = new Intl.NumberFormat("es-ES", {
     style: "percent",
     maximumFractionDigits: 1,
@@ -76,6 +78,7 @@ export const TopClientsCard: React.FC = () => {
                 {formatCurrency(revenue.grossWithoutVat)}
               </dd>
             </div>
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1"><dt className="text-sm text-muted-foreground">Gastos deducibles</dt><dd className="font-semibold tabular-nums">{formatCurrency(revenue.expenses)}</dd></div>
             <div className="border-t border-border pt-3">
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <dt className="text-sm font-medium text-foreground">Neto estimado</dt>
@@ -84,7 +87,7 @@ export const TopClientsCard: React.FC = () => {
                 </dd>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Bruto sin IVA − {revenue.irpfRate.toLocaleString("es-ES")}% de IRPF · Sin descontar gastos
+                Ingresos sin IVA − gastos deducibles − reserva del {revenue.irpfRate.toLocaleString("es-ES")}% sobre el beneficio positivo. No equivale a la liquidación anual del IRPF.
               </p>
             </div>
           </dl>

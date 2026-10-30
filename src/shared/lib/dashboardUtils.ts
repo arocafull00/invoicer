@@ -1,4 +1,5 @@
 import type { Expense, Invoice } from '@/shared/types';
+import type { TaxPeriodSettings } from '@/expenses/lib/taxSettings';
 
 const DEFAULT_IRPF_RATE_PERCENT = 20;
 
@@ -194,6 +195,8 @@ export interface AnnualRevenue {
   gross: number;
   grossWithoutVat: number;
   net: number;
+  expenses: number;
+  profit: number;
   irpfRate: number;
   invoiceCount: number;
   clients: Array<{
@@ -207,7 +210,8 @@ export interface AnnualRevenue {
 export const calculateAnnualRevenue = (
   invoices: Invoice[],
   irpfRatePercent: number = DEFAULT_IRPF_RATE_PERCENT,
-  year: number = new Date().getFullYear()
+  year: number = new Date().getFullYear(),
+  expenses: Expense[] = []
 ): AnnualRevenue => {
   const startDate = new Date(year, 0, 1);
   const endDate = new Date(year, 11, 31);
@@ -245,12 +249,17 @@ export const calculateAnnualRevenue = (
     }
   }
 
+  const expenseCents = expenses.filter((expense) => Number((expense.fiscal_date ?? expense.date).slice(0, 4)) === year)
+    .reduce((sum, expense) => sum + Math.round((Number(expense.base_amount) + Number(expense.vat_amount) * (1 - (expense.deductible_vat_pct ?? 100) / 100)) * (expense.deductible_base_pct ?? 100)), 0);
+  const profit = (baseCents - expenseCents) / 100;
   return {
     startDate,
     endDate,
+    expenses: expenseCents / 100,
+    profit,
     gross: (baseCents + vatCents) / 100,
     grossWithoutVat: baseCents / 100,
-    net: Math.round(baseCents * (1 - irpfRate / 100)) / 100,
+    net: Math.round((profit - Math.max(0, profit) * irpfRate / 100) * 100) / 100,
     irpfRate,
     invoiceCount,
     clients: Array.from(byClient.values())
@@ -339,142 +348,61 @@ export interface QuarterlyTaxesResult {
   totalIva: number;
   totalTaxes: number;
   totalInvoiced: number;
+  income: number;
+  expenses: number;
+  profit: number;
+  vatCharged: number;
+  vatDeductible: number;
+  vatToCarry: number;
+  net: number;
+  annualProfit: number;
+  supplierRetentions: number;
 }
 
-type MonthlyTaxAccumulator = {
-  hasActivity: boolean;
-  income: number;
-  expenseBase: number;
-  retention: number;
-  vatCharged: number;
-  vatPaid: number;
-};
+function deductibleCost(expense: Expense) {
+  return Math.round((Number(expense.base_amount) + Number(expense.vat_amount) * (1 - (expense.deductible_vat_pct ?? 100) / 100)) * (expense.deductible_base_pct ?? 100)) / 100;
+}
+function deductibleVat(expense: Expense) {
+  return Math.round(Number(expense.vat_amount) * (expense.deductible_vat_pct ?? 100)) / 100;
+}
+const roundMoney = (n: number) => Math.round(n * 100) / 100;
 
 export const calculateQuarterlyTaxes = (
-  invoices: Invoice[],
-  period: QuarterlyPeriod,
-  expenses: Expense[] = [],
-  irpfRatePercent: number = DEFAULT_IRPF_RATE_PERCENT
+  invoices: Invoice[], period: QuarterlyPeriod, expenses: Expense[] = [],
+  irpfRatePercent: number = DEFAULT_IRPF_RATE_PERCENT,
+  options?: Pick<TaxPeriodSettings, 'model130_required' | 'prior_irpf_payments' | 'vat_credit'>,
 ): QuarterlyTaxesResult => {
-  const ratePercent = Number.isFinite(irpfRatePercent)
-    ? Math.min(100, Math.max(0, irpfRatePercent))
-    : DEFAULT_IRPF_RATE_PERCENT;
-  const irpfRate = ratePercent / 100;
-
-  const paidInvoices = invoices.filter(
-    (invoice) => invoice.status === 'paid' && !invoice.deleted
-  );
-  const periodInvoices = paidInvoices.filter((invoice) =>
-    isDateInPeriod(invoice.created_date, period)
-  );
-  const periodExpenses = expenses.filter((expense) =>
-    isDateInPeriod(expense.date, period)
-  );
-
-  const monthlyData = new Map<string, MonthlyTaxAccumulator>();
-
-  period.months.forEach(({ name }) => {
-    monthlyData.set(name, {
-      hasActivity: false,
-      income: 0,
-      expenseBase: 0,
-      retention: 0,
-      vatCharged: 0,
-      vatPaid: 0,
-    });
+  const rate = (Number.isFinite(irpfRatePercent) ? Math.min(100, Math.max(0, irpfRatePercent)) : DEFAULT_IRPF_RATE_PERCENT) / 100;
+  // Fiscal estimates follow invoice dates (accrual), independently of collection status.
+  const active = invoices.filter((invoice) => !invoice.deleted);
+  const periodInvoices = active.filter((invoice) => isDateInPeriod(invoice.created_date, period));
+  const periodExpenses = expenses.filter((expense) => isDateInPeriod(expense.fiscal_date ?? expense.date, period));
+  const yearPeriod = { ...period, startDate: new Date(period.year, 0, 1) };
+  const annualInvoices = active.filter((invoice) => isDateInPeriod(invoice.created_date, yearPeriod));
+  const annualExpenses = expenses.filter((expense) => isDateInPeriod(expense.fiscal_date ?? expense.date, yearPeriod));
+  const sum = <T,>(items: T[], value: (item: T) => number) => roundMoney(items.reduce((n, item) => n + value(item), 0));
+  const income = sum(periodInvoices, (invoice) => Number(invoice.subtotal));
+  const deductibleExpenses = sum(periodExpenses, deductibleCost);
+  const profit = roundMoney(income - deductibleExpenses);
+  const annualProfit = roundMoney(sum(annualInvoices, (invoice) => Number(invoice.subtotal)) - sum(annualExpenses, deductibleCost));
+  const annualRetentions = sum(annualInvoices, getInvoiceRetention);
+  const totalIrpf = options?.model130_required === false ? 0 : roundMoney(Math.max(0, annualProfit * rate - annualRetentions - (options?.prior_irpf_payments ?? 0)));
+  const vatCharged = sum(periodInvoices, (invoice) => Number(invoice.vat_amount));
+  const vatDeductible = sum(periodExpenses, deductibleVat);
+  const vatBalance = roundMoney(vatCharged - vatDeductible - (options?.vat_credit ?? 0));
+  const totalIva = Math.max(0, vatBalance);
+  const monthlyBreakdown = period.months.map((month) => {
+    const monthInvoices = periodInvoices.filter((invoice) => findPeriodMonth(invoice.created_date, period)?.month === month.month);
+    const monthExpenses = periodExpenses.filter((expense) => findPeriodMonth(expense.fiscal_date ?? expense.date, period)?.month === month.month);
+    return { month: month.name, irpf: 0, iva: roundMoney(sum(monthInvoices, (i) => Number(i.vat_amount)) - sum(monthExpenses, deductibleVat)), hasActivity: monthInvoices.length > 0 || monthExpenses.length > 0 };
   });
-
-  periodInvoices.forEach((invoice) => {
-    const monthInfo = findPeriodMonth(invoice.created_date, period);
-    if (!monthInfo) return;
-
-    const current = monthlyData.get(monthInfo.name);
-    if (!current) return;
-
-    monthlyData.set(monthInfo.name, {
-      ...current,
-      hasActivity: true,
-      income: current.income + (Number(invoice.subtotal) || 0),
-      retention: current.retention + getInvoiceRetention(invoice),
-      vatCharged: current.vatCharged + (Number(invoice.vat_amount) || 0),
-    });
-  });
-
-  periodExpenses.forEach((expense) => {
-    const monthInfo = findPeriodMonth(expense.date, period);
-    if (!monthInfo) return;
-
-    const current = monthlyData.get(monthInfo.name);
-    if (!current) return;
-
-    monthlyData.set(monthInfo.name, {
-      ...current,
-      hasActivity: true,
-      expenseBase: current.expenseBase + (Number(expense.base_amount) || 0),
-      vatPaid: current.vatPaid + (Number(expense.vat_amount) || 0),
-    });
-  });
-
-  const monthlyBreakdown: MonthlyTaxBreakdown[] = period.months.map(({ name }) => {
-    const data = monthlyData.get(name) || {
-      hasActivity: false,
-      income: 0,
-      expenseBase: 0,
-      retention: 0,
-      vatCharged: 0,
-      vatPaid: 0,
-    };
-    const profit = data.income - data.expenseBase;
-    const irpf = Number((profit * irpfRate - data.retention).toFixed(2));
-    const iva = Number((data.vatCharged - data.vatPaid).toFixed(2));
-
-    return {
-      month: name,
-      irpf,
-      iva,
-      hasActivity: data.hasActivity,
-    };
-  });
-
-  const totalIncome = periodInvoices.reduce(
-    (sum, invoice) => sum + (Number(invoice.subtotal) || 0),
-    0
-  );
-  const totalExpenseBase = periodExpenses.reduce(
-    (sum, expense) => sum + (Number(expense.base_amount) || 0),
-    0
-  );
-  const totalRetention = periodInvoices.reduce(
-    (sum, invoice) => sum + getInvoiceRetention(invoice),
-    0
-  );
-  const totalVatCharged = periodInvoices.reduce(
-    (sum, invoice) => sum + (Number(invoice.vat_amount) || 0),
-    0
-  );
-  const totalVatPaid = periodExpenses.reduce(
-    (sum, expense) => sum + (Number(expense.vat_amount) || 0),
-    0
-  );
-
-  const totalIrpf = Math.max(
-    0,
-    Number(
-      ((totalIncome - totalExpenseBase) * irpfRate - totalRetention).toFixed(2)
-    )
-  );
-  const totalIva = Number((totalVatCharged - totalVatPaid).toFixed(2));
-  const totalTaxes = Number((totalIrpf + totalIva).toFixed(2));
-  const totalInvoiced = periodInvoices.reduce(
-    (sum, invoice) => sum + (Number(invoice.total) || 0),
-    0
-  );
-
+  const supplierRetentions = Math.max(0, sum(periodExpenses, (expense) => Number(expense.retention_amount ?? 0)));
+  const totalTaxes = roundMoney(totalIrpf + totalIva + supplierRetentions);
   return {
-    monthlyBreakdown,
-    totalIrpf,
-    totalIva,
-    totalTaxes,
-    totalInvoiced,
+    monthlyBreakdown, totalIrpf, totalIva, totalTaxes, income, expenses: deductibleExpenses, profit,
+    vatCharged, vatDeductible, vatToCarry: Math.max(0, -vatBalance), annualProfit, supplierRetentions,
+    // A provisional reserve on this quarter's profit, distinct from the cumulative model 130 payment.
+    net: roundMoney(profit - Math.max(0, profit) * rate),
+    totalInvoiced: sum(periodInvoices, (invoice) => Number(invoice.total)),
   };
 };

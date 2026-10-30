@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { SettingsField } from "@/settings/components/SettingsField";
 import { useSettingsStore } from "@/shared/lib/stores";
@@ -15,11 +15,8 @@ export function IrpfRateField() {
   const settings = useSettingsStore((s) => s.settings);
   const update = useSettingsStore((s) => s.update);
   const savedRate = settings?.irpf_rate ?? DEFAULT_IRPF_RATE;
-  const [value, setValue] = useState(String(savedRate));
-
-  useEffect(() => {
-    setValue(String(savedRate));
-  }, [savedRate]);
+  const [draft, setValue] = useState<string | null>(null);
+  const value = draft ?? String(savedRate);
 
   const persist = async (raw: string) => {
     const parsed = normalizeIrpfRate(Number(raw.replace(",", ".")));
@@ -33,6 +30,7 @@ export function IrpfRateField() {
 
     try {
       await update({ irpf_rate: parsed });
+      setValue(null);
     } catch {
       setValue(String(savedRate));
     }

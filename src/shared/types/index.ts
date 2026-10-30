@@ -100,6 +100,14 @@ export interface ExpenseType {
 export interface Expense {
   id: string;
   date: string;
+  fiscal_date?: string | null;
+  provider_nif?: string;
+  retention_amount?: number;
+  deductible_base_pct?: number;
+  deductible_vat_pct?: number;
+  currency?: 'EUR';
+  source_hash?: string | null;
+  document_name?: string | null;
   invoice_number: string;
   provider: string;
   concept: string;
