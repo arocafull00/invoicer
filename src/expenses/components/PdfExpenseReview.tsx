@@ -27,7 +27,7 @@ export function PdfExpenseReview({ row, onChange, onRemove, disabled }: {
     {row.warnings.length ? <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">{row.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul> : null}
     <ExpenseFields prefix={row.id} value={row.data} disabled={disabled || row.status === 'saved'} onChange={(data) => onChange({ ...row, data, reviewed: false, error: undefined, status: 'ready' })} />
     {row.status !== 'saved' ? <>
-      {problems.length && row.status !== 'queued' && row.status !== 'reading' ? <p className="text-sm text-destructive">{problems.join('. ')}</p> : null}
+      {problems.length > 0 && row.status === 'ready' ? <p className="text-sm text-destructive">{problems.join('. ')}</p> : null}
       <label className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1 size-4 accent-primary" checked={row.reviewed} disabled={disabled || !validation.success || row.data.currency !== 'EUR'}
         onChange={(e) => onChange({ ...row, reviewed: e.target.checked, status: 'ready' })} />He comprobado los importes, el trimestre y la parte deducible.</label>
     </> : null}
