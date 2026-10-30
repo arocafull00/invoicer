@@ -26,7 +26,7 @@ import { useInvoiceStore, useSettingsStore } from "@/shared/lib/stores";
 import { Spinner } from "@/shared/components/Spinner";
 import { formatDate, formatCurrency } from "@/shared/lib/helpers";
 import { downloadInvoicePDF } from "@/shared/lib/pdf";
-import { getInvoiceEmailContent } from "@/shared/lib/invoiceEmail";
+import { InvoiceEmailDialog } from "@/invoices/components/InvoiceEmailDialog";
 import type { Invoice } from "@/shared/types";
 import { updateInvoice, softDeleteInvoice } from "@/shared/api/services/invoices";
 import { queryClient } from "@/shared/api/queryClient";
@@ -66,6 +66,7 @@ export function InvoiceTable() {
   const { invoices, isDataReady } = useInvoiceStore();
   useSettingsStore((s) => s.settings);
   const [loadingPdf, setLoadingPdf] = useState<string | null>(null);
+  const [emailInvoice, setEmailInvoice] = useState<Invoice | null>(null);
 
   const handleDownloadPDF = async (invoice: Invoice) => {
     setLoadingPdf(invoice.id);
@@ -94,15 +95,7 @@ export function InvoiceTable() {
       return;
     }
 
-    const { subject, body } = getInvoiceEmailContent(invoice);
-    const params = new URLSearchParams({
-      view: "cm",
-      fs: "1",
-      to: recipient,
-      su: subject,
-      body,
-    });
-    window.open(`https://mail.google.com/mail/?${params}`, "_blank", "noopener,noreferrer");
+    setEmailInvoice(invoice);
   }, []);
 
   const [sorting, setSorting] = useState<SortingState>([
@@ -597,6 +590,12 @@ export function InvoiceTable() {
           </div>
         </div>
       </div>
+      {emailInvoice ? (
+        <InvoiceEmailDialog
+          invoice={emailInvoice}
+          onClose={() => setEmailInvoice(null)}
+        />
+      ) : null}
       <AlertDialog open={Boolean(confirmId)} onOpenChange={(open) => !open && setConfirmId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
