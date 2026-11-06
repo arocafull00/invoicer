@@ -4,6 +4,7 @@ import { useExpensesStore } from '@/expenses/store/useExpensesStore';
 import { readCachedSettings } from '@/shared/api/services/userSettings';
 import { queryClient } from '@/shared/api/queryClient';
 import { clearPdfDrafts } from '@/expenses/lib/pdfDrafts';
+import { TAX_PERIOD_CACHE_KEY } from '@/expenses/lib/taxSettings';
 
 const KEY = 'invoicer.app.v1';
 export const useAppCache = create<{ hydrated: boolean; owner: string | null; hasData: boolean; generation: number }>(() => ({ hydrated: false, owner: null, hasData: false, generation: 0 }));
@@ -40,7 +41,11 @@ export function cacheAppData(userId: string) {
 
 export function clearAppCache() {
   useAppCache.setState((state) => ({ owner: null, hasData: false, generation: state.generation + 1 }));
-  try { localStorage.removeItem(KEY); localStorage.removeItem('invoicer.tax-periods.v1'); } catch { /* Storage may be disabled. */ }
+  try {
+    localStorage.removeItem(KEY);
+    localStorage.removeItem('invoicer.tax-periods.v1');
+    localStorage.removeItem(TAX_PERIOD_CACHE_KEY);
+  } catch { /* Storage may be disabled. */ }
   queryClient.clear();
   useInvoiceStore.setState({ invoices: [], consultants: [], clients: [], payment_instructions: [], line_item_templates: [], isDataReady: false });
   useExpensesStore.setState({ expenses: [], expenseTypes: [], isLoaded: false });

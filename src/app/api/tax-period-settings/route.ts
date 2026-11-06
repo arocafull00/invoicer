@@ -12,7 +12,12 @@ export async function GET(request: Request) {
     if (!taxPeriodSchema.safeParse(settings).success) throw new ApiError('Período no válido', 400);
     const sql = getSql();
     const rows = await sql`SELECT * FROM tax_period_settings WHERE user_id = ${userId} AND year = ${settings.year} AND quarter = ${settings.quarter}`;
-    if (rows[0]) Object.assign(settings, { model130_required: rows[0].model130_required, prior_irpf_payments: Number(rows[0].prior_irpf_payments), vat_credit: Number(rows[0].vat_credit) });
+    if (rows[0]) {
+      const row = rows[0];
+      settings.model130_required = row.model130_required;
+      settings.prior_irpf_payments = row.prior_irpf_payments == null ? null : Number(row.prior_irpf_payments);
+      settings.vat_credit = Number(row.vat_credit);
+    }
     return NextResponse.json(settings);
   } catch (error) { return apiErrorResponse(error); }
 }

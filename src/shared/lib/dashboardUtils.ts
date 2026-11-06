@@ -356,6 +356,9 @@ export interface QuarterlyTaxesResult {
   vatToCarry: number;
   net: number;
   annualProfit: number;
+  annualIrpfQuota: number;
+  annualRetentions: number;
+  priorIrpfPayments: number;
   supplierRetentions: number;
 }
 
@@ -385,8 +388,29 @@ export const calculateQuarterlyTaxes = (
   const deductibleExpenses = sum(periodExpenses, deductibleCost);
   const profit = roundMoney(income - deductibleExpenses);
   const annualProfit = roundMoney(sum(annualInvoices, (invoice) => Number(invoice.subtotal)) - sum(annualExpenses, deductibleCost));
+  const irpfQuota = (profit: number) => roundMoney(Math.max(0, profit) * rate);
+  const annualIrpfQuota = irpfQuota(annualProfit);
   const annualRetentions = sum(annualInvoices, getInvoiceRetention);
-  const totalIrpf = options?.model130_required === false ? 0 : roundMoney(Math.max(0, annualProfit * rate - annualRetentions - (options?.prior_irpf_payments ?? 0)));
+  const model130Required = options?.model130_required !== false;
+  let priorIrpfPayments = 0;
+  if (model130Required && period.quarter > 1) {
+    if (options?.prior_irpf_payments != null) {
+      priorIrpfPayments = options.prior_irpf_payments;
+    } else {
+      for (let quarter = 1; quarter < period.quarter; quarter++) {
+        const previousPeriod = { ...yearPeriod, endDate: new Date(period.year, quarter * 3, 0) };
+        const previousInvoices = annualInvoices.filter((invoice) => isDateInPeriod(invoice.created_date, previousPeriod));
+        const previousExpenses = annualExpenses.filter((expense) => isDateInPeriod(expense.fiscal_date ?? expense.date, previousPeriod));
+        const previousProfit = roundMoney(sum(previousInvoices, (invoice) => Number(invoice.subtotal)) - sum(previousExpenses, deductibleCost));
+        // Only positive installments add to the prior amount. A later loss does not undo an earlier installment.
+        const previousBalance = roundMoney(irpfQuota(previousProfit) - sum(previousInvoices, getInvoiceRetention));
+        priorIrpfPayments = Math.max(priorIrpfPayments, previousBalance);
+      }
+    }
+  }
+  const totalIrpf = model130Required
+    ? Math.max(0, roundMoney(annualIrpfQuota - annualRetentions - priorIrpfPayments))
+    : 0;
   const vatCharged = sum(periodInvoices, (invoice) => Number(invoice.vat_amount));
   const vatDeductible = sum(periodExpenses, deductibleVat);
   const vatBalance = roundMoney(vatCharged - vatDeductible - (options?.vat_credit ?? 0));
@@ -400,7 +424,8 @@ export const calculateQuarterlyTaxes = (
   const totalTaxes = roundMoney(totalIrpf + totalIva + supplierRetentions);
   return {
     monthlyBreakdown, totalIrpf, totalIva, totalTaxes, income, expenses: deductibleExpenses, profit,
-    vatCharged, vatDeductible, vatToCarry: Math.max(0, -vatBalance), annualProfit, supplierRetentions,
+    vatCharged, vatDeductible, vatToCarry: Math.max(0, -vatBalance), annualProfit, annualIrpfQuota,
+    annualRetentions, priorIrpfPayments, supplierRetentions,
     // A provisional reserve on this quarter's profit, distinct from the cumulative model 130 payment.
     net: roundMoney(profit - Math.max(0, profit) * rate),
     totalInvoiced: sum(periodInvoices, (invoice) => Number(invoice.total)),
