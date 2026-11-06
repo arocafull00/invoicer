@@ -1,14 +1,20 @@
-import type { ExpenseInput } from './expenseValidation';
+import { expensePdfUploadDate, type ExpenseInput, type ExpensePdfInput } from './expenseValidation';
 
 export type PdfExpenseDraft = {
   id: string;
   file: File;
   hash: string;
-  status: 'queued' | 'reading' | 'ready' | 'error' | 'saved';
-  data: Partial<ExpenseInput>;
+  status: 'queued' | 'reading' | 'ready' | 'saved';
+  uploadDate: string;
+  data: Partial<Omit<ExpensePdfInput, 'date'>>;
   warnings: string[];
   error?: string;
-  reviewed: boolean;
+};
+
+type StoredPdfExpenseDraft = Omit<PdfExpenseDraft, 'uploadDate' | 'data' | 'status'> & {
+  uploadDate?: string;
+  data: Partial<ExpenseInput>;
+  status: PdfExpenseDraft['status'] | 'error';
 };
 
 const DB_NAME = 'invoicer.expense-import.v1';
@@ -27,7 +33,24 @@ export async function readPdfDrafts(userId: string): Promise<PdfExpenseDraft[]> 
   try {
     return await new Promise((resolve, reject) => {
       const request = db.transaction('drafts').objectStore('drafts').get(userId);
-      request.onsuccess = () => resolve((request.result ?? []).map((row: PdfExpenseDraft) => ({ ...row, status: row.status === 'reading' ? 'queued' : row.status })));
+      request.onsuccess = () => {
+        const drafts: StoredPdfExpenseDraft[] = request.result ?? [];
+        const fallbackDate = expensePdfUploadDate();
+        resolve(drafts.map(({ id, file, hash, status, uploadDate, data, warnings, error }) => ({
+          id,
+          file,
+          hash,
+          status: status === 'reading' || status === 'error' ? 'queued' : status,
+          uploadDate: uploadDate ?? (status === 'saved' ? '' : fallbackDate),
+          data: {
+            provider: data.provider,
+            concept: data.concept,
+            total: !uploadDate && warnings.some((warning) => warning.startsWith('Moneda ')) ? undefined : data.total,
+          },
+          warnings: uploadDate ? warnings : [],
+          error: uploadDate ? error : undefined,
+        })));
+      };
       request.onerror = () => reject(request.error);
     });
   } finally { db.close(); }

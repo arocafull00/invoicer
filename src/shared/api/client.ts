@@ -1,3 +1,4 @@
+import type { ExpensePdfInput } from '@/expenses/lib/expenseValidation';
 import type {
   Appointment,
   AppointmentInput,
@@ -234,7 +235,7 @@ export class ApiClient {
     });
   }
 
-  importExpensePdf(expense: unknown, file: File) {
+  importExpensePdf(expense: ExpensePdfInput, file: File) {
     const body = new FormData();
     body.append('expense', JSON.stringify(expense));
     body.append('file', file);

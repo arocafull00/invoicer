@@ -1,7 +1,24 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { expenseInputSchema, expenseIdentity, MAX_EXPENSE_PDF_BYTES } from '@/expenses/lib/expenseValidation';
+import { expenseInputSchema, expensePdfInputSchema, expenseIdentity, MAX_EXPENSE_PDF_BYTES, type ExpenseInput } from '@/expenses/lib/expenseValidation';
 import { getSql } from '../lib/db';
 import { ApiError, isUniqueViolation } from '../lib/errors';
+
+const expensePdfSchema = expensePdfInputSchema.transform((data): ExpenseInput => {
+  const totalCents = Math.round(data.total * 100);
+  const baseCents = Math.round(totalCents / 1.21);
+  return {
+    ...data,
+    fiscal_date: data.date,
+    invoice_number: '',
+    provider_nif: '',
+    base_amount: baseCents / 100,
+    vat_amount: (totalCents - baseCents) / 100,
+    retention_amount: 0,
+    deductible_base_pct: 100,
+    deductible_vat_pct: 100,
+    currency: 'EUR',
+  };
+});
 
 export function mapExpense(row: Record<string, unknown>) {
   const result = { ...row };
@@ -23,7 +40,7 @@ export async function listExpenses(userId: string) {
 }
 
 export async function saveExpense(userId: string, input: unknown, file?: File | null, existingId?: string) {
-  const parsed = expenseInputSchema.safeParse(input);
+  const parsed = (file ? expensePdfSchema : expenseInputSchema).safeParse(input);
   if (!parsed.success) throw new ApiError(parsed.error.issues.map((i) => i.message).join('. '), 400);
   const data = parsed.data;
   const sql = getSql();

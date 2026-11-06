@@ -7,7 +7,7 @@ const date = z.string({ error: 'Indica una fecha válida' }).regex(/^\d{4}-\d{2}
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }, 'Fecha no válida');
 
-export const expenseInputSchema = z.object({
+const expenseFieldsSchema = z.object({
   date,
   fiscal_date: date.optional(),
   invoice_number: z.string().trim().max(160).default(''),
@@ -22,7 +22,9 @@ export const expenseInputSchema = z.object({
   deductible_vat_pct: z.number().min(0).max(100).default(100),
   currency: z.literal('EUR', { error: 'Selecciona EUR y comprueba que los importes estén en euros' }).default('EUR'),
   expense_type_id: z.string().uuid().nullable().optional(),
-}).superRefine((value, ctx) => {
+});
+
+export const expenseInputSchema = expenseFieldsSchema.superRefine((value, ctx) => {
   if (value.total === 0) ctx.addIssue({ code: 'custom', path: ['total'], message: 'El total no puede ser cero' });
   if (Math.abs(value.base_amount + value.vat_amount - value.retention_amount - value.total) > 0.03) {
     ctx.addIssue({ code: 'custom', path: ['total'], message: 'Base + IVA − retención debe coincidir con el total' });
@@ -31,16 +33,20 @@ export const expenseInputSchema = z.object({
 
 export type ExpenseInput = z.infer<typeof expenseInputSchema>;
 
-// Imported unknown values must be entered explicitly instead of silently becoming zero.
-export const expenseReviewSchema = z.preprocess((value) => {
-  const data = value as Partial<ExpenseInput>;
-  return { ...data, vat_amount: data?.vat_amount ?? NaN, retention_amount: data?.retention_amount ?? NaN, currency: data?.currency ?? '' };
-}, expenseInputSchema);
+export const expensePdfInputSchema = expenseFieldsSchema.pick({
+  date: true,
+  provider: true,
+  concept: true,
+  total: true,
+}).refine(({ total }) => total !== 0, { path: ['total'], error: 'El total no puede ser cero' });
+
+export type ExpensePdfInput = z.infer<typeof expensePdfInputSchema>;
+
+export function expensePdfUploadDate() {
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Madrid' }).format(new Date());
+}
 
 export function expenseIdentity(value: { provider: string; invoice_number: string }) {
   return value.invoice_number.trim() ? `${value.provider.trim().toLocaleLowerCase('es')}|${value.invoice_number.trim().toLocaleLowerCase('es')}` : null;
 }
 
-export function fiscalDateForQuarter(year: number, quarter: number) {
-  return `${year}-${String((quarter - 1) * 3 + 1).padStart(2, '0')}-01`;
-}
