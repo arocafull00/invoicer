@@ -356,9 +356,6 @@ export interface QuarterlyTaxesResult {
   vatToCarry: number;
   net: number;
   annualProfit: number;
-  annualIrpfQuota: number;
-  annualRetentions: number;
-  priorIrpfPayments: number;
   supplierRetentions: number;
 }
 
@@ -424,8 +421,7 @@ export const calculateQuarterlyTaxes = (
   const totalTaxes = roundMoney(totalIrpf + totalIva + supplierRetentions);
   return {
     monthlyBreakdown, totalIrpf, totalIva, totalTaxes, income, expenses: deductibleExpenses, profit,
-    vatCharged, vatDeductible, vatToCarry: Math.max(0, -vatBalance), annualProfit, annualIrpfQuota,
-    annualRetentions, priorIrpfPayments, supplierRetentions,
+    vatCharged, vatDeductible, vatToCarry: Math.max(0, -vatBalance), annualProfit, supplierRetentions,
     // A provisional reserve on this quarter's profit, distinct from the cumulative model 130 payment.
     net: roundMoney(profit - Math.max(0, profit) * rate),
     totalInvoiced: sum(periodInvoices, (invoice) => Number(invoice.total)),

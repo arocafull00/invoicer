@@ -84,13 +84,8 @@ export function QuarterlyTaxesCard() {
     <dl className="space-y-3">
       {line('Facturación sin IVA', taxes.income)}{line('Gastos deducibles', taxes.expenses)}{line('Beneficio antes de impuestos', taxes.profit)}
       <div className="space-y-3 border-t border-border pt-3">{line('IVA repercutido', taxes.vatCharged)}{line('IVA deducible', taxes.vatDeductible)}{line('IVA a ingresar estimado', taxes.totalIva)}{taxes.vatToCarry > 0 ? line('IVA a compensar', taxes.vatToCarry) : null}</div>
-      <div className="space-y-3 border-t border-border pt-3">
+      <div className="border-t border-border pt-3">
         {line(options.model130_required ? 'Modelo 130 estimado' : 'Modelo 130 · No obligado', taxes.totalIrpf)}
-        {options.model130_required ? <div className="space-y-2 pl-3">
-          {line('Cuota acumulada desde enero', taxes.annualIrpfQuota)}
-          {line('Retenciones acumuladas en facturas', taxes.annualRetentions)}
-          {period.quarter > 1 ? line(estimatedPriorIrpf ? 'Casilla 05 · Estimada' : 'Casilla 05 · Informada', taxes.priorIrpfPayments) : null}
-        </div> : null}
       </div>
       {taxes.supplierRetentions > 0 ? line('Retenciones en gastos (111/115)', taxes.supplierRetentions) : null}
       <div className="flex flex-wrap items-baseline justify-between gap-2 border-t border-border pt-3"><dt className="font-medium">Reserva para la trimestral</dt><dd className="text-lg font-bold tabular-nums text-primary">{formatCurrency(taxes.totalTaxes)}</dd></div>
