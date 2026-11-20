@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,13 +44,22 @@ export const ClientSection: React.FC<ClientSectionProps> = ({
   onNewClientChange,
   onCreateClient,
 }) => {
+  const [creating, setCreating] = useState(false);
+  const creatingRef = useRef(false);
+
   const handleCreate = async () => {
+    if (creatingRef.current) return;
+    creatingRef.current = true;
+    setCreating(true);
     try {
       await onCreateClient();
       toast.success("Cliente creado");
     } catch (e) {
       console.error(e);
       toast.error("No se pudo crear el cliente");
+    } finally {
+      creatingRef.current = false;
+      setCreating(false);
     }
   };
 
@@ -151,7 +160,9 @@ export const ClientSection: React.FC<ClientSectionProps> = ({
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleCreate}>Guardar</Button>
+                <Button onClick={handleCreate} disabled={creating}>
+                  {creating ? "Guardando..." : "Guardar"}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,13 +44,22 @@ export const ConsultantSection: React.FC<ConsultantSectionProps> = ({
   onNewConsultantChange,
   onCreateConsultant,
 }) => {
+  const [creating, setCreating] = useState(false);
+  const creatingRef = useRef(false);
+
   const handleCreate = async () => {
+    if (creatingRef.current) return;
+    creatingRef.current = true;
+    setCreating(true);
     try {
       await onCreateConsultant();
       toast.success("Prestador del servicio creado");
     } catch (e) {
       console.error(e);
       toast.error("No se pudo crear el prestador del servicio");
+    } finally {
+      creatingRef.current = false;
+      setCreating(false);
     }
   };
 
@@ -156,7 +165,9 @@ export const ConsultantSection: React.FC<ConsultantSectionProps> = ({
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleCreate}>Guardar</Button>
+                <Button onClick={handleCreate} disabled={creating}>
+                  {creating ? "Guardando..." : "Guardar"}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

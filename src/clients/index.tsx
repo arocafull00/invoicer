@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Spinner } from '@/shared/components/Spinner';
-import { useClients, useCreateClient, useUpdateClient, useDeleteClient } from '@/shared/api/hooks';
+import { useClients, useCreateClient, useUpdateClient, useDeleteClient, useInvoices } from '@/shared/api/hooks';
 import type { Client } from '@/shared/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -48,11 +48,13 @@ export default function ClientsPage() {
   const createMutation = useCreateClient();
   const updateMutation = useUpdateClient();
   const deleteMutation = useDeleteClient();
+  const { data: invoices = [] } = useInvoices();
 
   const [search, setSearch] = useState('');
   const [openCreate, setOpenCreate] = useState(false);
   const [openEditId, setOpenEditId] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const pendingRef = useRef(false);
   const [form, setForm] = useState<Partial<Client>>({});
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
@@ -62,25 +64,32 @@ export default function ClientsPage() {
     return clients.filter((c) => !term || [c.name, c.email, c.city, c.country, c.company_number].some((f) => normalized(String(f || '')).includes(term)));
   }, [clients, search]);
 
+  const relatedInvoicesCount = confirmDeleteId ? invoices.filter((i) => i.client_id === confirmDeleteId).length : 0;
 
   async function handleCreate() {
+    if (pendingRef.current) return;
+    pendingRef.current = true;
     setPending(true);
     try {
       await createMutation.mutateAsync({ ...form });
       setOpenCreate(false);
       setForm({});
     } finally {
+      pendingRef.current = false;
       setPending(false);
     }
   }
 
   async function handleUpdate(id: string) {
+    if (pendingRef.current) return;
+    pendingRef.current = true;
     setPending(true);
     try {
       await updateMutation.mutateAsync({ id, client: { ...form } });
       setOpenEditId(null);
       setForm({});
     } finally {
+      pendingRef.current = false;
       setPending(false);
     }
   }
@@ -192,7 +201,11 @@ export default function ClientsPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar cliente</AlertDialogTitle>
-            <AlertDialogDescription>Esta acción no se puede deshacer</AlertDialogDescription>
+            <AlertDialogDescription>
+              {relatedInvoicesCount > 0
+                ? `Este cliente tiene ${relatedInvoicesCount} ${relatedInvoicesCount === 1 ? 'factura relacionada, que se quedará' : 'facturas relacionadas, que se quedarán'} sin cliente. Esta acción no se puede deshacer`
+                : 'Esta acción no se puede deshacer'}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>

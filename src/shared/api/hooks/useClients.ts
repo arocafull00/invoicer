@@ -44,6 +44,7 @@ export const useDeleteClient = () => {
     onSuccess: (_, id) => {
       useInvoiceStore.getState().removeClient(id);
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
     },
   });
 };
