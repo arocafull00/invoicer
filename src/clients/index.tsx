@@ -64,7 +64,7 @@ export default function ClientsPage() {
     return clients.filter((c) => !term || [c.name, c.email, c.city, c.country, c.company_number].some((f) => normalized(String(f || '')).includes(term)));
   }, [clients, search]);
 
-  const relatedInvoicesCount = confirmDeleteId ? invoices.filter((i) => i.client_id === confirmDeleteId).length : 0;
+  const relatedInvoicesCount = confirmDeleteId ? invoices.filter((i) => i.client?.id === confirmDeleteId).length : 0;
 
   async function handleCreate() {
     if (pendingRef.current) return;
