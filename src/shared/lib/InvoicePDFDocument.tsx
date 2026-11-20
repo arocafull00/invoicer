@@ -333,7 +333,7 @@ export function InvoicePDFDocument({
     <Document
       title={`Factura ${invoice.number}`}
       author={invoice.consultant.name}
-      subject={`Factura para ${invoice.client.name}`}
+      subject={`Factura para ${invoice.client?.name}`}
     >
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
@@ -377,18 +377,18 @@ export function InvoicePDFDocument({
           <View style={styles.infoCol}>
             <Text style={styles.sectionLabel}>Cliente</Text>
             <View style={styles.sectionRule} />
-            <Text style={styles.infoName}>{invoice.client.name}</Text>
-            {invoice.client.address ? (
-              <Text style={styles.infoLine}>{invoice.client.address}</Text>
+            <Text style={styles.infoName}>{invoice.client?.name}</Text>
+            {invoice.client?.address ? (
+              <Text style={styles.infoLine}>{invoice.client?.address}</Text>
             ) : null}
             <Text style={styles.infoLine}>
-              {invoice.client.city}, {invoice.client.country}
+              {invoice.client?.city}, {invoice.client?.country}
             </Text>
-            {invoice.client.company_number ? (
+            {invoice.client?.company_number ? (
               <View>
                 <View style={styles.infoGap} />
                 <Text style={styles.infoLine}>
-                  Company Number: {invoice.client.company_number}
+                  Company Number: {invoice.client?.company_number}
                 </Text>
               </View>
             ) : null}

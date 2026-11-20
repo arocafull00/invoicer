@@ -99,7 +99,7 @@ export const downloadInvoicePDF = async (invoice: Invoice): Promise<void> => {
 
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${invoice.client.name}-${invoice.consultant.name}-${invoice.number}.pdf`;
+  link.download = `${invoice.client?.name ?? 'factura'}-${invoice.consultant.name}-${invoice.number}.pdf`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

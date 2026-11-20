@@ -60,7 +60,7 @@ export const RecentInvoices: React.FC = () => {
               >
                 <div className="flex-1">
                   <p className="font-medium text-foreground">{number}</p>
-                  <p className="text-sm text-muted-foreground">{client.name}</p>
+                  <p className="text-sm text-muted-foreground">{client?.name}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-foreground">

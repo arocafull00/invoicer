@@ -123,15 +123,15 @@ export const ViewInvoice: React.FC = () => {
             <h2 className="text-lg font-semibold text-primary">Cliente</h2>
           </div>
           <div className="space-y-2">
-            <p className="font-medium text-foreground">{invoice.client.name}</p>
-            <p className="text-muted-foreground text-sm">{invoice.client.email}</p>
-            <p className="text-muted-foreground text-sm">{invoice.client.address}</p>
+            <p className="font-medium text-foreground">{invoice.client?.name}</p>
+            <p className="text-muted-foreground text-sm">{invoice.client?.email}</p>
+            <p className="text-muted-foreground text-sm">{invoice.client?.address}</p>
             <p className="text-muted-foreground text-sm">
-              {invoice.client.city}, {invoice.client.country}
+              {invoice.client?.city}, {invoice.client?.country}
             </p>
-            {invoice.client.company_number && (
+            {invoice.client?.company_number && (
               <p className="text-muted-foreground text-sm">
-                Número de empresa: {invoice.client.company_number}
+                Número de empresa: {invoice.client?.company_number}
               </p>
             )}
           </div>
