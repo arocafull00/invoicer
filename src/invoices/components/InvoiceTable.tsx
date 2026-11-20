@@ -184,7 +184,7 @@ export function InvoiceTable() {
       },
       {
         id: "consultantName",
-        accessorFn: (row) => row.consultant.name,
+        accessorFn: (row) => row.consultant?.name ?? "",
         header: () => <div>PRESTADOR DEL SERVICIO</div>,
         cell: ({ row }) => (
           <div>
@@ -199,13 +199,13 @@ export function InvoiceTable() {
       },
       {
         id: "clientName",
-        accessorFn: (row) => row.client.name,
+        accessorFn: (row) => row.client?.name ?? "",
         header: () => <div>CLIENTE</div>,
         cell: ({ row }) => (
           <div>
-            <p className="font-medium text-foreground">{row.original.client.name}</p>
+            <p className="font-medium text-foreground">{row.original.client?.name}</p>
             <p className="text-sm text-muted-foreground">
-              {row.original.client.city}, {row.original.client.country}
+              {[row.original.client?.city, row.original.client?.country].filter(Boolean).join(", ")}
             </p>
           </div>
         ),
@@ -437,7 +437,7 @@ export function InvoiceTable() {
                 <SelectContent>
                   <SelectItem value="all">Todos los prestadores del servicio</SelectItem>
                   {Array.from(
-                    new Set(invoices.map((i) => i.consultant?.name ?? ""))
+                    new Set(invoices.map((i) => i.consultant?.name).filter((name): name is string => Boolean(name)))
                   ).map((name) => (
                     <SelectItem key={name} value={name}>
                       {name}
@@ -464,7 +464,7 @@ export function InvoiceTable() {
                 <SelectContent>
                   <SelectItem value="all">Todos los clientes</SelectItem>
                   {Array.from(
-                    new Set(invoices.map((i) => i.client.name))
+                    new Set(invoices.map((i) => i.client?.name).filter((name): name is string => Boolean(name)))
                   ).map((name) => (
                     <SelectItem key={name} value={name}>
                       {name}
