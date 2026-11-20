@@ -30,7 +30,7 @@ export function InvoiceEmailDialog({
       authuser: accountEmail.trim(),
       view: "cm",
       fs: "1",
-      to: invoice.client.email?.trim() ?? "",
+      to: invoice.client?.email?.trim() ?? "",
       su: subject,
       body,
     });
@@ -63,7 +63,7 @@ export function InvoiceEmailDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="invoice-email-recipient">Para</Label>
-            <Input id="invoice-email-recipient" value={invoice.client.email?.trim() ?? ""} readOnly />
+            <Input id="invoice-email-recipient" value={invoice.client?.email?.trim() ?? ""} readOnly />
           </div>
           <div className="space-y-2">
             <Label htmlFor="invoice-email-subject">Asunto</Label>

@@ -82,7 +82,7 @@ export const EditInvoice: React.FC = () => {
       issueDate: invoice.start_date,
       dueDate: invoice.end_date,
       selectedConsultantId: invoice.consultant.id,
-      selectedClientId: invoice.client.id,
+      selectedClientId: invoice.client?.id ?? "",
       selectedPaymentId: invoice.payment_instructions.id,
       lineItems,
       currentLineItem: { description: "", quantity: 1, rate: 0, includeVat: false },
