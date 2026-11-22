@@ -51,72 +51,64 @@ function getInvoiceRetention(invoice: Invoice): number {
 }
 
 export interface DashboardStats {
-  invoicesThisMonth: number;
   totalRevenue: number;
   pendingInvoices: number;
-  collectionRate: number;
+  billedThisMonth: number;
+  netThisMonth: number;
   monthlyChange: {
-    invoices: number;
     revenue: number;
     pending: number;
-    collectionRate: number;
+    billed: number | null;
+    net: number | null;
   };
 }
 
-export const calculateDashboardStats = (invoices: Invoice[]): DashboardStats => {
+const percentChange = (current: number, previous: number) =>
+  previous !== 0 ? ((current - previous) / Math.abs(previous)) * 100 : current === 0 ? 0 : null;
+
+export const calculateDashboardStats = (
+  invoices: Invoice[],
+  expenses: Expense[] = [],
+  irpfRatePercent: number = DEFAULT_IRPF_RATE_PERCENT
+): DashboardStats => {
   const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-  const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-  const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+  const rate = (Number.isFinite(irpfRatePercent) ? Math.min(100, Math.max(0, irpfRatePercent)) : DEFAULT_IRPF_RATE_PERCENT) / 100;
+  const active = invoices.filter((invoice) => !invoice.deleted);
+  const inMonth = (dateString: string, offset: number) => {
+    const parts = getLocalDateParts(dateString);
+    const target = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+    return !!parts && parts.year === target.getFullYear() && parts.month === target.getMonth();
+  };
+  const monthInvoices = (offset: number) => active.filter((invoice) => inMonth(invoice.created_date, offset));
+  const billed = (offset: number) =>
+    roundMoney(monthInvoices(offset).reduce((sum, invoice) => sum + (Number(invoice.total) || 0), 0));
+  const net = (offset: number) => {
+    const income = monthInvoices(offset).reduce((sum, invoice) => sum + (Number(invoice.subtotal) || 0), 0);
+    const cost = expenses
+      .filter((expense) => inMonth(expense.fiscal_date ?? expense.date, offset))
+      .reduce((sum, expense) => sum + deductibleCost(expense), 0);
+    const profit = income - cost;
+    return roundMoney(profit - Math.max(0, profit) * rate);
+  };
 
-  // Filtrar facturas del mes actual
-  const thisMonthInvoices = invoices.filter(invoice => {
-    const invoiceDate = new Date(invoice.created_date);
-    return invoiceDate.getMonth() === currentMonth && invoiceDate.getFullYear() === currentYear;
-  });
-
-  // Filtrar facturas del mes pasado
-  const lastMonthInvoices = invoices.filter(invoice => {
-    const invoiceDate = new Date(invoice.created_date);
-    return invoiceDate.getMonth() === lastMonth && invoiceDate.getFullYear() === lastMonthYear;
-  });
-
-  // Calcular estadísticas del mes actual
-  const invoicesThisMonth = thisMonthInvoices.length;
-  const totalRevenue = invoices.reduce((sum, invoice) => sum + invoice.total, 0);
-  const thisMonthRevenue = thisMonthInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
-  
-  const pendingInvoices = invoices.filter(invoice => invoice.status === 'pending').length;
-  const paidInvoices = invoices.filter(invoice => invoice.status === 'paid').length;
-  const collectionRate = invoices.length > 0 ? (paidInvoices / invoices.length) * 100 : 0;
-  const thisMonthPending = thisMonthInvoices.filter(invoice => invoice.status === 'pending').length;
-  const thisMonthPaid = thisMonthInvoices.filter(invoice => invoice.status === 'paid').length;
-  const thisMonthCollectionRate = invoicesThisMonth > 0 ? (thisMonthPaid / invoicesThisMonth) * 100 : 0;
-
-  // Calcular cambios respecto al mes anterior
-  const lastMonthRevenue = lastMonthInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
-  const lastMonthCount = lastMonthInvoices.length;
-  const lastMonthPending = lastMonthInvoices.filter(invoice => invoice.status === 'pending').length;
-  const lastMonthPaid = lastMonthInvoices.filter(invoice => invoice.status === 'paid').length;
-  const lastMonthCollectionRate = lastMonthCount > 0 ? (lastMonthPaid / lastMonthCount) * 100 : 0;
-
-  const invoiceChange = lastMonthCount > 0 ? ((invoicesThisMonth - lastMonthCount) / lastMonthCount) * 100 : 0;
-  const revenueChange = lastMonthRevenue > 0 ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0;
-  const pendingChange = lastMonthPending > 0 ? ((thisMonthPending - lastMonthPending) / lastMonthPending) * 100 : 0;
-  const collectionRateChange = lastMonthCollectionRate > 0 ? thisMonthCollectionRate - lastMonthCollectionRate : 0;
+  const thisMonthRevenue = billed(0);
+  const lastMonthRevenue = billed(1);
+  const netThisMonth = net(0);
+  const pendingInvoices = active.filter((invoice) => invoice.status === 'pending').length;
+  const thisMonthPending = monthInvoices(0).filter((invoice) => invoice.status === 'pending').length;
+  const lastMonthPending = monthInvoices(1).filter((invoice) => invoice.status === 'pending').length;
 
   return {
-    invoicesThisMonth,
-    totalRevenue,
+    totalRevenue: active.reduce((sum, invoice) => sum + (Number(invoice.total) || 0), 0),
     pendingInvoices,
-    collectionRate,
+    billedThisMonth: thisMonthRevenue,
+    netThisMonth,
     monthlyChange: {
-      invoices: invoiceChange,
-      revenue: revenueChange,
-      pending: pendingChange,
-      collectionRate: collectionRateChange,
-    }
+      revenue: percentChange(thisMonthRevenue, lastMonthRevenue) ?? 0,
+      pending: percentChange(thisMonthPending, lastMonthPending) ?? 0,
+      billed: percentChange(thisMonthRevenue, lastMonthRevenue),
+      net: percentChange(netThisMonth, net(1)),
+    },
   };
 };
 
